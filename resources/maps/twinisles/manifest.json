@@ -1,0 +1,61 @@
+{
+  "categories": ["new", "fictional"],
+  "id": "TwinIsles",
+  "map": {
+    "height": 1024,
+    "num_land_tiles": 883688,
+    "width": 2048
+  },
+  "map16x": {
+    "height": 256,
+    "num_land_tiles": 54660,
+    "width": 512
+  },
+  "map4x": {
+    "height": 512,
+    "num_land_tiles": 220912,
+    "width": 1024
+  },
+  "multiplayer_frequency": 4,
+  "name": "Twin Isles",
+  "nations": [
+    {
+      "coordinates": [324, 398],
+      "flag": "",
+      "name": "Port Lys"
+    },
+    {
+      "coordinates": [1549, 434],
+      "flag": "",
+      "name": "Fort Valespire"
+    },
+    {
+      "coordinates": [830, 291],
+      "flag": "",
+      "name": "Crow's Nest"
+    },
+    {
+      "coordinates": [973, 711],
+      "flag": "",
+      "name": "Brine Cay"
+    }
+  ],
+  "special_team_count": 2,
+  "teamGameSpawnAreas": {
+    "2": [
+      {
+        "height": 1024,
+        "width": 1024,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "height": 1024,
+        "width": 1024,
+        "x": 1024,
+        "y": 0
+      }
+    ]
+  },
+  "translation_key": "map.twinisles"
+}
