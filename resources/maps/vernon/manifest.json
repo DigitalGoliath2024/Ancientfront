@@ -1,0 +1,61 @@
+{
+  "categories": ["new", "fictional"],
+  "id": "Vernon",
+  "map": {
+    "height": 2048,
+    "num_land_tiles": 2580140,
+    "width": 2048
+  },
+  "map16x": {
+    "height": 512,
+    "num_land_tiles": 155050,
+    "width": 512
+  },
+  "map4x": {
+    "height": 1024,
+    "num_land_tiles": 644569,
+    "width": 1024
+  },
+  "multiplayer_frequency": 4,
+  "name": "Vernon",
+  "nations": [
+    {
+      "coordinates": [1038, 400],
+      "flag": "",
+      "name": "North Fjord"
+    },
+    {
+      "coordinates": [1038, 872],
+      "flag": "",
+      "name": "Port Vernon"
+    },
+    {
+      "coordinates": [1208, 1901],
+      "flag": "",
+      "name": "South Reach"
+    },
+    {
+      "coordinates": [113, 921],
+      "flag": "",
+      "name": "West Stack"
+    }
+  ],
+  "special_team_count": 2,
+  "teamGameSpawnAreas": {
+    "2": [
+      {
+        "height": 2048,
+        "width": 1024,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "height": 2048,
+        "width": 1024,
+        "x": 1024,
+        "y": 0
+      }
+    ]
+  },
+  "translation_key": "map.vernon"
+}

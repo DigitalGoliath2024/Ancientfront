@@ -27,6 +27,7 @@ export enum GameMapType {
   BranchingPaths = "Branching Paths", // map-generator/assets/maps/branchingpaths/info.json
   Britannia = "Britannia", // map-generator/assets/maps/britannia/info.json
   BritanniaClassic = "Britannia Classic", // map-generator/assets/maps/britanniaclassic/info.json
+  CalderaIsland = "Caldera Island", // map-generator/assets/maps/calderaisland/info.json
   Caribbean = "Caribbean", // map-generator/assets/maps/caribbean/info.json
   CaspianSea = "Caspian Sea", // map-generator/assets/maps/caspiansea/info.json
   Caucasus = "Caucasus", // map-generator/assets/maps/caucasus/info.json
@@ -95,6 +96,7 @@ export enum GameMapType {
   SanFrancisco = "San Francisco", // map-generator/assets/maps/sanfrancisco/info.json
   Scandinavia = "Scandinavia", // map-generator/assets/maps/scandinavia/info.json
   Sierpinski = "Sierpinski", // map-generator/assets/maps/sierpinski/info.json
+  SkullIsland = "Skull Island", // map-generator/assets/maps/skullisland/info.json
   Sol = "Sol", // map-generator/assets/maps/sol/info.json
   SouthAmerica = "South America", // map-generator/assets/maps/southamerica/info.json
   SoutheastAsia = "SoutheastAsia", // map-generator/assets/maps/southeastasia/info.json
@@ -116,6 +118,7 @@ export enum GameMapType {
   TwoLakes = "Two Lakes", // map-generator/assets/maps/twolakes/info.json
   UnitedStates = "United States", // map-generator/assets/maps/unitedstates/info.json
   Venice = "Venice", // map-generator/assets/maps/venice/info.json
+  Vernon = "Vernon", // map-generator/assets/maps/vernon/info.json
   Vietnam = "Vietnam", // map-generator/assets/maps/vietnam/info.json
   WarshipWarship = "Warship Warship", // map-generator/assets/maps/warshipwarship/info.json
   World = "World", // map-generator/assets/maps/world/info.json
@@ -502,6 +505,17 @@ export const maps: readonly MapInfo[] = [
     teamFrequency: -1,
     specialFrequency: -1,
     themes: ["europe"],
+  },
+  {
+    id: "CalderaIsland",
+    type: GameMapType.CalderaIsland,
+    translationKey: "map.calderaisland",
+    categories: ["new", "fictional"],
+    multiplayerFrequency: 4,
+    ffaFrequency: -1,
+    teamFrequency: -1,
+    specialFrequency: -1,
+    specialTeamCount: 2,
   },
   {
     id: "Caribbean",
@@ -1802,6 +1816,17 @@ export const maps: readonly MapInfo[] = [
     specialFrequency: -1,
   },
   {
+    id: "SkullIsland",
+    type: GameMapType.SkullIsland,
+    translationKey: "map.skullisland",
+    categories: ["new", "fictional"],
+    multiplayerFrequency: 4,
+    ffaFrequency: -1,
+    teamFrequency: -1,
+    specialFrequency: -1,
+    specialTeamCount: 2,
+  },
+  {
     id: "Sol",
     type: GameMapType.Sol,
     translationKey: "map.sol",
@@ -2080,6 +2105,17 @@ export const maps: readonly MapInfo[] = [
     teamFrequency: -1,
     specialFrequency: -1,
     themes: ["europe"],
+  },
+  {
+    id: "Vernon",
+    type: GameMapType.Vernon,
+    translationKey: "map.vernon",
+    categories: ["new", "fictional"],
+    multiplayerFrequency: 4,
+    ffaFrequency: -1,
+    teamFrequency: -1,
+    specialFrequency: -1,
+    specialTeamCount: 2,
   },
   {
     id: "Vietnam",

@@ -115,6 +115,18 @@ Original island art provided for Marauder's Sea (Twin Isles).
 
 Original island art provided for Marauder's Sea (Foot Island).
 
+### Skull Island Map
+
+Original island art provided for Marauder's Sea (Skull Island).
+
+### Caldera Island Map
+
+Original island art provided for Marauder's Sea (Caldera Island).
+
+### Vernon Map
+
+Original island art provided for Marauder's Sea (Vernon).
+
 ### Los Angeles Map
 
 © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright)  

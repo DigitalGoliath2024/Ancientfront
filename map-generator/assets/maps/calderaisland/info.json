@@ -1,0 +1,46 @@
+{
+  "id": "CalderaIsland",
+  "name": "Caldera Island",
+  "translation_key": "map.calderaisland",
+  "categories": ["new", "fictional"],
+  "multiplayer_frequency": 4,
+  "special_team_count": 2,
+  "nations": [
+    {
+      "coordinates": [400, 500],
+      "flag": "",
+      "name": "High Rim"
+    },
+    {
+      "coordinates": [571, 1400],
+      "flag": "",
+      "name": "South Rim"
+    },
+    {
+      "coordinates": [903, 990],
+      "flag": "",
+      "name": "Ember Heart"
+    },
+    {
+      "coordinates": [1385, 1305],
+      "flag": "",
+      "name": "East Arc"
+    }
+  ],
+  "teamGameSpawnAreas": {
+    "2": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 814,
+        "height": 2048
+      },
+      {
+        "x": 814,
+        "y": 0,
+        "width": 814,
+        "height": 2048
+      }
+    ]
+  }
+}

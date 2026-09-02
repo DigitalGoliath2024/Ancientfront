@@ -1,0 +1,61 @@
+{
+  "categories": ["new", "fictional"],
+  "id": "SkullIsland",
+  "map": {
+    "height": 1024,
+    "num_land_tiles": 546400,
+    "width": 2048
+  },
+  "map16x": {
+    "height": 256,
+    "num_land_tiles": 33184,
+    "width": 512
+  },
+  "map4x": {
+    "height": 512,
+    "num_land_tiles": 136598,
+    "width": 1024
+  },
+  "multiplayer_frequency": 4,
+  "name": "Skull Island",
+  "nations": [
+    {
+      "coordinates": [1019, 335],
+      "flag": "",
+      "name": "Port Cranium"
+    },
+    {
+      "coordinates": [1037, 787],
+      "flag": "",
+      "name": "The Mandible"
+    },
+    {
+      "coordinates": [221, 180],
+      "flag": "",
+      "name": "West Wreck"
+    },
+    {
+      "coordinates": [1812, 384],
+      "flag": "",
+      "name": "East Shard"
+    }
+  ],
+  "special_team_count": 2,
+  "teamGameSpawnAreas": {
+    "2": [
+      {
+        "height": 1024,
+        "width": 1024,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "height": 1024,
+        "width": 1024,
+        "x": 1024,
+        "y": 0
+      }
+    ]
+  },
+  "translation_key": "map.skullisland"
+}
