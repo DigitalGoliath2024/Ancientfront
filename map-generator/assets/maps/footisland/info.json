@@ -1,0 +1,46 @@
+{
+  "id": "FootIsland",
+  "name": "Foot Island",
+  "translation_key": "map.footisland",
+  "categories": ["new", "fictional"],
+  "multiplayer_frequency": 4,
+  "special_team_count": 2,
+  "nations": [
+    {
+      "coordinates": [180, 396],
+      "flag": "",
+      "name": "Port Heel"
+    },
+    {
+      "coordinates": [700, 495],
+      "flag": "",
+      "name": "Archhaven"
+    },
+    {
+      "coordinates": [1400, 456],
+      "flag": "",
+      "name": "Fort Instep"
+    },
+    {
+      "coordinates": [1952, 440],
+      "flag": "",
+      "name": "Toe Key"
+    }
+  ],
+  "teamGameSpawnAreas": {
+    "2": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "x": 1024,
+        "y": 0,
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  }
+}

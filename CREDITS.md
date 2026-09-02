@@ -111,6 +111,10 @@ Polar Geospatial Center, 2018, "PGC Map Catalog", https://doi.org/10.7910/DVN/6R
 
 Original island art provided for Marauder's Sea (Twin Isles).
 
+### Foot Island Map
+
+Original island art provided for Marauder's Sea (Foot Island).
+
 ### Los Angeles Map
 
 © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright)  

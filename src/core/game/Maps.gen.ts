@@ -46,6 +46,7 @@ export enum GameMapType {
   FalklandIslands = "Falkland Islands", // map-generator/assets/maps/falklandislands/info.json
   FaroeIslands = "Faroe Islands", // map-generator/assets/maps/faroeislands/info.json
   FingerLakes = "Finger Lakes", // map-generator/assets/maps/fingerlakes/info.json
+  FootIsland = "Foot Island", // map-generator/assets/maps/footisland/info.json
   FourIslands = "Four Islands", // map-generator/assets/maps/fourislands/info.json
   France = "France", // map-generator/assets/maps/france/info.json
   GatewayToTheAtlantic = "Gateway to the Atlantic", // map-generator/assets/maps/gatewaytotheatlantic/info.json
@@ -711,6 +712,17 @@ export const maps: readonly MapInfo[] = [
     teamFrequency: -1,
     specialFrequency: -1,
     themes: ["north_america"],
+  },
+  {
+    id: "FootIsland",
+    type: GameMapType.FootIsland,
+    translationKey: "map.footisland",
+    categories: ["new", "fictional"],
+    multiplayerFrequency: 4,
+    ffaFrequency: -1,
+    teamFrequency: -1,
+    specialFrequency: -1,
+    specialTeamCount: 2,
   },
   {
     id: "FourIslands",
