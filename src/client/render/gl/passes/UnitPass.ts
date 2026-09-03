@@ -6,7 +6,7 @@
  * elongated pixel-art sprites facing east and rotated to an 8-direction
  * heading from movement. Other types stay axis-aligned. Sprites are tiny
  * grayscale PNGs colorized on the GPU using gray replacement
- * (180/130/100/70). MIRV Warhead uses a programmatic 3×3 white square
+ * (180/130/100/70, plus 20 for black sails). MIRV Warhead uses a programmatic 3×3 white square
  * (colorized to border color); Shell is a single white pixel.
  *
  * Two instanced draw calls per frame — ground units and missiles are

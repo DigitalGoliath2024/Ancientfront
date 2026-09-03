@@ -127,6 +127,14 @@ Original island art provided for Marauder's Sea (Caldera Island).
 
 Original island art provided for Marauder's Sea (Vernon).
 
+### Tarryn Fjords Map
+
+Original island art provided for Marauder's Sea (Tarryn Fjords).
+
+### The Ember Isles Map
+
+Original island art provided for Marauder's Sea (The Ember Isles).
+
 ### Los Angeles Map
 
 © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright)  

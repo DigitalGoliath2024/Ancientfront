@@ -1,0 +1,46 @@
+{
+  "id": "TarrynFjords",
+  "name": "Tarryn Fjords",
+  "translation_key": "map.tarrynfjords",
+  "categories": ["new", "fictional"],
+  "multiplayer_frequency": 4,
+  "special_team_count": 2,
+  "nations": [
+    {
+      "coordinates": [297, 1009],
+      "flag": "",
+      "name": "West Fjord"
+    },
+    {
+      "coordinates": [1725, 1011],
+      "flag": "",
+      "name": "East Fjord"
+    },
+    {
+      "coordinates": [1070, 1074],
+      "flag": "",
+      "name": "Midholm"
+    },
+    {
+      "coordinates": [1030, 1674],
+      "flag": "",
+      "name": "South Skerry"
+    }
+  ],
+  "teamGameSpawnAreas": {
+    "2": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 2048
+      },
+      {
+        "x": 1024,
+        "y": 0,
+        "width": 1024,
+        "height": 2048
+      }
+    ]
+  }
+}

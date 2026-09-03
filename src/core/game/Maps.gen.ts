@@ -42,6 +42,7 @@ export enum GameMapType {
   DidierFrance = "Didier France", // map-generator/assets/maps/didierfrance/info.json
   Dyslexdria = "Dyslexdria", // map-generator/assets/maps/dyslexdria/info.json
   EastAsia = "East Asia", // map-generator/assets/maps/eastasia/info.json
+  EmberIsles = "The Ember Isles", // map-generator/assets/maps/emberisles/info.json
   Europe = "Europe", // map-generator/assets/maps/europe/info.json
   EuropeClassic = "Europe Classic", // map-generator/assets/maps/europeclassic/info.json
   FalklandIslands = "Falkland Islands", // map-generator/assets/maps/falklandislands/info.json
@@ -106,6 +107,7 @@ export enum GameMapType {
   Surrounded = "Surrounded", // map-generator/assets/maps/surrounded/info.json
   Svalmel = "Svalmel", // map-generator/assets/maps/svalmel/info.json
   TaiwanStrait = "Taiwan Strait", // map-generator/assets/maps/taiwanstrait/info.json
+  TarrynFjords = "Tarryn Fjords", // map-generator/assets/maps/tarrynfjords/info.json
   TheBox = "The Box", // map-generator/assets/maps/thebox/info.json
   TierraDelFuego = "Tierra Del Fuego", // map-generator/assets/maps/tierradelfuego/info.json
   Titan = "Titan", // map-generator/assets/maps/titan/info.json
@@ -669,6 +671,17 @@ export const maps: readonly MapInfo[] = [
     teamFrequency: -1,
     specialFrequency: -1,
     themes: ["asia"],
+  },
+  {
+    id: "EmberIsles",
+    type: GameMapType.EmberIsles,
+    translationKey: "map.emberisles",
+    categories: ["new", "fictional"],
+    multiplayerFrequency: 4,
+    ffaFrequency: -1,
+    teamFrequency: -1,
+    specialFrequency: -1,
+    specialTeamCount: 2,
   },
   {
     id: "Europe",
@@ -1978,6 +1991,17 @@ export const maps: readonly MapInfo[] = [
     specialFrequency: -1,
     specialTeamCount: 2,
     themes: ["asia"],
+  },
+  {
+    id: "TarrynFjords",
+    type: GameMapType.TarrynFjords,
+    translationKey: "map.tarrynfjords",
+    categories: ["new", "fictional"],
+    multiplayerFrequency: 4,
+    ffaFrequency: -1,
+    teamFrequency: -1,
+    specialFrequency: -1,
+    specialTeamCount: 2,
   },
   {
     id: "TheBox",

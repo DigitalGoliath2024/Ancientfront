@@ -197,11 +197,12 @@ void main() {
     borderColor = FLICKER_COLORS[(idx + 2) % 4];
   }
 
-  // Four-band gray replacement:
+  // Gray replacement:
   //   180/255 ~ 0.706 -> territory color (light band)
   //   130/255 ~ 0.510 -> spawn/mid color (interpolated; used by missiles)
   //   100/255 ~ 0.392 -> center accent (warship center — tracks ring, blinks black)
   //   70/255  ~ 0.275 -> border color (dark band)
+  //   20/255  ~ 0.078 -> sail (always black)
   vec3 spawnColor = mix(territoryColor, borderColor, 0.5);
   vec3 centerColor = mix(territoryColor, vec3(0.0), retreatBlink);
 
@@ -215,8 +216,10 @@ void main() {
       color = territoryColor;
     } else if (gray > 0.34) {
       color = mix(borderColor, vec3(0.0), retreatBlink);
-    } else {
+    } else if (gray > 0.12) {
       color = spawnColor;
+    } else {
+      color = vec3(0.0);
     }
   } else if (gray > 0.6) {
     // Light band (180) -> territory color
@@ -227,9 +230,12 @@ void main() {
   } else if (gray > 0.34) {
     // Center accent band (100) -> center color
     color = centerColor;
-  } else {
+  } else if (gray > 0.12) {
     // Dark band (70) -> border color
     color = borderColor;
+  } else {
+    // Sail band (20) -> black
+    color = vec3(0.0);
   }
 
   fragColor = vec4(color, texel.a * alphaMul);

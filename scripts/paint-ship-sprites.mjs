@@ -3,7 +3,9 @@
  * marauder) and stamps them into resources/atlases/unit-atlas.png.
  *
  * Grayscale bands match SpriteLoader / UnitPass: 180 hull, 130 deck, 100 mast,
- * 70 outline. Sprites face east (bow on +x) and are rotated in the shader.
+ * 70 outline, 20 sail (stays black in the shader). Sprites face east (bow on
+ * +x) and are rotated in the shader. Sail is a thin connected black line
+ * with a one-pixel bulge toward the bow; it sticks slightly past the hull.
  */
 import fs from "fs";
 import path from "path";
@@ -19,21 +21,22 @@ const PALETTE = {
   M: [130, 130, 130, 255],
   C: [100, 100, 100, 255],
   L: [180, 180, 180, 255],
+  S: [20, 20, 20, 255],
 };
 
 /** Transport — thin longboat, pointed bow. */
 const TRANSPORT = [
   ".............",
   ".............",
-  ".............",
-  ".............",
-  "..DDDDDDDD...",
-  ".DLLLLLLLLDD.",
-  "DDLLLLMLLLLLD",
-  ".DLLLLLLLLDD.",
-  "..DDDDDDDD...",
-  ".............",
-  ".............",
+  "........S....",
+  "........S....",
+  "..DDDDDDSD...",
+  ".DLLLLLLSLDD.",
+  "DDLLLLLLSSLLD",
+  ".DLLLLLLSLDD.",
+  "..DDDDDDSD...",
+  "........S....",
+  "........S....",
   ".............",
   ".............",
 ];
@@ -41,52 +44,52 @@ const TRANSPORT = [
 /** Trade ship — longer hull with cargo amidships. */
 const TRADE = [
   ".............",
-  ".............",
-  ".............",
-  "...DDDDDDD...",
-  "..DLLLLLLLDD.",
-  ".DLLLMMMMLLD.",
-  "DDLLLLMLLLLLD",
-  ".DLLLMMMMLLD.",
-  "..DLLLLLLLDD.",
-  "...DDDDDDD...",
-  ".............",
-  ".............",
+  "........S....",
+  "........S....",
+  "...DDDDSDD...",
+  "..DLLLLLSLDD.",
+  ".DLLLMMMSLLD.",
+  "DDLLLLMLSSLLD",
+  ".DLLLMMMSLLD.",
+  "..DLLLLLSLDD.",
+  "...DDDDSDD...",
+  "........S....",
+  "........S....",
   ".............",
 ];
 
 /** Warship — ship of the line: dual masts, gunports, sterncastle, bowsprit. */
 const WARSHIP = [
-  ".............",
-  ".....C.C.....",
-  "....MCMCM....",
-  "..DDMMMMMDD..",
-  ".DLDLDLDLLDD.",
-  "DDLLLLCLLLLLD",
-  "DMMMCCCCMLLLD",
-  "DDLLLLCLLLLLD",
-  ".DLDLDLDLLDD.",
-  "..DDMMMMMDD..",
-  "....MCMCM....",
-  ".....C.C.....",
-  ".............",
+  "........S....",
+  ".....C.CS....",
+  "....MCMCS....",
+  "..DDMMMMSDD..",
+  ".DLDLDLDSLDD.",
+  "DDLLLLCLSLLLD",
+  "DMMMCCCCSSLLD",
+  "DDLLLLCLSLLLD",
+  ".DLDLDLDSLDD.",
+  "..DDMMMMSDD..",
+  "....MCMCS....",
+  ".....C.CS....",
+  "........S....",
 ];
 
 /** Marauder — raked raider: lateen sail, ram bow, ragged outline. */
 const MARAUDER = [
-  ".............",
-  "......C......",
-  ".....CCC.....",
-  "...DMMMCCD...",
-  "..DLDCCCLDD..",
-  ".DLLLCCCLLLD.",
-  "DMMMCCCCLLLLD",
-  ".DLLLCCCLLLD.",
-  "..DLDCCCLDD..",
-  "...DMMMCCD...",
-  ".....CCC.....",
-  "......C......",
-  ".............",
+  "........S....",
+  "......C.S....",
+  ".....CCCS....",
+  "...DMMMCSD...",
+  "..DLDCCCSDD..",
+  ".DLLLCCCSLLD.",
+  "DMMMCCCCSSLLD",
+  ".DLLLCCCSLLD.",
+  "..DLDCCCSDD..",
+  "...DMMMCSD...",
+  ".....CCCS....",
+  "......C.S....",
+  "........S....",
 ];
 
 function crc32(buf) {
