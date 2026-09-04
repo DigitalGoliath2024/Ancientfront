@@ -14,6 +14,8 @@ import { renderAppShell } from "./RenderHtml";
 import { ServerEnv } from "./ServerEnv";
 import { staticRoot } from "./ProjectPaths";
 import { applyStaticAssetCacheControl } from "./StaticAssetCache";
+import { createInProcessIpc, shouldRunInProcess } from "./InProcessIpc";
+import { startWorker } from "./Worker";
 
 const playlist = new MapPlaylist();
 let lobbyService: MasterLobbyService;
@@ -127,67 +129,80 @@ export async function startMaster() {
 
   log.info(`Instance ID: ${INSTANCE_ID}`);
 
-  // Fork workers
-  for (let i = 0; i < ServerEnv.numWorkers(); i++) {
-    const worker = cluster.fork({
-      WORKER_ID: i,
-      INSTANCE_ID,
+  if (shouldRunInProcess()) {
+    log.info(
+      "Running master and worker in one process (Hostinger/LiteSpeed cannot use cluster.fork)",
+    );
+    process.env.WORKER_ID = "0";
+    const { ipc, workerHandle } = createInProcessIpc();
+    lobbyService.registerWorker(0, workerHandle);
+    await startWorker({
+      httpServer: server,
+      expressApp: app,
+      ipc,
+      listen: false,
     });
+  } else {
+    // Fork workers
+    for (let i = 0; i < ServerEnv.numWorkers(); i++) {
+      const worker = cluster.fork({
+        WORKER_ID: i,
+        INSTANCE_ID,
+      });
 
-    lobbyService.registerWorker(i, worker);
-    log.info(`Started worker ${i} (PID: ${worker.process.pid})`);
-  }
-
-  // Handle worker crashes
-  cluster.on("exit", (worker, code, signal) => {
-    const workerId = (worker as any).process?.env?.WORKER_ID;
-    if (workerId === undefined) {
-      log.error(`worker crashed could not find id`);
-      return;
+      lobbyService.registerWorker(i, worker);
+      log.info(`Started worker ${i} (PID: ${worker.process.pid})`);
     }
 
-    const workerIdNum = parseInt(workerId);
-    lobbyService.removeWorker(workerIdNum);
+    // Handle worker crashes
+    cluster.on("exit", (worker, code, signal) => {
+      const workerId = (worker as any).process?.env?.WORKER_ID;
+      if (workerId === undefined) {
+        log.error(`worker crashed could not find id`);
+        return;
+      }
 
-    log.warn(
-      `Worker ${workerId} (PID: ${worker.process.pid}) died with code: ${code} and signal: ${signal}`,
-    );
-    log.info(`Restarting worker ${workerId}...`);
+      const workerIdNum = parseInt(workerId);
+      lobbyService.removeWorker(workerIdNum);
 
-    // Restart the worker with the same ID
-    const newWorker = cluster.fork({
-      WORKER_ID: workerId,
-      INSTANCE_ID,
+      log.warn(
+        `Worker ${workerId} (PID: ${worker.process.pid}) died with code: ${code} and signal: ${signal}`,
+      );
+      log.info(`Restarting worker ${workerId}...`);
+
+      const newWorker = cluster.fork({
+        WORKER_ID: workerId,
+        INSTANCE_ID,
+      });
+
+      lobbyService.registerWorker(workerIdNum, newWorker);
+      log.info(
+        `Restarted worker ${workerId} (New PID: ${newWorker.process.pid})`,
+      );
     });
+  }
 
-    lobbyService.registerWorker(workerIdNum, newWorker);
-    log.info(
-      `Restarted worker ${workerId} (New PID: ${newWorker.process.pid})`,
-    );
+  app.get("/api/health", (_req, res) => {
+    const ready = lobbyService?.isHealthy() ?? false;
+    if (ready) {
+      res.json({ status: "ok" });
+    } else {
+      res.status(503).json({ status: "unavailable" });
+    }
+  });
+
+  app.get("/{*splat}", async function (_req, res) {
+    try {
+      const htmlPath = path.join(staticRoot(), "index.html");
+      await renderAppShell(res, htmlPath);
+    } catch (error) {
+      log.error("Error rendering SPA fallback:", error);
+      res.status(500).send("Internal Server Error");
+    }
   });
 
   const PORT = Number.parseInt(process.env.PORT ?? "3000", 10);
-  server.listen(PORT, () => {
+  server.listen(PORT, "0.0.0.0", () => {
     log.info(`Master HTTP server listening on port ${PORT}`);
   });
 }
-
-app.get("/api/health", (_req, res) => {
-  const ready = lobbyService?.isHealthy() ?? false;
-  if (ready) {
-    res.json({ status: "ok" });
-  } else {
-    res.status(503).json({ status: "unavailable" });
-  }
-});
-
-// SPA fallback route
-app.get("/{*splat}", async function (_req, res) {
-  try {
-    const htmlPath = path.join(staticRoot(), "index.html");
-    await renderAppShell(res, htmlPath);
-  } catch (error) {
-    log.error("Error rendering SPA fallback:", error);
-    res.status(500).send("Internal Server Error");
-  }
-});

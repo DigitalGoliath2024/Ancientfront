@@ -42,18 +42,28 @@ import { MAX_WEBSOCKET_PAYLOAD_BYTES } from "./telemetry/MatchTelemetryConfig";
 import { WorkerLobbyService } from "./WorkerLobbyService";
 import { initWorkerMetrics } from "./WorkerMetrics";
 import { stripWorkerPrefix } from "./WorkerPathPrefix";
+import type { WorkerIpc } from "./InProcessIpc";
 
 const workerId = ServerEnv.workerId() ?? 0;
 const log = logger.child({ comp: `w_${workerId}` });
 const playlist = new MapPlaylist();
 
+export type StartWorkerOptions = {
+  httpServer?: http.Server;
+  expressApp?: express.Express;
+  ipc?: WorkerIpc;
+  listen?: boolean;
+};
+
 // Worker setup
-export async function startWorker() {
+export async function startWorker(options: StartWorkerOptions = {}) {
   log.info(`Worker starting...`);
 
-  const app = express();
-  app.use(express.json({ limit: "5mb" }));
-  const server = http.createServer(app);
+  const app = options.expressApp ?? express();
+  if (!options.expressApp) {
+    app.use(express.json({ limit: "5mb" }));
+  }
+  const server = options.httpServer ?? http.createServer(app);
   const wss = new WebSocketServer({
     noServer: true,
     maxPayload: MAX_WEBSOCKET_PAYLOAD_BYTES,
@@ -72,7 +82,13 @@ export async function startWorker() {
   server.on("close", () => telemetry.stop());
 
   // Initialize lobby service (handles WebSocket upgrade routing)
-  const lobbyService = new WorkerLobbyService(server, wss, gm, log);
+  const lobbyService = new WorkerLobbyService(
+    server,
+    wss,
+    gm,
+    log,
+    options.ipc,
+  );
 
   setTimeout(
     () => {
@@ -725,29 +741,37 @@ export async function startWorker() {
   });
 
   // The load balancer will handle routing to this server based on path
-  const PORT = ServerEnv.workerPortByIndex(workerId);
-  server.listen(PORT, () => {
-    log.info(`running on http://localhost:${PORT}`);
-    log.info(`Handling requests with path prefix /w${workerId}/`);
-    // Signal to the master process that this worker is ready
+  const shouldListen = options.listen ?? options.httpServer === undefined;
+  if (shouldListen) {
+    const PORT = ServerEnv.workerPortByIndex(workerId);
+    server.listen(PORT, () => {
+      log.info(`running on http://localhost:${PORT}`);
+      log.info(`Handling requests with path prefix /w${workerId}/`);
+      lobbyService.sendReady(workerId);
+      log.info(`signaled ready state to master`);
+    });
+  } else {
+    log.info(
+      `in-process worker ${workerId} sharing the master HTTP server (/w${workerId}/)`,
+    );
     lobbyService.sendReady(workerId);
     log.info(`signaled ready state to master`);
-  });
+  }
 
-  // Global error handler
-  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    log.error(`Error in ${req.method} ${req.path}:`, err);
-    res.status(500).json({ error: "An unexpected error occurred" });
-  });
+  if (!options.httpServer) {
+    app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+      log.error(`Error in ${req.method} ${req.path}:`, err);
+      res.status(500).json({ error: "An unexpected error occurred" });
+    });
 
-  // Process-level error handlers
-  process.on("uncaughtException", (err) => {
-    log.error(`uncaught exception:`, err);
-  });
+    process.on("uncaughtException", (err) => {
+      log.error(`uncaught exception:`, err);
+    });
 
-  process.on("unhandledRejection", (reason, promise) => {
-    log.error(`unhandled rejection at:`, promise, "reason:", reason);
-  });
+    process.on("unhandledRejection", (reason, promise) => {
+      log.error(`unhandled rejection at:`, promise, "reason:", reason);
+    });
+  }
 }
 
 async function startMatchmakingPolling(gm: GameManager) {

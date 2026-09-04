@@ -16,6 +16,8 @@ import {
   WorkerReady,
 } from "./IPCBridgeSchema";
 import { logger } from "./Logger";
+import type { WorkerIpc } from "./InProcessIpc";
+import { clusterWorkerIpc } from "./InProcessIpc";
 
 // The game config advertised for a listed private lobby: everything the
 // host configured minus host-only fields. The server already rejects
@@ -49,6 +51,7 @@ export class WorkerLobbyService {
     private readonly gameWss: WebSocketServer,
     private readonly gm: GameManager,
     private readonly log: typeof logger,
+    private readonly ipc: WorkerIpc = clusterWorkerIpc,
   ) {
     this.lobbiesWss = new WebSocketServer({
       noServer: true,
@@ -60,7 +63,7 @@ export class WorkerLobbyService {
   }
 
   private setupIPCListener() {
-    process.on("message", (raw: unknown) => this.handleMasterMessage(raw));
+    this.ipc.onMasterMessage((raw: unknown) => this.handleMasterMessage(raw));
   }
 
   // Separate from setupIPCListener so tests can dispatch messages without
@@ -128,7 +131,7 @@ export class WorkerLobbyService {
   }
 
   private sendToMaster(msg: WorkerReady | WorkerLobbyList) {
-    process.send?.(msg);
+    this.ipc.sendToMaster(msg);
   }
 
   private sendMyLobbiesToMaster() {
