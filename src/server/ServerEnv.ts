@@ -1,9 +1,27 @@
+import * as dotenv from "dotenv";
 import { JWK } from "jose";
 import { z } from "zod";
 import { GameEnv, parseGameEnv } from "../core/configuration/Config";
 import { isOpenFrontAccountApiEnabled } from "../core/OpenFrontAccountApi";
 import { GameID } from "../core/Schemas";
 import { generateID, simpleHash } from "../core/Util";
+
+// ESM imports run before Server.ts's dotenv.config(). Hostinger also often
+// omits GAME_ENV from the process environment, so load .env here first.
+dotenv.config();
+
+const TURNSTILE_ALWAYS_PASS = "1x00000000000000000000AA";
+
+function firstNonEmpty(
+  ...values: Array<string | undefined>
+): string | undefined {
+  for (const value of values) {
+    if (value !== undefined && value.trim() !== "") {
+      return value.trim();
+    }
+  }
+  return undefined;
+}
 
 const JwksSchema = z.object({
   keys: z
@@ -18,7 +36,6 @@ const JwksSchema = z.object({
 });
 
 export class ServerEnv {
-  private static readonly gameEnv: GameEnv = parseGameEnv(process.env.GAME_ENV);
   private static publicKey: JWK | null = null;
 
   // Values that also flow to the client via index.html, but on the server
@@ -30,10 +47,13 @@ export class ServerEnv {
   // the derived logic is identical. Consolidate into a shared helper that
   // takes a source so we don't have to keep them in sync by hand.
   static env(): GameEnv {
-    return ServerEnv.gameEnv;
+    const raw =
+      firstNonEmpty(process.env.GAME_ENV) ??
+      (process.env.NODE_ENV === "production" ? "prod" : "dev");
+    return parseGameEnv(raw);
   }
   static gameEnvName(): string {
-    switch (ServerEnv.gameEnv) {
+    switch (ServerEnv.env()) {
       case GameEnv.Dev:
         return "dev";
       case GameEnv.Preprod:
@@ -43,10 +63,7 @@ export class ServerEnv {
     }
   }
   static numWorkers(): number {
-    const raw = process.env.NUM_WORKERS;
-    if (!raw) {
-      throw new Error("NUM_WORKERS not set");
-    }
+    const raw = firstNonEmpty(process.env.NUM_WORKERS) ?? "1";
     const n = parseInt(raw, 10);
     if (!Number.isFinite(n) || n <= 0) {
       throw new Error(`Invalid NUM_WORKERS: ${raw}`);
@@ -54,17 +71,20 @@ export class ServerEnv {
     return n;
   }
   static turnstileSiteKey(): string {
-    const v = process.env.TURNSTILE_SITE_KEY;
-    if (!v) {
-      throw new Error("TURNSTILE_SITE_KEY not set");
-    }
-    return v;
+    return (
+      firstNonEmpty(process.env.TURNSTILE_SITE_KEY) ?? TURNSTILE_ALWAYS_PASS
+    );
   }
   static jwtAudience(): string {
-    const v = process.env.DOMAIN;
-    if (!v) {
-      throw new Error("DOMAIN not set");
-    }
+    const host = firstNonEmpty(process.env.HOST, process.env.HOSTNAME)?.replace(
+      /^https?:\/\//,
+      "",
+    );
+    const hostName = host?.split(":")[0];
+    const v =
+      firstNonEmpty(process.env.DOMAIN) ??
+      (hostName && hostName !== "localhost" ? hostName : undefined) ??
+      "localhost";
     return v;
   }
   static instanceId(): string {
@@ -115,7 +135,7 @@ export class ServerEnv {
     return 100;
   }
   static gameCreationRate(): number {
-    return ServerEnv.gameEnv === GameEnv.Dev ? 5 * 1000 : 2 * 60 * 1000;
+    return ServerEnv.env() === GameEnv.Dev ? 5 * 1000 : 2 * 60 * 1000;
   }
   static workerIndex(gameID: GameID): number {
     return simpleHash(gameID) % ServerEnv.numWorkers();
@@ -145,14 +165,14 @@ export class ServerEnv {
 
   // Server-only env values
   static domain(): string {
-    return process.env.DOMAIN ?? "";
+    return ServerEnv.jwtAudience();
   }
   static subdomain(): string {
     return process.env.SUBDOMAIN ?? "";
   }
   static otelEnabled(): boolean {
     return (
-      ServerEnv.gameEnv !== GameEnv.Dev &&
+      ServerEnv.env() !== GameEnv.Dev &&
       Boolean(ServerEnv.otelEndpoint()) &&
       Boolean(ServerEnv.otelAuthHeader())
     );
@@ -164,11 +184,7 @@ export class ServerEnv {
     return process.env.OTEL_AUTH_HEADER ?? "";
   }
   static gitCommit(): string {
-    const v = process.env.GIT_COMMIT;
-    if (!v) {
-      throw new Error("GIT_COMMIT not set");
-    }
-    return v;
+    return firstNonEmpty(process.env.GIT_COMMIT) ?? "prod";
   }
   static apiKey(): string {
     return process.env.API_KEY ?? "";

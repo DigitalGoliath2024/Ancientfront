@@ -1,5 +1,23 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
+import { GameEnv } from "../../src/core/configuration/Config";
 import { ServerEnv } from "../../src/server/ServerEnv";
+
+describe("ServerEnv.env", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  test("maps GAME_ENV when set", () => {
+    vi.stubEnv("GAME_ENV", "prod");
+    expect(ServerEnv.env()).toBe(GameEnv.Prod);
+  });
+
+  test("defaults to prod when GAME_ENV is unset and NODE_ENV is production", () => {
+    vi.stubEnv("GAME_ENV", "");
+    vi.stubEnv("NODE_ENV", "production");
+    expect(ServerEnv.env()).toBe(GameEnv.Prod);
+  });
+});
 
 describe("ServerEnv.numWorkers", () => {
   afterEach(() => {
@@ -11,9 +29,9 @@ describe("ServerEnv.numWorkers", () => {
     expect(ServerEnv.numWorkers()).toBe(4);
   });
 
-  test("throws when unset", () => {
+  test("defaults to 1 when unset", () => {
     vi.stubEnv("NUM_WORKERS", "");
-    expect(() => ServerEnv.numWorkers()).toThrow(/NUM_WORKERS not set/);
+    expect(ServerEnv.numWorkers()).toBe(1);
   });
 
   test("throws on non-numeric", () => {
@@ -42,11 +60,9 @@ describe("ServerEnv.turnstileSiteKey", () => {
     expect(ServerEnv.turnstileSiteKey()).toBe("site-key");
   });
 
-  test("throws when unset", () => {
+  test("defaults to Cloudflare test key when unset", () => {
     vi.stubEnv("TURNSTILE_SITE_KEY", "");
-    expect(() => ServerEnv.turnstileSiteKey()).toThrow(
-      /TURNSTILE_SITE_KEY not set/,
-    );
+    expect(ServerEnv.turnstileSiteKey()).toBe("1x00000000000000000000AA");
   });
 });
 
@@ -60,9 +76,11 @@ describe("ServerEnv.jwtAudience", () => {
     expect(ServerEnv.jwtAudience()).toBe("openfront.io");
   });
 
-  test("throws when DOMAIN unset", () => {
+  test("defaults to localhost when DOMAIN unset", () => {
     vi.stubEnv("DOMAIN", "");
-    expect(() => ServerEnv.jwtAudience()).toThrow(/DOMAIN not set/);
+    vi.stubEnv("HOST", "");
+    vi.stubEnv("HOSTNAME", "");
+    expect(ServerEnv.jwtAudience()).toBe("localhost");
   });
 });
 
