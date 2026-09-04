@@ -20,7 +20,6 @@ import { GameImpl } from "./GameImpl";
 import { TileRef } from "./GameMap";
 import { GameUpdateType, UnitUpdate } from "./GameUpdates";
 import { PlayerImpl } from "./PlayerImpl";
-import { applyPortIntegrityDelta } from "./PortDamage";
 import { maxHealthWithVeterancy } from "./Veterancy";
 
 export class UnitImpl implements Unit {
@@ -44,8 +43,6 @@ export class UnitImpl implements Unit {
   private _missileTimerQueue: number[] = [];
   private _hasTrainStation: boolean = false;
   private _level: number = 1;
-  /** Hidden damage toward the next Port demotion. Unused on other types. */
-  private _portDemotionDamage = 0;
   private _targetable: boolean = true;
   private _loaded: boolean | undefined;
   private _trainType: TrainType | undefined;
@@ -275,6 +272,9 @@ export class UnitImpl implements Unit {
   }
 
   maxHealth(): number {
+    if (Structures.has(this._type)) {
+      return this.mg.config().structureMaxHealth(this._type, this._level);
+    }
     const base = this.info().maxHealth ?? 1;
     // veterancy() is 0 for non-warships, so this returns base for them.
     return maxHealthWithVeterancy(
@@ -285,11 +285,6 @@ export class UnitImpl implements Unit {
   }
 
   modifyHealth(delta: number, attacker?: Player): void {
-    if (this.usesStructureIntegrity()) {
-      this.modifyStructureIntegrity(delta, attacker);
-      return;
-    }
-
     const previousHealth = this._health;
     const nextHealth = withinInt(
       this._health + toInt(delta),
@@ -319,66 +314,7 @@ export class UnitImpl implements Unit {
     if (!this.hasHealth()) {
       return false;
     }
-    if (this.usesStructureIntegrity() && this._level > 1) {
-      return this._portDemotionDamage > 0;
-    }
     return this.health() < this.maxHealth();
-  }
-
-  private usesStructureIntegrity(): boolean {
-    return Structures.has(this._type) && this.hasHealth();
-  }
-
-  /**
-   * Buildings: L2+ absorb damage as hidden demotion progress (reported HP
-   * stays at max so the renderer never draws a health bar). L1 chips real HP.
-   */
-  private modifyStructureIntegrity(delta: number, attacker?: Player): void {
-    const maxHealth = this.maxHealth();
-    const previousHealth = Number(this._health);
-    const result = applyPortIntegrityDelta(
-      {
-        level: this._level,
-        health: previousHealth,
-        demotionDamage: this._portDemotionDamage,
-      },
-      delta,
-      maxHealth,
-    );
-
-    if (
-      result.level === this._level &&
-      result.health === previousHealth &&
-      result.demotionDamage === this._portDemotionDamage &&
-      !result.destroyed
-    ) {
-      return;
-    }
-
-    const drops = this._level - result.level;
-    for (let i = 0; i < drops; i++) {
-      if (!this._active) {
-        return;
-      }
-      this.decreaseLevel(attacker);
-    }
-    if (!this._active) {
-      return;
-    }
-
-    this._portDemotionDamage = result.demotionDamage;
-    this._health = toInt(result.health);
-
-    if (result.destroyed || this._health === 0n) {
-      this.delete(true, attacker);
-      return;
-    }
-
-    // Level drops already published via decreaseLevel. Hidden L2+ demotion
-    // is not sent (HP stays at max). L1 HP chips need a fresh update.
-    if (result.health !== previousHealth) {
-      this.mg.addUpdate(this.toUpdate());
-    }
   }
 
   clearPendingDeletion(): void {
@@ -801,8 +737,7 @@ export class UnitImpl implements Unit {
       };
     }
     this._level++;
-    if (this.usesStructureIntegrity()) {
-      this._portDemotionDamage = 0;
+    if (Structures.has(this._type) && this.hasHealth()) {
       this._health = toInt(this.maxHealth());
     }
     // unitCount()/unitsOwned() are level-weighted and memoised on these versions
@@ -816,9 +751,6 @@ export class UnitImpl implements Unit {
 
   decreaseLevel(destroyer?: Player): void {
     this._level--;
-    if (this.usesStructureIntegrity()) {
-      this._portDemotionDamage = 0;
-    }
     if ([UnitType.MissileSilo, UnitType.SAMLauncher].includes(this.type())) {
       this._missileTimerQueue.pop();
     }
@@ -828,6 +760,12 @@ export class UnitImpl implements Unit {
     if (this._level <= 0) {
       this.delete(true, destroyer);
       return;
+    }
+    if (this.hasHealth()) {
+      const cap = toInt(this.maxHealth());
+      if (this._health > cap) {
+        this._health = cap;
+      }
     }
     // unitCount()/unitsOwned() are level-weighted and memoised on these versions
     this.mg.bumpUnitsVersion();

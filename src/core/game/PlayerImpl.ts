@@ -17,6 +17,7 @@ import {
   Attack,
   BuildableUnit,
   Cell,
+  CombatShips,
   ColoredTeams,
   Embargo,
   EmojiMessage,
@@ -1534,9 +1535,8 @@ export class PlayerImpl implements Player {
 
       const buildNew = canBuild !== false && canUpgrade === false;
 
-      // Cumulative bulk-upgrade totals. Each upgrade raises the unit's level
-      // and the constructed count, so step n costs the same as if the player
-      // already had n extra units — cost(mg, this, n).
+      // Cumulative bulk totals. Each extra ship/level costs as if the player
+      // already owned n more of this type — cost(mg, this, n).
       let upgradeCosts: Gold[] | undefined;
       if (canUpgrade !== false) {
         const maxLevel = config.unitInfo(u).maxLevel;
@@ -1547,6 +1547,13 @@ export class PlayerImpl implements Player {
         upgradeCosts = new Array<Gold>(steps);
         let total = 0n;
         for (let n = 0; n < steps; n++) {
+          total += config.unitInfo(u).cost(mg, this, n);
+          upgradeCosts[n] = total;
+        }
+      } else if (buildNew && CombatShips.has(u)) {
+        upgradeCosts = new Array<Gold>(MAX_UPGRADE_AMOUNT);
+        let total = 0n;
+        for (let n = 0; n < MAX_UPGRADE_AMOUNT; n++) {
           total += config.unitInfo(u).cost(mg, this, n);
           upgradeCosts[n] = total;
         }

@@ -63,27 +63,20 @@ describe("Destroyable ports", () => {
     expect(city.health()).toBe(game.config().cityMaxHealth());
   });
 
-  test("L2+ demotes without dying and keeps HP at max (no health-bar data)", () => {
+  test("upgrades add HP and keep the level; damage chips the bar", () => {
     const port = buildPort(4);
     expect(port.level()).toBe(4);
-    port.modifyHealth(-1000, player1);
+    expect(port.maxHealth()).toBe(
+      game.config().portMaxHealth() + 3 * game.config().portHealthPerLevel(),
+    );
+    port.modifyHealth(-400, player1);
     expect(port.isActive()).toBe(true);
-    expect(port.level()).toBe(3);
-    expect(port.health()).toBe(port.maxHealth());
-    expect(
-      portHasVisibleHealthBar(port.level(), port.health(), port.maxHealth()),
-    ).toBe(false);
-  });
-
-  test("leftover damage spills into L1 HP and the bar becomes visible", () => {
-    const port = buildPort(2);
-    port.modifyHealth(-(1000 + 250), player1);
-    expect(port.isActive()).toBe(true);
-    expect(port.level()).toBe(1);
-    expect(port.health()).toBe(750);
+    expect(port.level()).toBe(4);
+    expect(port.health()).toBe(port.maxHealth() - 400);
     expect(
       portHasVisibleHealthBar(port.level(), port.health(), port.maxHealth()),
     ).toBe(true);
+    expect(port.structureNeedsRepair()).toBe(true);
   });
 
   test("L1 dies and is gone when HP hits 0", () => {
@@ -93,13 +86,13 @@ describe("Destroyable ports", () => {
     expect(player2.units(UnitType.Port)).toHaveLength(0);
   });
 
-  test("a single overkill hit can demote through L2 into a destroyed L1", () => {
+  test("an upgraded port dies when its full scaled hull is emptied", () => {
     const port = buildPort(3);
-    port.modifyHealth(-(2 * 1000 + 1000), player1);
+    port.modifyHealth(-port.maxHealth(), player1);
     expect(port.isActive()).toBe(false);
   });
 
-  test("upgrading a damaged L1 port hides the health bar again", () => {
+  test("upgrading a damaged port refills to the new max", () => {
     const port = buildPort();
     port.modifyHealth(-400, player1);
     expect(
@@ -132,29 +125,23 @@ describe("Destroyable ports", () => {
     ).toBe(true);
   });
 
-  test("warship shells demote an L2 port using the integrity formula", () => {
+  test("warship shells chip an upgraded port without dropping its level", () => {
     const port = buildPort(2);
     const spawn = game.ref(coastX + 1, 10);
     const warship = player1.buildUnit(UnitType.Warship, spawn, {
       patrolTile: spawn,
     });
     const max = port.maxHealth();
-    let applied = 0;
-    while (port.level() > 1) {
-      const shell = new ShellExecution(spawn, player1, warship, port);
-      shell.init(game, game.ticks() + applied);
-      const damage = shell.getEffectOnTargetForTesting();
-      port.modifyHealth(-damage, player1);
-      applied += damage;
-      expect(applied).toBeLessThan(max * 4);
-    }
+    const shell = new ShellExecution(spawn, player1, warship, port);
+    shell.init(game, game.ticks());
+    const damage = shell.getEffectOnTargetForTesting();
+    port.modifyHealth(-damage, player1);
     expect(port.isActive()).toBe(true);
-    expect(port.level()).toBe(1);
-    // Exact bucket fill keeps HP at max (no bar). Overshoot chips L1 HP.
-    expect(port.health()).toBe(max - (applied - max));
+    expect(port.level()).toBe(2);
+    expect(port.health()).toBe(max - damage);
     expect(
       portHasVisibleHealthBar(port.level(), port.health(), port.maxHealth()),
-    ).toBe(port.health() < max);
+    ).toBe(true);
   });
 
   test("warships fire on a nearby enemy port", () => {

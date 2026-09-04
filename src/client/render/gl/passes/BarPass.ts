@@ -13,14 +13,13 @@
  */
 
 import type { Config } from "../../../../core/configuration/Config";
-import { Structures, UnitType } from "../../../../core/game/Game";
+import { UnitType } from "../../../../core/game/Game";
 import { portHasVisibleHealthBar } from "../../../../core/game/PortDamage";
 import { maxHealthWithVeterancy } from "../../../../core/game/Veterancy";
 import type { RendererConfig, UnitState } from "../../types";
 import {
   UT_MARAUDER,
   UT_MISSILE_SILO,
-  UT_PORT,
   UT_SAM_LAUNCHER,
 } from "../../types";
 import type { RenderSettings } from "../RenderSettings";
@@ -72,8 +71,6 @@ export class BarPass {
   private mapW: number;
   private warshipMaxHealth: number;
   private marauderMaxHealth: number;
-  private portMaxHealth: number;
-  private structureMaxHealth = new Map<string, number>();
   private veterancyHealthBonus: number;
 
   constructor(
@@ -87,10 +84,6 @@ export class BarPass {
     this.mapW = header.mapWidth;
     this.warshipMaxHealth = config.unitInfo(UnitType.Warship).maxHealth ?? 0;
     this.marauderMaxHealth = config.unitInfo(UnitType.Marauder).maxHealth ?? 0;
-    this.portMaxHealth = config.unitInfo(UnitType.Port).maxHealth ?? 0;
-    for (const type of Structures.types) {
-      this.structureMaxHealth.set(type, config.unitInfo(type).maxHealth ?? 0);
-    }
     this.veterancyHealthBonus = config.warshipVeterancyHealthBonus();
 
     // --- Shader program ---
@@ -177,14 +170,14 @@ export class BarPass {
       }
     }
 
-    // --- Progress bars + structure health (L1 hull only; L2+ demotes first) ---
+    // --- Progress bars + structure health (any level while hull is chipped) ---
     for (const unit of structures.values()) {
       if (!unit.isActive) continue;
       if (unit.health !== null && unit.health > 0 && !unit.underConstruction) {
-        const maxHealth =
-          unit.unitType === UT_PORT
-            ? this.portMaxHealth
-            : (this.structureMaxHealth.get(unit.unitType) ?? 0);
+        const maxHealth = this.config.structureMaxHealth(
+          unit.unitType as UnitType,
+          unit.level,
+        );
         if (
           maxHealth > 0 &&
           portHasVisibleHealthBar(unit.level, unit.health, maxHealth)

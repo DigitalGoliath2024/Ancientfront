@@ -49,6 +49,10 @@ export class WarshipExecution implements Execution {
       this.warship = this.input;
     } else {
       const shipType = this.input.shipType ?? UnitType.Warship;
+      const cost = this.mg.unitInfo(shipType).cost(this.mg, this.input.owner);
+      if (this.input.owner.gold() < cost) {
+        return;
+      }
       const spawn = this.input.owner.canBuild(shipType, this.input.patrolTile);
       if (spawn === false) {
         console.warn(

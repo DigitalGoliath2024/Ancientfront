@@ -584,11 +584,7 @@ export interface Unit {
   /** Effective max health, including any warship veterancy bonus. */
   maxHealth(): number;
   modifyHealth(delta: number, attacker?: Player): void;
-  /**
-   * Structures use port-style integrity: L2+ damage demotes before the
-   * building can be destroyed. True while L1 hull is chipped or an extra
-   * level has pending demotion damage.
-   */
+  /** True while a structure's hull is below its level-scaled max. */
   structureNeedsRepair(): boolean;
 
   // Warship veterancy

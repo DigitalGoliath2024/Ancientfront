@@ -19,6 +19,9 @@ export class ConstructionExecution implements Execution {
   private mg: Game;
 
   private ticksUntilComplete: Tick;
+  private shipsRemaining = 0;
+  private nextShipTick = 0;
+  private shipBatchStarted = false;
 
   constructor(
     private player: Player,
@@ -52,6 +55,10 @@ export class ConstructionExecution implements Execution {
       // For non-structure units (nukes/warship), charge once and delegate to specialized executions.
       const isStructure = this.isStructure(this.constructionType);
       if (!isStructure) {
+        if (this.isCombatShip(this.constructionType)) {
+          this.tickCombatShipBatch(ticks);
+          return;
+        }
         // Defer validation and gold deduction to the specific execution
         this.completeConstruction();
         this.active = false;
@@ -130,16 +137,7 @@ export class ConstructionExecution implements Execution {
         break;
       case UnitType.Warship:
       case UnitType.Marauder:
-        this.mg.addExecution(
-          new WarshipExecution({
-            owner: player,
-            patrolTile: this.tile,
-            shipType:
-              this.constructionType === UnitType.Marauder
-                ? UnitType.Marauder
-                : UnitType.Warship,
-          }),
-        );
+        this.spawnCombatShip();
         break;
       case UnitType.Port:
         this.mg.addExecution(new PortExecution(this.structure!));
@@ -176,6 +174,53 @@ export class ConstructionExecution implements Execution {
         );
         break;
     }
+  }
+
+  private isCombatShip(type: UnitType): boolean {
+    return type === UnitType.Warship || type === UnitType.Marauder;
+  }
+
+  private spawnCombatShip(): void {
+    const shipType =
+      this.constructionType === UnitType.Marauder
+        ? UnitType.Marauder
+        : UnitType.Warship;
+    this.mg.addExecution(
+      new WarshipExecution({
+        owner: this.player,
+        patrolTile: this.tile,
+        shipType,
+      }),
+    );
+  }
+
+  private tickCombatShipBatch(ticks: Tick): void {
+    if (!this.shipBatchStarted) {
+      this.shipBatchStarted = true;
+      this.shipsRemaining = this.amount ?? 1;
+      this.spawnCombatShip();
+      this.shipsRemaining--;
+      if (this.shipsRemaining <= 0) {
+        this.active = false;
+        return;
+      }
+      this.nextShipTick =
+        ticks + this.mg.config().combatShipBulkSpawnDelayTicks();
+      return;
+    }
+
+    if (ticks < this.nextShipTick) {
+      return;
+    }
+
+    this.spawnCombatShip();
+    this.shipsRemaining--;
+    if (this.shipsRemaining <= 0) {
+      this.active = false;
+      return;
+    }
+    this.nextShipTick =
+      ticks + this.mg.config().combatShipBulkSpawnDelayTicks();
   }
 
   private isStructure(type: UnitType): boolean {

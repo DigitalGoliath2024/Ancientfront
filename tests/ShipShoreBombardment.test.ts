@@ -173,17 +173,20 @@ describe("Ship shore bombardment and building hulls", () => {
     expect(city.health()).toBe(damaged);
   });
 
-  test("an upgraded city demotes before it can be destroyed", () => {
+  test("an upgraded city takes extra HP and dies at 0 without dropping levels", () => {
     const city = player2.buildUnit(UnitType.City, game.ref(5, 10), {});
     city.increaseLevel();
     city.increaseLevel();
     expect(city.level()).toBe(3);
     const hull = city.maxHealth();
-    city.modifyHealth(-hull, player1);
+    expect(hull).toBe(
+      game.config().cityMaxHealth() + 2 * game.config().cityHealthPerLevel(),
+    );
+    city.modifyHealth(-400, player1);
     expect(city.isActive()).toBe(true);
-    expect(city.level()).toBe(2);
-    expect(city.health()).toBe(hull);
-    city.modifyHealth(-(hull + hull), player1);
+    expect(city.level()).toBe(3);
+    expect(city.health()).toBe(hull - 400);
+    city.modifyHealth(-(hull - 400), player1);
     expect(city.isActive()).toBe(false);
   });
 

@@ -694,6 +694,44 @@ describe("RadialMenuElements", () => {
       ]);
     });
 
+    it("offers bulk ship builds from the attack wheel", () => {
+      mockPlayerActions.buildableUnits = [
+        {
+          type: UnitType.Warship,
+          canBuild: 7,
+          canUpgrade: false,
+          cost: 100n,
+          upgradeCosts: [100n, 250n, 450n, 700n, 1000n],
+        },
+      ];
+
+      const subMenu = attackMenuElement.subMenu!(mockParams);
+      const warshipElement = subMenu.find((item) => item.id === "attack_Warship");
+      expect(warshipElement).toBeDefined();
+
+      (mockGame as any).myPlayer = vi.fn(() => ({ gold: () => 999n }));
+      const options = warshipElement!.subMenu!(mockParams);
+      expect(options.map((o) => o.id)).toEqual([
+        `build_${UnitType.Warship}_1`,
+        `build_${UnitType.Warship}_5`,
+        `build_${UnitType.Warship}_10`,
+        `build_${UnitType.Warship}_max`,
+      ]);
+      expect(options.map((o) => o.disabled(mockParams))).toEqual([
+        false,
+        true,
+        true,
+        false,
+      ]);
+      options[3].action!(mockParams);
+      expect(mockParams.eventBus.emit).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          unit: UnitType.Warship,
+          amount: 4,
+        }),
+      );
+    });
+
     // This era's attack wheel is ships/mines, not nukes, so Atom Bomb is never listed.
     it.skip("caps the nuke bulk amount at loaded silo tubes", () => {
       const enemyPlayer = {

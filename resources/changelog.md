@@ -2,8 +2,9 @@
 
 ## Combat and buildings
 
-- **Upgraded buildings** — Cities, factories, ports, port guns, and armories now lose upgrade levels under fire the same way ports already did. A higher-level building has to be worn down before it can be destroyed.
-- **Port Gun Repairman** — Still repairs high-level batteries. That work now goes into the hidden damage that strips a level, not a health bar that never showed.
+- **Building health** — Structures take hit points at every level. Damage shows on a health bar. The building is destroyed at zero hit points.
+- **Port guns** — Cap at level 10. Fire in volleys. Repairman heals high-level batteries on the health bar.
+- **Bulk ships** — Buy several warships or marauders at once from the radial menu. They spawn about two seconds apart.
 
 ## Audio
 

@@ -5,6 +5,7 @@ import {
   BuildableAttacks,
   BuildMenus,
   bulkCost,
+  CombatShips,
   maxBulkAmount,
   PlayerActions,
   PlayerBuildableUnitType,
@@ -503,8 +504,11 @@ function createMenuElements(
           if (!buildableUnit) {
             return [];
           }
+          const isUpgradeBulk = buildableUnit.canUpgrade !== false;
+          const isShipBulk =
+            CombatShips.has(item.unitType) && buildableUnit.canBuild !== false;
           if (
-            buildableUnit.canUpgrade === false ||
+            (!isUpgradeBulk && !isShipBulk) ||
             !params.buildMenu.canBuildOrUpgrade(item)
           ) {
             return [];
@@ -523,14 +527,19 @@ function createMenuElements(
           }
           const steps = STRUCTURE_BULK_STEPS;
           const slots = [1, ...steps, maxAmount];
+          const idPrefix = isUpgradeBulk ? "upgrade" : "build";
+          const tooltipKey = isUpgradeBulk
+            ? "radial_menu.upgrade_x"
+            : "radial_menu.build_x";
+          const slotColor = filterType === "attack" ? COLORS.attack : COLORS.building;
           return slots.map((amount, i) => {
             const isMaxSlot = i === slots.length - 1;
             const executable = amount <= maxAmount;
             const cost = bulkCost(buildableUnit, amount);
             return {
               id: isMaxSlot
-                ? `upgrade_${item.unitType}_max`
-                : `upgrade_${item.unitType}_${amount}`,
+                ? `${idPrefix}_${item.unitType}_max`
+                : `${idPrefix}_${item.unitType}_${amount}`,
               name: translateText("build_menu.upgrade_amount", {
                 amount: amount.toString(),
               }),
@@ -540,12 +549,12 @@ function createMenuElements(
               fontSize: "20px",
               color: (p: MenuElementParams) =>
                 executable && (p.game.myPlayer()?.gold() ?? 0n) >= cost
-                  ? COLORS.building
+                  ? slotColor
                   : COLORS.disabled,
               icon: "",
               tooltipItems: [
                 {
-                  text: translateText("radial_menu.upgrade_x", {
+                  text: translateText(tooltipKey, {
                     amount: amount.toString(),
                   }),
                   className: "title",
@@ -558,13 +567,24 @@ function createMenuElements(
               disabled: (p: MenuElementParams) =>
                 !executable || (p.game.myPlayer()?.gold() ?? 0n) < cost,
               action: (p: MenuElementParams) => {
-                p.eventBus.emit(
-                  new SendUpgradeStructureIntentEvent(
-                    buildableUnit.canUpgrade as number,
-                    buildableUnit.type,
-                    amount,
-                  ),
-                );
+                if (isUpgradeBulk) {
+                  p.eventBus.emit(
+                    new SendUpgradeStructureIntentEvent(
+                      buildableUnit.canUpgrade as number,
+                      buildableUnit.type,
+                      amount,
+                    ),
+                  );
+                } else {
+                  p.eventBus.emit(
+                    new BuildUnitIntentEvent(
+                      buildableUnit.type,
+                      p.tile,
+                      undefined,
+                      amount,
+                    ),
+                  );
+                }
                 p.closeMenu();
               },
             };

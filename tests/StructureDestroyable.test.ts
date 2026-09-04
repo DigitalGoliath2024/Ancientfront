@@ -8,7 +8,7 @@ import {
 import { setup } from "./util/Setup";
 import { executeTicks } from "./util/utils";
 
-describe("Upgraded buildings demote before they are destroyed", () => {
+describe("Upgraded buildings take extra HP instead of demoting", () => {
   let game: Game;
   let player1: Player;
   let player2: Player;
@@ -41,14 +41,14 @@ describe("Upgraded buildings demote before they are destroyed", () => {
     [UnitType.PortGun, 7, 10],
     [UnitType.Armory, 5, 12],
     [UnitType.Port, 7, 12],
-  ] as const)("%s L3 loses a level to one hull of damage", (type, x, y) => {
+  ] as const)("%s L3 keeps its level and chips HP from one hull of damage", (type, x, y) => {
     const building = upgradeTo(type, game.ref(x, y), 3);
     const hull = building.maxHealth();
-    building.modifyHealth(-hull, player1);
+    building.modifyHealth(-Math.min(hull - 1, 1000), player1);
     expect(building.isActive()).toBe(true);
-    expect(building.level()).toBe(2);
-    expect(building.health()).toBe(hull);
-    expect(building.structureNeedsRepair()).toBe(false);
+    expect(building.level()).toBe(3);
+    expect(building.health()).toBeLessThan(hull);
+    expect(building.structureNeedsRepair()).toBe(true);
   });
 
   it.each([
@@ -56,10 +56,17 @@ describe("Upgraded buildings demote before they are destroyed", () => {
     [UnitType.Factory, 4, 10],
     [UnitType.PortGun, 7, 10],
     [UnitType.Armory, 5, 12],
-  ] as const)("%s is destroyed only after every extra level is stripped", (type, x, y) => {
+    [UnitType.Port, 7, 12],
+  ] as const)("%s is destroyed when its scaled hull hits 0", (type, x, y) => {
     const building = upgradeTo(type, game.ref(x, y), 3);
-    const hull = building.maxHealth();
-    building.modifyHealth(-(2 * hull + hull), player1);
+    building.modifyHealth(-building.maxHealth(), player1);
     expect(building.isActive()).toBe(false);
+  });
+
+  it("port guns still cap at level 10", () => {
+    const gun = upgradeTo(UnitType.PortGun, game.ref(7, 10), 10);
+    expect(gun.level()).toBe(10);
+    expect(game.config().unitInfo(UnitType.PortGun).maxLevel).toBe(10);
+    expect(gun.maxHealth()).toBe(1000 + 9 * game.config().portGunHealthPerLevel());
   });
 });

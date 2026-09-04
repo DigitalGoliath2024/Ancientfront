@@ -523,8 +523,6 @@ export class Config {
             UnitType.Port,
             UnitType.Factory,
           ),
-          // L1 hull. Each extra level is one full hull of hidden demotion
-          // damage; ~4 unbuffed warship shells (200–325 each) flatten L1.
           maxHealth: this.portMaxHealth(),
           constructionDuration: this.instantBuild() ? 0 : 5 * 10,
           upgradable: true,
@@ -1321,12 +1319,16 @@ export class Config {
   }
 
   /**
-   * L1 port hull HP. Each level above 1 is one hidden demotion bucket of
-   * the same size. Unbuffed warship shells deal 200–325, so a few volleys
-   * flatten a level-1 port without a one-scratch wipe.
+   * L1 hull HP. Unbuffed warship shells deal 200–325, so a few volleys
+   * flatten a level-1 port. Each upgrade adds a modest extra hull, not a
+   * whole extra building's worth of HP.
    */
   portMaxHealth(): number {
     return 1000;
+  }
+
+  portHealthPerLevel(): number {
+    return 200;
   }
 
   /** Unbuffed shells deal 200–325; a few warship volleys flatten a city. */
@@ -1334,25 +1336,95 @@ export class Config {
     return 2000;
   }
 
+  /** About one extra unbuffed shell per upgrade — not another full hull. */
+  cityHealthPerLevel(): number {
+    return 250;
+  }
+
   factoryMaxHealth(): number {
     return 2000;
+  }
+
+  factoryHealthPerLevel(): number {
+    return 250;
   }
 
   defensePostMaxHealth(): number {
     return 1500;
   }
 
+  defensePostHealthPerLevel(): number {
+    return 150;
+  }
+
   missileSiloMaxHealth(): number {
     return 1500;
+  }
+
+  missileSiloHealthPerLevel(): number {
+    return 150;
   }
 
   samLauncherMaxHealth(): number {
     return 1500;
   }
 
+  samLauncherHealthPerLevel(): number {
+    return 150;
+  }
+
   /** Unique / expensive; tankier than a city. */
   armoryMaxHealth(): number {
     return 3000;
+  }
+
+  armoryHealthPerLevel(): number {
+    return 200;
+  }
+
+  portGunHealthPerLevel(): number {
+    return 200;
+  }
+
+  /**
+   * Hull at this upgrade level. Extra HP per level is about one extra
+   * unbuffed shell so stacking upgrades cannot make buildings unkillable.
+   * Port guns still cap at 10 and keep their armor / Repairman on top.
+   */
+  structureMaxHealth(type: UnitType, level: number): number {
+    const lvl = Math.max(1, level);
+    const extra = lvl - 1;
+    switch (type) {
+      case UnitType.Port:
+        return this.portMaxHealth() + extra * this.portHealthPerLevel();
+      case UnitType.City:
+        return this.cityMaxHealth() + extra * this.cityHealthPerLevel();
+      case UnitType.Factory:
+        return this.factoryMaxHealth() + extra * this.factoryHealthPerLevel();
+      case UnitType.DefensePost:
+        return (
+          this.defensePostMaxHealth() + extra * this.defensePostHealthPerLevel()
+        );
+      case UnitType.MissileSilo:
+        return (
+          this.missileSiloMaxHealth() + extra * this.missileSiloHealthPerLevel()
+        );
+      case UnitType.SAMLauncher:
+        return (
+          this.samLauncherMaxHealth() + extra * this.samLauncherHealthPerLevel()
+        );
+      case UnitType.Armory:
+        return this.armoryMaxHealth() + extra * this.armoryHealthPerLevel();
+      case UnitType.PortGun:
+        return 1000 + extra * this.portGunHealthPerLevel();
+      default:
+        return 0;
+    }
+  }
+
+  /** 2s between bulk-built combat ships (sim is 10 ticks/s). */
+  combatShipBulkSpawnDelayTicks(): Tick {
+    return 20;
   }
 
   /** Highest Port Gun level. Range, armor, volley, and Repairman all peak here. */
