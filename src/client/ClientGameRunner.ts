@@ -84,6 +84,7 @@ import {
 } from "./render/gl";
 import { ALL_UNIT_TYPES, UnitState } from "./render/types";
 import { SoundManager } from "./sound/SoundManager";
+import { PlayAnnouncerEvent } from "./sound/Sounds";
 import { themeProvider } from "./theme/ThemeProvider";
 import { GameView, PlayerView } from "./view";
 
@@ -114,6 +115,7 @@ export interface JoinLobbyResult {
 export function joinLobby(
   eventBus: EventBus,
   lobbyConfig: LobbyConfig,
+  soundManager: SoundManager,
 ): JoinLobbyResult {
   // Mutable clientID state — assigned by server (multiplayer) or derived from gameStartInfo (singleplayer)
   let clientID: ClientID | undefined;
@@ -262,6 +264,7 @@ export function joinLobby(
         userSettings,
         terrainLoad,
         terrainMapFileLoader,
+        soundManager,
       )
         .then((r) => {
           currentGameRunner = r;
@@ -606,6 +609,7 @@ async function createClientGame(
   userSettings: UserSettings,
   terrainLoad: Promise<TerrainMapData> | null,
   mapLoader: GameMapLoader,
+  soundManager: SoundManager,
 ): Promise<ClientGameRunner> {
   if (lobbyConfig.gameStartInfo === undefined) {
     throw new Error("missing gameStartInfo");
@@ -659,7 +663,6 @@ async function createClientGame(
   inputOverlay.style.touchAction = "none";
   document.body.appendChild(inputOverlay);
 
-  const soundManager = new SoundManager(eventBus, userSettings);
   try {
     // Resolve render settings (defaults + user overrides) up front so the
     // renderer is built with the final values — no construct-with-defaults,
@@ -820,7 +823,6 @@ async function createClientGame(
       disposeRenderer,
     );
   } catch (err) {
-    soundManager.dispose();
     throw err;
   }
 }
@@ -1114,7 +1116,7 @@ export class ClientGameRunner {
   }
 
   public stop() {
-    this.soundManager.dispose();
+    this.soundManager.playMenuMusic();
     this.graphicsListenerAbort?.abort();
     this.disposeRenderer?.();
     if (!this.isActive) return;
@@ -1165,6 +1167,7 @@ export class ClientGameRunner {
     }
     this.myPlayer.actions(tile, [UnitType.TransportShip]).then((actions) => {
       if (actions.canAttack) {
+        this.playEnemyLandAttackSound(tile);
         this.eventBus.emit(
           new SendAttackIntentEvent(
             this.gameView.owner(tile).id(),
@@ -1175,6 +1178,14 @@ export class ClientGameRunner {
         this.sendBoatAttackIntent(tile);
       }
     });
+  }
+
+  private playEnemyLandAttackSound(tile: TileRef): void {
+    const owner = this.gameView.owner(tile);
+    if (!owner.isPlayer() || owner === this.myPlayer) {
+      return;
+    }
+    this.eventBus.emit(new PlayAnnouncerEvent("attack"));
   }
 
   private autoUpgradeEvent(event: AutoUpgradeEvent) {
@@ -1324,6 +1335,7 @@ export class ClientGameRunner {
 
     this.myPlayer.actions(tile, null).then((actions) => {
       if (actions.canAttack) {
+        this.playEnemyLandAttackSound(tile);
         this.eventBus.emit(
           new SendAttackIntentEvent(
             this.gameView.owner(tile).id(),

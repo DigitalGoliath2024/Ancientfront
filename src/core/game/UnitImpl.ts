@@ -5,6 +5,7 @@ import {
   NukeState,
   Player,
   SamLauncherState,
+  Structures,
   TerraNullius,
   Tick,
   TrainType,
@@ -284,8 +285,8 @@ export class UnitImpl implements Unit {
   }
 
   modifyHealth(delta: number, attacker?: Player): void {
-    if (this._type === UnitType.Port) {
-      this.modifyPortHealth(delta, attacker);
+    if (this.usesStructureIntegrity()) {
+      this.modifyStructureIntegrity(delta, attacker);
       return;
     }
 
@@ -314,11 +315,25 @@ export class UnitImpl implements Unit {
     }
   }
 
+  structureNeedsRepair(): boolean {
+    if (!this.hasHealth()) {
+      return false;
+    }
+    if (this.usesStructureIntegrity() && this._level > 1) {
+      return this._portDemotionDamage > 0;
+    }
+    return this.health() < this.maxHealth();
+  }
+
+  private usesStructureIntegrity(): boolean {
+    return Structures.has(this._type) && this.hasHealth();
+  }
+
   /**
-   * Ports: L2+ absorb damage as hidden demotion progress (reported HP stays
-   * at max so the renderer never draws a health bar). L1 chips real HP.
+   * Buildings: L2+ absorb damage as hidden demotion progress (reported HP
+   * stays at max so the renderer never draws a health bar). L1 chips real HP.
    */
-  private modifyPortHealth(delta: number, attacker?: Player): void {
+  private modifyStructureIntegrity(delta: number, attacker?: Player): void {
     const maxHealth = this.maxHealth();
     const previousHealth = Number(this._health);
     const result = applyPortIntegrityDelta(
@@ -786,7 +801,7 @@ export class UnitImpl implements Unit {
       };
     }
     this._level++;
-    if (this._type === UnitType.Port) {
+    if (this.usesStructureIntegrity()) {
       this._portDemotionDamage = 0;
       this._health = toInt(this.maxHealth());
     }
@@ -801,7 +816,7 @@ export class UnitImpl implements Unit {
 
   decreaseLevel(destroyer?: Player): void {
     this._level--;
-    if (this._type === UnitType.Port) {
+    if (this.usesStructureIntegrity()) {
       this._portDemotionDamage = 0;
     }
     if ([UnitType.MissileSilo, UnitType.SAMLauncher].includes(this.type())) {

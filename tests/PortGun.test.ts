@@ -211,10 +211,12 @@ describe("Port Gun", () => {
     gun.increaseLevel();
     expect(gun.level()).toBe(3);
     gun.modifyHealth(-50);
-    const damaged = gun.health();
+    expect(gun.structureNeedsRepair()).toBe(true);
+    const damagedLevel = gun.level();
     game.addExecution(new PortGunExecution(gun));
     executeTicks(game, 20);
-    expect(gun.health()).toBe(damaged);
+    expect(gun.level()).toBe(damagedLevel);
+    expect(gun.structureNeedsRepair()).toBe(true);
   });
 
   test("Repairman slowly heals at level 4", () => {
@@ -223,13 +225,13 @@ describe("Port Gun", () => {
     gun.increaseLevel();
     gun.increaseLevel();
     expect(gun.level()).toBe(4);
-    gun.modifyHealth(-50);
-    const damaged = gun.health();
+    gun.modifyHealth(-1);
+    expect(gun.structureNeedsRepair()).toBe(true);
     const interval = game.config().portGunRepairmanInterval(4);
-    const heal = game.config().portGunRepairmanHealPerPulse(4);
     game.addExecution(new PortGunExecution(gun));
     executeTicks(game, interval + 4);
-    expect(gun.health()).toBe(damaged + heal);
+    expect(gun.structureNeedsRepair()).toBe(false);
+    expect(gun.level()).toBe(4);
   });
 
   test("Repairman heals a bit faster above level 4", () => {
@@ -250,16 +252,16 @@ describe("Port Gun", () => {
     level5.increaseLevel();
     level5.increaseLevel();
     level5.increaseLevel();
-    level4.modifyHealth(-50);
-    level5.modifyHealth(-50);
-    const damaged4 = level4.health();
-    const damaged5 = level5.health();
+    level4.modifyHealth(-1);
+    level5.modifyHealth(-1);
+    expect(level4.structureNeedsRepair()).toBe(true);
+    expect(level5.structureNeedsRepair()).toBe(true);
     const interval5 = game.config().portGunRepairmanInterval(5);
     game.addExecution(new PortGunExecution(level4));
     game.addExecution(new PortGunExecution(level5));
     executeTicks(game, interval5 + 2);
-    expect(level5.health()).toBeGreaterThan(damaged5);
-    expect(level4.health()).toBe(damaged4);
+    expect(level5.structureNeedsRepair()).toBe(false);
+    expect(level4.structureNeedsRepair()).toBe(true);
   });
 
   test("Repairman at level 10 matches the old high-tier pace", () => {

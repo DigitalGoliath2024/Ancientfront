@@ -273,6 +273,27 @@ export class UserSettingModal extends BaseModal {
     this.requestUpdate();
   }
 
+  private sliderMusicVolume(e: CustomEvent<{ value: number }>) {
+    const value = e.detail?.value;
+    if (typeof value === "number") {
+      this.userSettings.setBackgroundMusicVolume(value / 100);
+    }
+  }
+
+  private sliderSoundEffectsVolume(e: CustomEvent<{ value: number }>) {
+    const value = e.detail?.value;
+    if (typeof value === "number") {
+      this.userSettings.setSoundEffectsVolume(value / 100);
+    }
+  }
+
+  private sliderAnnouncerVolume(e: CustomEvent<{ value: number }>) {
+    const value = e.detail?.value;
+    if (typeof value === "number") {
+      this.userSettings.setAnnouncerVolume(value / 100);
+    }
+  }
+
   private sliderAttackRatio(e: CustomEvent<{ value: number }>) {
     const value = e.detail?.value;
     if (typeof value === "number") {
@@ -781,6 +802,33 @@ export class UserSettingModal extends BaseModal {
         </div>
         <graphics-preset-selector></graphics-preset-selector>
       </div>
+
+      <setting-slider
+        label="${translateText("user_setting.background_music_volume")}"
+        description="${translateText("user_setting.background_music_volume_desc")}"
+        min="0"
+        max="100"
+        .value=${this.userSettings.backgroundMusicVolume() * 100}
+        @change=${this.sliderMusicVolume}
+      ></setting-slider>
+
+      <setting-slider
+        label="${translateText("user_setting.sound_effects_volume")}"
+        description="${translateText("user_setting.sound_effects_volume_desc")}"
+        min="0"
+        max="100"
+        .value=${this.userSettings.soundEffectsVolume() * 100}
+        @change=${this.sliderSoundEffectsVolume}
+      ></setting-slider>
+
+      <setting-slider
+        label="${translateText("user_setting.announcer_volume")}"
+        description="${translateText("user_setting.announcer_volume_desc")}"
+        min="0"
+        max="100"
+        .value=${this.userSettings.announcerVolume() * 100}
+        @change=${this.sliderAnnouncerVolume}
+      ></setting-slider>
 
       <!-- 😊 Emojis -->
       <setting-toggle

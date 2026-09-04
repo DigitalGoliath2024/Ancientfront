@@ -173,6 +173,20 @@ describe("Ship shore bombardment and building hulls", () => {
     expect(city.health()).toBe(damaged);
   });
 
+  test("an upgraded city demotes before it can be destroyed", () => {
+    const city = player2.buildUnit(UnitType.City, game.ref(5, 10), {});
+    city.increaseLevel();
+    city.increaseLevel();
+    expect(city.level()).toBe(3);
+    const hull = city.maxHealth();
+    city.modifyHealth(-hull, player1);
+    expect(city.isActive()).toBe(true);
+    expect(city.level()).toBe(2);
+    expect(city.health()).toBe(hull);
+    city.modifyHealth(-(hull + hull), player1);
+    expect(city.isActive()).toBe(false);
+  });
+
   test("combat ships out-prioritize buildings so a city does not steal focus", () => {
     const city = player2.buildUnit(UnitType.City, game.ref(5, 10), {});
     const enemy = player2.buildUnit(

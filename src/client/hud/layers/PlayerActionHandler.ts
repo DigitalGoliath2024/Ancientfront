@@ -1,5 +1,6 @@
 import { EventBus } from "../../../core/EventBus";
 import { TileRef } from "../../../core/game/GameMap";
+import { PlayAnnouncerEvent } from "../../sound/Sounds";
 import {
   SendAllianceExtensionIntentEvent,
   SendAllianceRequestIntentEvent,
@@ -24,6 +25,9 @@ export class PlayerActionHandler {
   ) {}
 
   handleAttack(player: PlayerView, targetId: string | null) {
+    if (targetId !== null) {
+      this.eventBus.emit(new PlayAnnouncerEvent("attack"));
+    }
     this.eventBus.emit(
       new SendAttackIntentEvent(
         targetId,

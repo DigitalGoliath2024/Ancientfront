@@ -1,9 +1,10 @@
 /**
- * Port hull / demotion math. Integer-only so the sim stays deterministic.
+ * Structure hull / demotion math (ports, cities, factories, guns, …).
+ * Integer-only so the sim stays deterministic.
  *
  * Level 1 uses real HP (the visible health bar). Each level above 1 is a
  * hidden demotion bucket equal to that same hull: damage fills the bucket,
- * then the port drops one level and leftover spills into the next bucket
+ * then the building drops one level and leftover spills into the next bucket
  * (or into L1 HP). L2+ never reduces reported HP, so health bars stay off.
  */
 

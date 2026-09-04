@@ -690,7 +690,7 @@ export class UserSettings {
   }
 
   backgroundMusicVolume(): number {
-    return this.getFloat("settings.backgroundMusicVolume", 0);
+    return this.getFloat("settings.backgroundMusicVolume", 0.4);
   }
 
   setBackgroundMusicVolume(volume: number): void {
@@ -834,10 +834,18 @@ export class UserSettings {
   }
 
   soundEffectsVolume(): number {
-    return this.getFloat("settings.soundEffectsVolume", 0);
+    return this.getFloat("settings.soundEffectsVolume", 0.4);
   }
 
   setSoundEffectsVolume(volume: number): void {
     this.setFloat("settings.soundEffectsVolume", volume);
+  }
+
+  announcerVolume(): number {
+    return this.getFloat("settings.announcerVolume", 0.4);
+  }
+
+  setAnnouncerVolume(volume: number): void {
+    this.setFloat("settings.announcerVolume", volume);
   }
 }

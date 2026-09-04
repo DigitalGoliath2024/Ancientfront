@@ -2,15 +2,31 @@ import { EventBus } from "../../core/EventBus";
 import { UnitType } from "../../core/game/Game";
 import { GameUpdateType } from "../../core/game/GameUpdates";
 import { Controller } from "../Controller";
-import { PlaySoundEffectEvent, SoundEffect } from "../sound/Sounds";
+import {
+  AnnouncerLine,
+  PlayAnnouncerEvent,
+  PlaySoundEffectEvent,
+  SoundEffect,
+} from "../sound/Sounds";
 import { GameView, UnitView } from "../view";
 
 // A MIRV rains hundreds of warheads over a few seconds; playing a boom per
 // warhead churns the audio pipeline. Play at most one warhead boom per interval.
 const MIRV_HIT_SOUND_INTERVAL_TICKS = 5;
 
+const DESTROY_ANNOUNCER: Partial<Record<UnitType, AnnouncerLine>> = {
+  [UnitType.Warship]: "warship-destroyed",
+  [UnitType.Marauder]: "marauder-destroyed",
+  [UnitType.City]: "city-destroyed",
+  [UnitType.Port]: "port-destroyed",
+  [UnitType.PortGun]: "port-gun-destroyed",
+  [UnitType.Factory]: "factory-destroyed",
+};
+
 export class SoundEffectController implements Controller {
   private lastMirvHitSoundTick = -Infinity;
+  private previouslyActive = new Set<number>();
+  private announcedGameOver = false;
 
   constructor(
     private readonly game: GameView,
@@ -18,6 +34,7 @@ export class SoundEffectController implements Controller {
   ) {}
 
   tick(): void {
+    this.maybeAnnounceGameOver();
     const updates = this.game.updatesSinceLastTick();
     if (!updates) return;
 
@@ -37,8 +54,14 @@ export class SoundEffectController implements Controller {
   }
 
   private handleUnit(unit: UnitView): void {
-    if (unit.isActive() && unit.createdAt() === this.game.ticks()) {
-      this.onCreated(unit);
+    const id = unit.id();
+    if (unit.isActive()) {
+      this.previouslyActive.add(id);
+      if (unit.createdAt() === this.game.ticks()) {
+        this.onCreated(unit);
+      }
+    } else if (this.previouslyActive.delete(id)) {
+      this.onDestroyed(unit);
     }
     switch (unit.type()) {
       case UnitType.AtomBomb:
@@ -50,6 +73,15 @@ export class SoundEffectController implements Controller {
       case UnitType.HydrogenBomb:
         this.onNukeDetonation(unit, "hydrogen-hit");
         break;
+    }
+  }
+
+  private onDestroyed(unit: UnitView): void {
+    const myPlayer = this.game.myPlayer();
+    if (myPlayer === null || unit.owner() !== myPlayer) return;
+    const line = DESTROY_ANNOUNCER[unit.type()];
+    if (line !== undefined) {
+      this.emitAnnouncer(line);
     }
   }
 
@@ -113,7 +145,26 @@ export class SoundEffectController implements Controller {
     this.emit(sound);
   }
 
+  private maybeAnnounceGameOver(): void {
+    if (this.announcedGameOver) return;
+    const myPlayer = this.game.myPlayer();
+    if (
+      myPlayer === null ||
+      myPlayer.isAlive() ||
+      this.game.inSpawnPhase() ||
+      !myPlayer.hasSpawned()
+    ) {
+      return;
+    }
+    this.announcedGameOver = true;
+    this.emitAnnouncer("game-over");
+  }
+
   private emit(sound: SoundEffect): void {
     this.eventBus.emit(new PlaySoundEffectEvent(sound));
+  }
+
+  private emitAnnouncer(line: AnnouncerLine): void {
+    this.eventBus.emit(new PlayAnnouncerEvent(line));
   }
 }

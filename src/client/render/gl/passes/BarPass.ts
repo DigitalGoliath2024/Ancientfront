@@ -177,21 +177,19 @@ export class BarPass {
       }
     }
 
-    // --- Progress bars + structure health (L1 ports; other buildings when chipped) ---
+    // --- Progress bars + structure health (L1 hull only; L2+ demotes first) ---
     for (const unit of structures.values()) {
       if (!unit.isActive) continue;
       if (unit.health !== null && unit.health > 0 && !unit.underConstruction) {
-        if (unit.unitType === UT_PORT) {
-          if (
-            portHasVisibleHealthBar(unit.level, unit.health, this.portMaxHealth)
-          ) {
-            this.pushHealth(unit, unit.health / this.portMaxHealth);
-          }
-        } else {
-          const maxHealth = this.structureMaxHealth.get(unit.unitType) ?? 0;
-          if (maxHealth > 0 && unit.health < maxHealth) {
-            this.pushHealth(unit, unit.health / maxHealth);
-          }
+        const maxHealth =
+          unit.unitType === UT_PORT
+            ? this.portMaxHealth
+            : (this.structureMaxHealth.get(unit.unitType) ?? 0);
+        if (
+          maxHealth > 0 &&
+          portHasVisibleHealthBar(unit.level, unit.health, maxHealth)
+        ) {
+          this.pushHealth(unit, unit.health / maxHealth);
         }
       }
       const progress = this.computeStructureProgress(unit, gameTick);

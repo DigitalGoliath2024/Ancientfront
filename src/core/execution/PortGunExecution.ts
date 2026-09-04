@@ -105,7 +105,7 @@ export class PortGunExecution implements Execution {
     if (!this.post.hasHealth()) {
       return;
     }
-    if (this.post.health() >= this.post.maxHealth()) {
+    if (!this.post.structureNeedsRepair()) {
       this.lastRepairTick = 0;
       return;
     }

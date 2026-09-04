@@ -12,6 +12,7 @@ import {
 } from "../../InputHandler";
 import { translateText } from "../../Utils";
 import {
+  SetAnnouncerVolumeEvent,
   SetBackgroundMusicVolumeEvent,
   SetSoundEffectsVolumeEvent,
 } from "../../sound/Sounds";
@@ -213,6 +214,13 @@ export class SettingsModal extends LitElement implements Controller {
     this.requestUpdate();
   }
 
+  private onAnnouncerVolumeChange(event: Event) {
+    const volume = parseFloat((event.target as HTMLInputElement).value) / 100;
+    this.userSettings.setAnnouncerVolume(volume);
+    this.eventBus.emit(new SetAnnouncerVolumeEvent(volume));
+    this.requestUpdate();
+  }
+
   render() {
     if (!this.isVisible) {
       return null;
@@ -316,6 +324,33 @@ export class SettingsModal extends LitElement implements Controller {
               </div>
               <div class="text-sm text-slate-400">
                 ${Math.round(this.userSettings.soundEffectsVolume() * 100)}%
+              </div>
+            </div>
+
+            <div
+              class="flex gap-3 items-center w-full text-left p-3 hover:bg-slate-700 rounded-sm text-white transition-colors"
+            >
+              <img
+                src=${musicIcon}
+                alt="announcerIcon"
+                width="20"
+                height="20"
+              />
+              <div class="flex-1">
+                <div class="font-medium">
+                  ${translateText("user_setting.announcer_volume")}
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  .value=${this.userSettings.announcerVolume() * 100}
+                  @input=${this.onAnnouncerVolumeChange}
+                  class="w-full border border-slate-500 rounded-lg"
+                />
+              </div>
+              <div class="text-sm text-slate-400">
+                ${Math.round(this.userSettings.announcerVolume() * 100)}%
               </div>
             </div>
 

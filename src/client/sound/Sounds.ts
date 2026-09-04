@@ -19,6 +19,24 @@ export type SoundEffect =
   | "message"
   | "click";
 
+export type AnnouncerLine =
+  | "attack"
+  | "warship-destroyed"
+  | "marauder-destroyed"
+  | "city-destroyed"
+  | "port-destroyed"
+  | "port-gun-destroyed"
+  | "factory-destroyed"
+  | "game-over";
+
+export const MENU_MUSIC_URL = assetUrl("sounds/music/map-of-broken-seas.mp3");
+
+export const GAMEPLAY_MUSIC_URLS: readonly string[] = [
+  assetUrl("sounds/music/marauders-hymn.mp3"),
+  assetUrl("sounds/music/call-of-the-sea.mp3"),
+  assetUrl("sounds/music/horizons-call.mp3"),
+];
+
 export const soundEffectUrls: ReadonlyMap<SoundEffect, string> = new Map([
   ["ka-ching", assetUrl("sounds/effects/ka-ching.mp3")],
   ["atom-hit", assetUrl("sounds/effects/atom-hit.mp3")],
@@ -38,6 +56,17 @@ export const soundEffectUrls: ReadonlyMap<SoundEffect, string> = new Map([
   ["click", assetUrl("sounds/effects/click.mp3")],
 ]);
 
+export const announcerUrls: ReadonlyMap<AnnouncerLine, string> = new Map([
+  ["attack", assetUrl("sounds/announcer/attacking-enemy.mp3")],
+  ["warship-destroyed", assetUrl("sounds/announcer/warship-destroyed.mp3")],
+  ["marauder-destroyed", assetUrl("sounds/announcer/marauder-destroyed.wav")],
+  ["city-destroyed", assetUrl("sounds/announcer/city-destroyed.mp3")],
+  ["port-destroyed", assetUrl("sounds/announcer/port-destroyed.mp3")],
+  ["port-gun-destroyed", assetUrl("sounds/announcer/port-gun-destroyed.mp3")],
+  ["factory-destroyed", assetUrl("sounds/announcer/factory-destroyed.mp3")],
+  ["game-over", assetUrl("sounds/announcer/game-over.mp3")],
+]);
+
 export class PlaySoundEffectEvent implements GameEvent {
   constructor(public readonly effect: SoundEffect) {}
 }
@@ -47,5 +76,13 @@ export class SetSoundEffectsVolumeEvent implements GameEvent {
 }
 
 export class SetBackgroundMusicVolumeEvent implements GameEvent {
+  constructor(public readonly volume: number) {}
+}
+
+export class PlayAnnouncerEvent implements GameEvent {
+  constructor(public readonly line: AnnouncerLine) {}
+}
+
+export class SetAnnouncerVolumeEvent implements GameEvent {
   constructor(public readonly volume: number) {}
 }

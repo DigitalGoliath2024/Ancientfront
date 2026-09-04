@@ -6,6 +6,7 @@ import {
   PlayerProfile,
   PlayerType,
   Relation,
+  Structures,
   Unit,
   UnitType,
 } from "../../../core/game/Game";
@@ -608,7 +609,7 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
         <div class="mt-1">
           <div class="text-sm opacity-80">${unit.type()}</div>
           ${unit.hasHealth() &&
-          (unit.type() !== UnitType.Port || unit.level() <= 1)
+          (!Structures.has(unit.type()) || unit.level() <= 1)
             ? html` <div class="text-sm">Health: ${unit.health()}</div> `
             : ""}
           ${unit.type() === UnitType.TransportShip

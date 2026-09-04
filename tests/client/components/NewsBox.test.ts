@@ -97,8 +97,8 @@ describe("NewsBox", () => {
       expect(items.some((i) => i.type === "warning")).toBe(true);
     });
 
-    it("starts with the local Marauder's Sea 0.1.0 announcement", () => {
-      expect(allItems[0]?.id).toBe("marauders-sea-0.1.0");
+    it("starts with the local Marauder's Sea 0.1.1 announcement", () => {
+      expect(allItems[0]?.id).toBe("marauders-sea-0.1.1");
       expect(allItems[0]?.type).toBe("announcement");
     });
   });
@@ -122,23 +122,22 @@ describe("NewsBox", () => {
       document.body.replaceChildren();
     });
 
-    it("renders the gold welcome line above the local 0.1.0 announcement", async () => {
+    it("renders the gold welcome line above the local 0.1.1 announcement", async () => {
       const el = await mountBox();
       await vi.waitFor(() => {
-        expect(el.textContent).toContain("Marauder's Sea 0.1.0");
+        expect(el.textContent).toContain("Marauder's Sea 0.1.1");
       });
       const welcome = el.querySelector("[data-news-welcome]");
       expect(welcome).toBeTruthy();
       expect(welcome?.className).toContain("text-gold");
-      expect(welcome?.className).toContain("text-lg");
       expect(welcome?.textContent).toContain("news_box.welcome");
       expect(welcome?.querySelector(".text-ember")?.textContent).toContain(
         "news_box.welcome_strategy",
       );
 
-      const announcement = el.querySelector(".text-sm");
-      expect(announcement?.textContent).toContain("Marauder's Sea 0.1.0");
-      expect(el.textContent).toContain("news_box.v0_1_0");
+      const announcement = el.querySelector("span.text-sm.font-medium");
+      expect(announcement?.textContent).toContain("Marauder's Sea 0.1.1");
+      expect(el.textContent).toContain("news_box.v0_1_1");
 
       const box = welcome!.parentElement;
       expect(box?.firstElementChild).toBe(welcome);

@@ -56,25 +56,43 @@ vi.mock("../../../src/client/sound/Sounds", async (importOriginal) => {
       ["message", "mock/message.mp3"],
       ["build-city", "mock/build-city.mp3"],
     ]),
+    announcerUrls: new Map([
+      ["attack", "mock/attack.mp3"],
+      ["warship-destroyed", "mock/warship-destroyed.mp3"],
+      ["marauder-destroyed", "mock/marauder-destroyed.wav"],
+      ["city-destroyed", "mock/city-destroyed.mp3"],
+      ["port-destroyed", "mock/port-destroyed.mp3"],
+      ["port-gun-destroyed", "mock/port-gun-destroyed.mp3"],
+      ["factory-destroyed", "mock/factory-destroyed.mp3"],
+      ["game-over", "mock/game-over.mp3"],
+    ]),
   };
 });
 
 import {
   MAX_CONCURRENT_SOUNDS,
+  MUSIC_HOWLS,
   SoundManager,
 } from "../../../src/client/sound/SoundManager";
 import {
+  PlayAnnouncerEvent,
   PlaySoundEffectEvent,
+  SetAnnouncerVolumeEvent,
   SetBackgroundMusicVolumeEvent,
   SetSoundEffectsVolumeEvent,
 } from "../../../src/client/sound/Sounds";
 import { EventBus } from "../../../src/core/EventBus";
 import { UserSettings } from "../../../src/core/game/UserSettings";
 
-function createUserSettings(musicVolume = 0, sfxVolume = 1): UserSettings {
+function createUserSettings(
+  musicVolume = 0,
+  sfxVolume = 1,
+  announcerVolume = 1,
+): UserSettings {
   const settings = new UserSettings();
   settings.setBackgroundMusicVolume(musicVolume);
   settings.setSoundEffectsVolume(sfxVolume);
+  settings.setAnnouncerVolume(announcerVolume);
   return settings;
 }
 
@@ -95,8 +113,7 @@ describe("SoundManager", () => {
   it("lazy-loads a sound effect once and reuses it", () => {
     eventBus.emit(new PlaySoundEffectEvent("click"));
     eventBus.emit(new PlaySoundEffectEvent("click"));
-    // 3 background music Howls + 1 Click Howl = 4
-    expect(howlCtor).toHaveBeenCalledTimes(4);
+    expect(howlCtor).toHaveBeenCalledTimes(MUSIC_HOWLS + 1);
   });
 
   it("plays a sound effect when PlaySoundEffectEvent is emitted", () => {
@@ -111,7 +128,7 @@ describe("SoundManager", () => {
     howlCtor.mockClear();
     howlInstances.length = 0;
     new SoundManager(bus, settings);
-    const bgHowls = howlInstances.slice(0, 3);
+    const bgHowls = howlInstances.slice(0, MUSIC_HOWLS);
     bgHowls.forEach((h) => {
       // Slider position is curved (squared) into perceptual gain: 0.5² = 0.25.
       expect(h.volume).toHaveBeenCalledWith(0.25);
@@ -133,7 +150,7 @@ describe("SoundManager", () => {
 
   it("responds to SetBackgroundMusicVolumeEvent", () => {
     eventBus.emit(new SetBackgroundMusicVolumeEvent(0.7));
-    const bgHowls = howlInstances.slice(0, 3);
+    const bgHowls = howlInstances.slice(0, MUSIC_HOWLS);
     bgHowls.forEach((h) => {
       // 0.7² = 0.49 perceptual gain.
       expect(h.volume).toHaveBeenCalledWith(0.7 * 0.7);
@@ -149,9 +166,42 @@ describe("SoundManager", () => {
     expect(clickHowl.volume).toHaveBeenCalledWith(0.4 * 0.4);
   });
 
+  it("plays an announcer line when PlayAnnouncerEvent is emitted", () => {
+    eventBus.emit(new PlayAnnouncerEvent("attack"));
+    const announcerHowl = howlInstances[howlInstances.length - 1];
+    expect(announcerHowl.play).toHaveBeenCalledTimes(1);
+  });
+
+  it("stops a previous announcer line before playing another", () => {
+    eventBus.emit(new PlayAnnouncerEvent("attack"));
+    const attackHowl = howlInstances[howlInstances.length - 1];
+    eventBus.emit(new PlayAnnouncerEvent("warship-destroyed"));
+    expect(attackHowl.stop).toHaveBeenCalled();
+  });
+
+  it("applies current announcer volume to lazily-loaded lines", () => {
+    const settings = createUserSettings(0, 1, 0.3);
+    const bus = new EventBus();
+    howlCtor.mockClear();
+    howlInstances.length = 0;
+    new SoundManager(bus, settings);
+    bus.emit(new PlayAnnouncerEvent("attack"));
+    expect(howlCtor).toHaveBeenLastCalledWith(
+      expect.objectContaining({ volume: 0.09 }),
+    );
+  });
+
+  it("responds to SetAnnouncerVolumeEvent", () => {
+    eventBus.emit(new PlayAnnouncerEvent("attack"));
+    const announcerHowl = howlInstances[howlInstances.length - 1];
+    announcerHowl.volume.mockClear();
+    eventBus.emit(new SetAnnouncerVolumeEvent(0.4));
+    expect(announcerHowl.volume).toHaveBeenCalledWith(0.4 * 0.4);
+  });
+
   it("clamps volume values between 0 and 1", () => {
     eventBus.emit(new SetBackgroundMusicVolumeEvent(2));
-    const bgHowls = howlInstances.slice(0, 3);
+    const bgHowls = howlInstances.slice(0, MUSIC_HOWLS);
     bgHowls.forEach((h) => {
       expect(h.volume).toHaveBeenCalledWith(1);
     });
@@ -164,7 +214,7 @@ describe("SoundManager", () => {
   });
 
   it("curves the slider position into perceptual gain so the top of the range is audibly distinct", () => {
-    const bgHowls = howlInstances.slice(0, 3);
+    const bgHowls = howlInstances.slice(0, MUSIC_HOWLS);
     // Linear gain would make 0.9 and 1.0 nearly indistinguishable; squaring
     // spreads the top end (0.9 → 0.81) so reductions are noticeable sooner.
     eventBus.emit(new SetBackgroundMusicVolumeEvent(0.9));
@@ -195,7 +245,7 @@ describe("SoundManager", () => {
   });
 
   it("dispose() stops and unloads background music", () => {
-    const bgHowls = howlInstances.slice(0, 3);
+    const bgHowls = howlInstances.slice(0, MUSIC_HOWLS);
 
     soundManager.dispose();
 
@@ -212,6 +262,20 @@ describe("SoundManager", () => {
   it("does not throw when playBackgroundMusic and stopBackgroundMusic are called", () => {
     expect(() => soundManager.playBackgroundMusic()).not.toThrow();
     expect(() => soundManager.stopBackgroundMusic()).not.toThrow();
+  });
+
+  it("playMenuMusic starts the looping menu track", () => {
+    soundManager.playMenuMusic();
+    expect(howlInstances[0].play).toHaveBeenCalled();
+  });
+
+  it("playBackgroundMusic stops the menu track and starts a gameplay track", () => {
+    soundManager.playMenuMusic();
+    howlInstances[0].play.mockClear();
+    soundManager.playBackgroundMusic();
+    expect(howlInstances[0].stop).toHaveBeenCalled();
+    const gameplayHowls = howlInstances.slice(1, MUSIC_HOWLS);
+    expect(gameplayHowls.some((h) => h.play.mock.calls.length > 0)).toBe(true);
   });
 
   it("swallows errors from Howler and does not propagate", () => {
@@ -242,7 +306,9 @@ describe("SoundManager", () => {
     expect(() => soundManager.stopBackgroundMusic()).not.toThrow();
     expect(() => soundManager.setBackgroundMusicVolume(0.5)).not.toThrow();
     expect(() => soundManager.setSoundEffectsVolume(0.5)).not.toThrow();
+    expect(() => soundManager.setAnnouncerVolume(0.5)).not.toThrow();
     expect(() => soundManager.playSoundEffect("click")).not.toThrow();
+    expect(() => soundManager.playAnnouncer("attack")).not.toThrow();
     expect(() => soundManager.stopSoundEffect("click")).not.toThrow();
   });
 });

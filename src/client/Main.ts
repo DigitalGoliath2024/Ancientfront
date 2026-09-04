@@ -28,6 +28,7 @@ import {
 import "./ChangeUsernameModal";
 import "./ClanModal";
 import { joinLobby, type JoinLobbyResult } from "./ClientGameRunner";
+import { SoundManager } from "./sound/SoundManager";
 import {
   completeCosmeticPurchaseReturn,
   getPlayerCosmeticsRefs,
@@ -235,6 +236,10 @@ class Client {
   private joinModal: JoinLobbyModal;
   private gameModeSelector: GameModeSelector;
   private userSettings: UserSettings = new UserSettings();
+  private soundManager: SoundManager = new SoundManager(
+    this.eventBus,
+    this.userSettings,
+  );
   private storeModal: StoreModal;
   private tokenLoginModal: TokenLoginModal;
   private matchmakingModal: MatchmakingModal;
@@ -257,6 +262,7 @@ class Client {
 
   async initialize(): Promise<void> {
     crazyGamesSDK.maybeInit();
+    this.soundManager.playMenuMusic();
 
     // Every exit from a game (win screen, in-game quit, popstate) navigates to
     // "/" and re-runs this, so announcing the menu here also covers "returned
@@ -1139,7 +1145,9 @@ class Client {
     // asked for separately.
     const resolvedName =
       this.usernameInput?.resolvedName() ?? fallbackPlayerName();
-    const newLobbyHandle = joinLobby(this.eventBus, {
+    const newLobbyHandle = joinLobby(
+      this.eventBus,
+      {
       gameID: lobby.gameID,
       cosmetics: await getPlayerCosmeticsRefs({
         verified: resolvedName.verified,
@@ -1158,7 +1166,9 @@ class Client {
           : undefined),
       gameRecord: lobby.gameRecord,
       spectator: lobby.spectator,
-    });
+    },
+      this.soundManager,
+    );
 
     if (this.mostRecentJoinEvent !== event.timeStamp) {
       newLobbyHandle.stop(true);
