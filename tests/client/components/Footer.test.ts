@@ -37,7 +37,7 @@ describe("page-footer version line", () => {
     await mount();
 
     const line = footer.querySelector(".footer-version");
-    expect(line?.textContent?.trim()).toBe("v0.1.0");
+    expect(line?.textContent?.trim()).toBe("v0.1.1");
     expect(line?.textContent?.trim()).toBe(gameVersion);
     const github = footer.querySelector('a[href="' + SOURCE_REPO_URL + '"] img');
     expect(github).toBeTruthy();
