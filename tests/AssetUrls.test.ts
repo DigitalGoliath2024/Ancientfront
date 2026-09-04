@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { buildAssetUrl, rewriteAssetsForCdn } from "../src/core/AssetUrls";
+import { buildAssetUrl, getCdnBase, rewriteAssetsForCdn } from "../src/core/AssetUrls";
 
 describe("AssetUrls", () => {
   test("returns hashed URLs for direct asset matches", () => {
@@ -99,6 +99,20 @@ describe("AssetUrls", () => {
         "https://cdn.example.com///",
       ),
     ).toBe("https://cdn.example.com/_assets/images/Favicon.hash.svg");
+  });
+});
+
+describe("getCdnBase", () => {
+  test("falls back to window.location.origin when CDN base is empty", () => {
+    window.BOOTSTRAP_CONFIG = { cdnBase: "" } as typeof window.BOOTSTRAP_CONFIG;
+    expect(getCdnBase()).toBe(window.location.origin);
+  });
+
+  test("uses a configured CDN origin", () => {
+    window.BOOTSTRAP_CONFIG = {
+      cdnBase: "https://cdn.example.com/",
+    } as typeof window.BOOTSTRAP_CONFIG;
+    expect(getCdnBase()).toBe("https://cdn.example.com");
   });
 });
 

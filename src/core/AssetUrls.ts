@@ -87,13 +87,25 @@ export function getAssetManifest(): AssetManifest {
 // Without this fallback, asset fetches inside workers (e.g. map binaries)
 // would silently bypass the CDN.
 export function getCdnBase(): string {
+  let configured: string | undefined;
   if (
     typeof window !== "undefined" &&
     window.BOOTSTRAP_CONFIG?.cdnBase !== undefined
   ) {
-    return window.BOOTSTRAP_CONFIG.cdnBase;
+    configured = window.BOOTSTRAP_CONFIG.cdnBase;
+  } else if (globalThis.__CDN_BASE__ !== undefined) {
+    configured = globalThis.__CDN_BASE__;
   }
-  return globalThis.__CDN_BASE__ ?? "";
+  if (configured) {
+    return configured.replace(/\/+$/, "");
+  }
+  // Blob workers (Vite `?worker&inline`) cannot fetch root-relative URLs
+  // like `/_assets/...`. Same-origin games with no CDN must pass an absolute
+  // origin into the worker via __CDN_BASE__.
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return window.location.origin;
+  }
+  return "";
 }
 
 export function assetUrl(path: string): string {
