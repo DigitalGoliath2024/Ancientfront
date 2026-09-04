@@ -121,10 +121,10 @@ export function encodeTerrainTile(
   const terrainColors = {
     ocean: oceanColor ?? DEEP_WATER_BASE,
     shoreWater: [100, 143, 255],
-    sand: sandColor ?? [204, 203, 158],
-    plains: plainsColor ?? [190, 220, 138],
-    highland: highlandColor ?? [200, 183, 138],
-    mountain: mountainColor ?? [230, 230, 230],
+    sand: sandColor ?? [240, 213, 106],
+    plains: plainsColor ?? [126, 217, 87],
+    highland: highlandColor ?? [232, 180, 90],
+    mountain: mountainColor ?? [212, 220, 232],
     peak: backgroundColor ?? BACKGROUND_BASE,
   };
 

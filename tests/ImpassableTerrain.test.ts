@@ -397,10 +397,10 @@ describe("Impassable Terrain", () => {
   test("encodeTerrainTile renders plains normally (not background)", () => {
     const out = new Uint8Array(4);
     encodeTerrainTile(LAND_PLAINS, out, 0);
-    // Plains: r=190, g=220, b=138 — clearly different from background.
-    expect(out[0]).toBe(190);
-    expect(out[1]).toBe(220);
-    expect(out[2]).toBe(138);
+    // Plains: r=126, g=217, b=87 — clearly different from background.
+    expect(out[0]).toBe(126);
+    expect(out[1]).toBe(217);
+    expect(out[2]).toBe(87);
   });
 
   // ── Nation AI: attack behavior near impassable terrain ───────────────
