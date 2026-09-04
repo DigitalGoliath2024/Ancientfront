@@ -1,12 +1,9 @@
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
 import type { AssetManifest } from "../core/AssetUrls";
+import { staticRoot } from "./ProjectPaths";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const staticDir = path.join(__dirname, "../../static");
-const manifestPath = path.join(staticDir, "asset-manifest.json");
+const manifestPath = path.join(staticRoot(), "asset-manifest.json");
 
 let cachedManifest: AssetManifest | null = null;
 

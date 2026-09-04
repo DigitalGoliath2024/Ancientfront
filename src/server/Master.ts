@@ -4,7 +4,6 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import http from "http";
 import path from "path";
-import { fileURLToPath } from "url";
 import { GameEnv } from "../core/configuration/Config";
 import { getDescriptor } from "./DesktopRelease";
 import { logger } from "./Logger";
@@ -13,6 +12,7 @@ import { MasterLobbyService } from "./MasterLobbyService";
 import { setNoStoreHeaders } from "./NoStoreHeaders";
 import { renderAppShell } from "./RenderHtml";
 import { ServerEnv } from "./ServerEnv";
+import { staticRoot } from "./ProjectPaths";
 import { applyStaticAssetCacheControl } from "./StaticAssetCache";
 
 const playlist = new MapPlaylist();
@@ -23,9 +23,6 @@ const server = http.createServer(app);
 
 const log = logger.child({ comp: "m" });
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 app.use(express.json());
 
 // Serve the shared app shell for the root document.
@@ -34,7 +31,7 @@ app.use(async (req, res, next) => {
     try {
       await renderAppShell(
         res,
-        path.join(__dirname, "../../static/index.html"),
+        path.join(staticRoot(), "index.html"),
       );
     } catch (error) {
       log.error("Error rendering index.html:", error);
@@ -52,7 +49,7 @@ app.use(async (req, res, next) => {
 // is deliberately tiny and separately cacheable; release.json is fetched only
 // when that pointer changes. Both must be reachable without a bot challenge --
 // see OPE-192.
-const staticDir = path.join(__dirname, "../../static");
+const staticDir = staticRoot();
 const descriptorOpts = () => ({
   clientVersion: ServerEnv.gitCommit(),
   cdnBase: ServerEnv.cdnBase(),
@@ -85,7 +82,7 @@ app.get("/desktop/release.json", async (_req, res) => {
 });
 
 app.use(
-  express.static(path.join(__dirname, "../../static"), {
+  express.static(staticRoot(), {
     maxAge: "1y", // Set max-age to 1 year for all static assets
     setHeaders: (res) => {
       applyStaticAssetCacheControl(
@@ -187,7 +184,7 @@ app.get("/api/health", (_req, res) => {
 // SPA fallback route
 app.get("/{*splat}", async function (_req, res) {
   try {
-    const htmlPath = path.join(__dirname, "../../static/index.html");
+    const htmlPath = path.join(staticRoot(), "index.html");
     await renderAppShell(res, htmlPath);
   } catch (error) {
     log.error("Error rendering SPA fallback:", error);

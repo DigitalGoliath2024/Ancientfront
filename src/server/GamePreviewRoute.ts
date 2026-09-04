@@ -16,6 +16,7 @@ import {
 } from "./GamePreviewBuilder";
 import { setNoStoreHeaders } from "./NoStoreHeaders";
 import { getAppShellContent, setHtmlNoCacheHeaders } from "./RenderHtml";
+import { projectRoot, staticRoot } from "./ProjectPaths";
 import { ServerEnv } from "./ServerEnv";
 
 const requestOrigin = (req: Request): string => {
@@ -39,9 +40,8 @@ export function registerGamePreviewRoute(opts: {
   gm: GameManager;
   workerId: number;
   log: Logger;
-  baseDir: string;
 }) {
-  const { app, gm, log, baseDir } = opts;
+  const { app, gm, log } = opts;
 
   const gameIDSchema = z.string().regex(GAME_ID_REGEX);
 
@@ -111,8 +111,8 @@ export function registerGamePreviewRoute(opts: {
       );
 
       // Always serve HTML with meta tags for /game/:id route
-      const staticHtml = path.join(baseDir, "../../static/index.html");
-      const rootHtml = path.join(baseDir, "../../index.html");
+      const staticHtml = path.join(staticRoot(), "index.html");
+      const rootHtml = path.join(projectRoot(), "index.html");
       let filePath: string | null = null;
 
       try {

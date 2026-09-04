@@ -1,21 +1,23 @@
 /**
- * Hostinger (and similar hosts) require a JavaScript entry file.
- * The game server itself lives in TypeScript; tsx loads it.
+ * Hostinger cannot spawn tsx/esbuild at runtime (EACCES on the esbuild binary).
+ * Production build emits dist/server.mjs; fall back to tsx for local dev.
  */
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
-const child = spawn(
-  process.execPath,
-  ["--import", "tsx", path.join(root, "src/server/Server.ts")],
-  {
-    cwd: root,
-    stdio: "inherit",
-    env: process.env,
-  },
-);
+const bundled = path.join(root, "dist", "server.mjs");
+const args = existsSync(bundled)
+  ? [bundled]
+  : ["--import", "tsx", path.join(root, "src/server/Server.ts")];
+
+const child = spawn(process.execPath, args, {
+  cwd: root,
+  stdio: "inherit",
+  env: process.env,
+});
 
 child.on("exit", (code, signal) => {
   if (signal) {

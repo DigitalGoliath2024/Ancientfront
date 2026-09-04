@@ -4,12 +4,10 @@
 // the CDN as index-<short-commit>.html, so games archived from this build stay
 // replayable after the deployment itself is gone (#4934).
 import path from "path";
-import { fileURLToPath } from "url";
 import { renderHtmlContent } from "./RenderHtml";
+import { staticRoot } from "./ProjectPaths";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-renderHtmlContent(path.join(__dirname, "../../static/index.html")).then(
+renderHtmlContent(path.join(staticRoot(), "index.html")).then(
   (html) => process.stdout.write(html),
   (error: unknown) => {
     console.error("Failed to render static index:", error);

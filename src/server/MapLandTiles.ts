@@ -2,16 +2,13 @@ import fs from "fs/promises";
 import path from "path";
 import { normalizeAssetPath } from "src/core/AssetUrls";
 import { GameMapType } from "src/core/game/Game";
-import { fileURLToPath } from "url";
 import { logger } from "./Logger";
+import { resourcesRoot, staticRoot } from "./ProjectPaths";
 import { getRuntimeAssetManifest } from "./RuntimeAssetManifest";
 
 const log = logger.child({ component: "MapLandTiles" });
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const staticDir = path.join(__dirname, "../../static");
-const resourcesDir = path.join(__dirname, "../../resources");
+const staticDir = staticRoot();
+const resourcesDir = resourcesRoot();
 
 const landTilesCache = new Map<GameMapType, number>();
 

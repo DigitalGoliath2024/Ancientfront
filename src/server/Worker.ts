@@ -4,7 +4,6 @@ import rateLimit from "express-rate-limit";
 import http from "http";
 import ipAnonymize from "ip-anonymize";
 import path from "path";
-import { fileURLToPath } from "url";
 import { WebSocket, WebSocketServer } from "ws";
 import { z } from "zod";
 import { GameEnv } from "../core/configuration/Config";
@@ -35,6 +34,7 @@ import { MapPlaylist } from "./MapPlaylist";
 import { setNoStoreHeaders } from "./NoStoreHeaders";
 import { startPolling } from "./PollingLoop";
 import { PrivilegeRefresher } from "./PrivilegeRefresher";
+import { outRoot, staticRoot } from "./ProjectPaths";
 import { ServerEnv } from "./ServerEnv";
 import { applyStaticAssetCacheControl } from "./StaticAssetCache";
 import { createMatchTelemetryEmitter } from "./telemetry/BufferedMatchTelemetryEmitter";
@@ -50,9 +50,6 @@ const playlist = new MapPlaylist();
 // Worker setup
 export async function startWorker() {
   log.info(`Worker starting...`);
-
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
 
   const app = express();
   app.use(express.json({ limit: "5mb" }));
@@ -114,7 +111,7 @@ export async function startWorker() {
   app.use(compression());
 
   app.use(
-    express.static(path.join(__dirname, "../../out"), {
+    express.static(outRoot(), {
       setHeaders: (res) => {
         applyStaticAssetCacheControl(
           res.setHeader.bind(res),
@@ -125,7 +122,7 @@ export async function startWorker() {
   );
   app.use(
     "/maps",
-    express.static(path.join(__dirname, "../../static/maps"), {
+    express.static(path.join(staticRoot(), "maps"), {
       maxAge: "1y",
       setHeaders: (res, filePath) => {
         if (filePath.endsWith(".webp")) {
@@ -367,7 +364,6 @@ export async function startWorker() {
     gm,
     workerId,
     log,
-    baseDir: __dirname,
   });
 
   registerAdminBotRoutes({ app, gm, workerId, log });
