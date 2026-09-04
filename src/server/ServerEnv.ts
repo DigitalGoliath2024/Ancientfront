@@ -8,7 +8,7 @@ import { generateID, simpleHash } from "../core/Util";
 
 // ESM imports run before Server.ts's dotenv.config(). Hostinger also often
 // omits GAME_ENV from the process environment, so load .env here first.
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const TURNSTILE_ALWAYS_PASS = "1x00000000000000000000AA";
 

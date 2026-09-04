@@ -3,13 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "server.js",
+  "main": "dist/server.mjs",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "build": "npm run build-prod",
-    "start": "node server.js",
+    "start": "node dist/server.mjs",
     "prebuild": "node scripts/ensure-executable-bins.mjs",
     "prestart": "node scripts/ensure-executable-bins.mjs",
     "postinstall": "node scripts/ensure-executable-bins.mjs",

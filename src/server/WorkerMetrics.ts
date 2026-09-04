@@ -8,7 +8,7 @@ import { GameManager } from "./GameManager";
 import { getOtelResource, getPromLabels } from "./OtelResource";
 import { ServerEnv } from "./ServerEnv";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 export function initWorkerMetrics(gameManager: GameManager): void {
   // Create resource with worker information

@@ -9,7 +9,7 @@ import * as dotenv from "dotenv";
 import winston from "winston";
 import { getOtelResource } from "./OtelResource";
 import { ServerEnv } from "./ServerEnv";
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const resource = getOtelResource();
 
