@@ -1,19 +1,6 @@
 /**
- * Hostinger watches this process for server.listen() within 3 seconds.
- * Spawning a child (tsx / node dist/server.mjs) made listen() happen in
- * another PID, so Hostinger restarted the app in a loop.
+ * LiteSpeed (lsnode.js) loads this file with require(). Node can require()
+ * ESM only if the graph has no top-level await. Import the bundled server
+ * statically so listen() runs in this same process during module evaluation.
  */
-import { existsSync } from "node:fs";
-import { fileURLToPath, pathToFileURL } from "node:url";
-import path from "node:path";
-
-const root = path.dirname(fileURLToPath(import.meta.url));
-const bundled = path.join(root, "dist", "server.mjs");
-
-if (!existsSync(bundled)) {
-  throw new Error(
-    "Missing dist/server.mjs. On Hostinger run the production build; locally use npm run start:server-dev.",
-  );
-}
-
-await import(pathToFileURL(bundled).href);
+import "./dist/server.mjs";
