@@ -1,6 +1,15 @@
 {
   "name": "openfront-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "server.js",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
+    "build": "npm run build-prod",
+    "start": "node server.js",
     "build-dev": "concurrently \"tsc --noEmit\" \"vite build --mode development\"",
     "build-prod": "concurrently --kill-others-on-fail \"tsc --noEmit\" \"vite build\" && tsx scripts/buildAssetHashes.ts",
     "start:client": "vite",
@@ -32,7 +41,7 @@
     "lint:github": "oxlint --format=github && eslint --format gha",
     "lint:eslint": "eslint",
     "lint:eslint:fix": "eslint --fix",
-    "prepare": "husky",
+    "prepare": "husky || true",
     "gen-maps": "cd map-generator && go run . && npm run format",
     "inst": "npm ci --ignore-scripts"
   },
@@ -122,6 +131,5 @@
     "winston": "^3.19.0",
     "ws": "^8.21.0",
     "zod": "^4.4.2"
-  },
-  "type": "module"
+  }
 }
