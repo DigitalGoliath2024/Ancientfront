@@ -1,6 +1,7 @@
 import { JWK } from "jose";
 import { z } from "zod";
 import { GameEnv, parseGameEnv } from "../core/configuration/Config";
+import { isOpenFrontAccountApiEnabled } from "../core/OpenFrontAccountApi";
 import { GameID } from "../core/Schemas";
 import { generateID, simpleHash } from "../core/Util";
 
@@ -90,6 +91,9 @@ export class ServerEnv {
       : `https://api.${audience}`;
   }
   static async jwkPublicKey(): Promise<JWK> {
+    if (!isOpenFrontAccountApiEnabled()) {
+      throw new Error("OpenFront account API disabled");
+    }
     if (ServerEnv.publicKey) return ServerEnv.publicKey;
     const jwksUrl = ServerEnv.jwtIssuer() + "/.well-known/jwks.json";
     console.log(`Fetching JWKS from ${jwksUrl}`);

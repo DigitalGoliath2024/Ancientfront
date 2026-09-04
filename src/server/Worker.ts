@@ -9,6 +9,7 @@ import { WebSocket, WebSocketServer } from "ws";
 import { z } from "zod";
 import { GameEnv } from "../core/configuration/Config";
 import { GameType } from "../core/game/Game";
+import { isOpenFrontAccountApiEnabled } from "../core/OpenFrontAccountApi";
 import {
   ClientMessage,
   ID,
@@ -78,7 +79,9 @@ export async function startWorker() {
 
   setTimeout(
     () => {
-      startMatchmakingPolling(gm);
+      if (isOpenFrontAccountApiEnabled()) {
+        startMatchmakingPolling(gm);
+      }
     },
     1000 + Math.random() * 2000,
   );
@@ -93,7 +96,9 @@ export async function startWorker() {
     ServerEnv.jwtIssuer() + "/reserved_clan_tags",
     log,
   );
-  privilegeRefresher.start();
+  if (isOpenFrontAccountApiEnabled()) {
+    privilegeRefresher.start();
+  }
 
   // Ahead of everything that can reject a request — the worker-prefix check
   // below and the rate limiter further down — so that a 404 or a 429 still
@@ -301,8 +306,9 @@ export async function startWorker() {
       }
 
       // Dev has no subscription backend; skip the check so the feature is
-      // testable locally (same precedent as Turnstile).
-      if (ServerEnv.env() !== GameEnv.Dev) {
+      // testable locally (same precedent as Turnstile). This fork also skips
+      // when the OpenFront account API is disabled.
+      if (ServerEnv.env() !== GameEnv.Dev && isOpenFrontAccountApiEnabled()) {
         const userMe = await getUserMe(token);
         if (userMe.type === "error") {
           log.warn(
@@ -576,7 +582,7 @@ export async function startWorker() {
             ws.close(1002, "Unauthorized");
             return;
           }
-        } else {
+        } else if (isOpenFrontAccountApiEnabled()) {
           // Verify token and get player permissions
           const result = await getUserMe(clientMsg.token);
           if (result.type === "error") {

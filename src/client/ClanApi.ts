@@ -20,6 +20,7 @@ import {
   DiscordInviteResponseSchema,
   JoinClanResponseSchema,
 } from "../core/ClanApiSchemas";
+import { fetchAccountApi } from "./accountApiFetch";
 import { getApiBase, getUserMe } from "./Api";
 import { getAuthHeader } from "./Auth";
 
@@ -50,7 +51,7 @@ async function clanFetch(
   options?: RequestInit,
 ): Promise<Response> {
   const url = `${getApiBase()}${path}`;
-  return fetch(url, {
+  return fetchAccountApi(url, {
     ...options,
     headers: {
       Accept: "application/json",
@@ -64,9 +65,12 @@ export async function fetchClanLeaderboard(): Promise<
   ClanLeaderboardResponse | false
 > {
   try {
-    const res = await fetch(`${getApiBase()}/public/clans/leaderboard`, {
-      headers: { Accept: "application/json" },
-    });
+    const res = await fetchAccountApi(
+      `${getApiBase()}/public/clans/leaderboard`,
+      {
+        headers: { Accept: "application/json" },
+      },
+    );
 
     if (!res.ok) {
       console.warn(
@@ -140,7 +144,7 @@ export async function fetchClanDetail(tag: string): Promise<ClanInfo | false> {
 export async function fetchClanExists(tag: string): Promise<boolean | null> {
   try {
     const path = `/public/clan/${encodeURIComponent(tag.toUpperCase())}/exists`;
-    const res = await fetch(`${getApiBase()}${path}`, {
+    const res = await fetchAccountApi(`${getApiBase()}${path}`, {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(CLAN_EXISTS_FETCH_TIMEOUT_MS),
     });

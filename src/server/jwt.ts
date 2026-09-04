@@ -7,6 +7,7 @@ import {
   UserMeResponseSchema,
 } from "../core/ApiSchemas";
 import { GameEnv } from "../core/configuration/Config";
+import { isOpenFrontAccountApiEnabled } from "../core/OpenFrontAccountApi";
 import { PersistentIdSchema } from "../core/Schemas";
 import { ServerEnv } from "./ServerEnv";
 
@@ -22,7 +23,7 @@ export async function verifyClientToken(
   token: string,
 ): Promise<TokenVerificationResult> {
   if (PersistentIdSchema.safeParse(token).success) {
-    if (ServerEnv.env() === GameEnv.Dev) {
+    if (ServerEnv.env() === GameEnv.Dev || !isOpenFrontAccountApiEnabled()) {
       return { type: "success", persistentId: token, claims: null };
     } else {
       return {
@@ -30,6 +31,9 @@ export async function verifyClientToken(
         message: "persistent ID not allowed in production",
       };
     }
+  }
+  if (!isOpenFrontAccountApiEnabled()) {
+    return { type: "error", message: "OpenFront account API disabled" };
   }
   try {
     const issuer = ServerEnv.jwtIssuer();
@@ -69,6 +73,12 @@ export async function getUserMe(
   | { type: "error"; message: string }
 > {
   try {
+    if (!isOpenFrontAccountApiEnabled()) {
+      return {
+        type: "error",
+        message: "OpenFront account API disabled",
+      };
+    }
     // Get the user object
     const response = await fetch(ServerEnv.jwtIssuer() + "/users/@me", {
       headers: {

@@ -1,3 +1,4 @@
+import { fetchAccountApi } from "./accountApiFetch";
 import { getApiBase } from "./Api";
 import { getAuthHeader, logOut } from "./Auth";
 
@@ -205,7 +206,7 @@ export async function fetchSteamLinkTicket(
   token: string,
 ): Promise<SteamLinkTicketResult> {
   try {
-    const response = await fetch(
+    const response = await fetchAccountApi(
       `${getApiBase()}/auth/steam/link_ticket/${encodeURIComponent(token)}`,
       { headers: { Accept: "application/json" } },
     );
@@ -264,7 +265,7 @@ async function postSteamLinkRedeem(
     const authHeader = await getAuthHeader();
     if (authHeader === "") return { ok: false, reason: "failed" };
 
-    const response = await fetch(`${getApiBase()}/auth/steam/link`, {
+    const response = await fetchAccountApi(`${getApiBase()}/auth/steam/link`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

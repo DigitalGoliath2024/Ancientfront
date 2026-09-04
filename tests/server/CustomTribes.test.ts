@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { setOpenFrontAccountApiEnabled } from "../../src/core/OpenFrontAccountApi";
 import { fetchCustomTribes } from "../../src/server/CustomTribes";
 
 // fetchCustomTribes resolves its endpoint from ServerEnv.jwtIssuer(), which
@@ -12,6 +13,7 @@ function jsonResponse(body: unknown, status = 200) {
 describe("fetchCustomTribes", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    setOpenFrontAccountApiEnabled(true);
   });
 
   it("posts the lobby players and returns the tribes", async () => {
@@ -100,5 +102,15 @@ describe("fetchCustomTribes", () => {
       vi.fn().mockRejectedValue(new Error("connect ECONNREFUSED")),
     );
     await expect(fetchCustomTribes([])).rejects.toThrow("ECONNREFUSED");
+  });
+
+  it("returns an empty pool without contacting OpenFront when the API is off", async () => {
+    setOpenFrontAccountApiEnabled(false);
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    expect(
+      await fetchCustomTribes([{ clientId: "abcd1234", publicId: "p" }]),
+    ).toEqual([]);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

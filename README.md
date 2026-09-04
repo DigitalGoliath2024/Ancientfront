@@ -20,8 +20,8 @@ OpenFront **source code** is licensed under the **GNU Affero General Public Lice
 
 Current copyright notices appear in:
 
-- Footer: "© OpenFront and Contributors"
-- Loading screen: "© OpenFront and Contributors"
+- Footer: Marauder's Sea © 2026 [Flying V Studios](https://flyingveestudios.netlify.app/); based on and independently modified from OpenFront; **© OpenFront and Contributors**; not affiliated with or endorsed by OpenFront Inc.; Source Code, AGPL v3 License, and Asset Credits links
+- Loading screen: Marauder's Sea; independent modified version of OpenFront; **© OpenFront and Contributors**; Modified by [Flying V Studios](https://flyingveestudios.netlify.app/), 2026; not affiliated notice
 
 See the [LICENSE](LICENSE) for complete requirements.
 

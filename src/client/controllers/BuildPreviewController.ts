@@ -8,10 +8,7 @@
  */
 
 import { EventBus } from "../../core/EventBus";
-import {
-  listNukeBreakAlliance,
-  wouldNukeBreakAlliance,
-} from "../../core/execution/Util";
+import { listNukeBreakAlliance } from "../../core/execution/Util";
 import {
   BuildableUnit,
   bulkCost,
@@ -72,7 +69,6 @@ export function samThreatensNukePreview(
 export class BuildPreviewController implements Controller {
   /** Current ghost (null when no build type is active). */
   private ghostUnit: { buildableUnit: BuildableUnit } | null = null;
-  private readonly connectedAllySmallIds: Set<number> = new Set();
   private readonly usedSafetyAllies: Set<number> = new Set();
   private readonly mousePos = { x: 0, y: 0 };
   private lastGhostQueryAt: number = 0;
@@ -133,9 +129,10 @@ export class BuildPreviewController implements Controller {
           // follows the cursor, so smooth it the same way as the icon. When
           // upgrading, the circle is anchored to the existing structure's tile
           // (stationary, correctly snapped) — leave it alone in that case.
-          const radiusFollowsCursor = !(
-            ghost.canUpgrade && ghost.upgradeTargetTile !== null
-          );
+          // Naval mine range is the coastal placement zone, anchored to shore.
+          const radiusFollowsCursor =
+            !(ghost.canUpgrade && ghost.upgradeTargetTile !== null) &&
+            ghost.ghostType !== UnitType.NavalMine;
           this.view.updateGhostPreview({
             ...ghost,
             tileX: w.x - 0.5,
@@ -226,34 +223,10 @@ export class BuildPreviewController implements Controller {
       }
     }
 
-    // Check if targeting an ally (for nuke warning visual)
+    // Check if targeting an ally (for nuke warning visual). Nukes are not
+    // player-buildable in this era, so this stays false.
     let targetingAlly = false;
     const myPlayer = this.game.myPlayer();
-    const nukeType = this.ghostUnit.buildableUnit.type;
-    if (
-      tileRef &&
-      myPlayer &&
-      (nukeType === UnitType.AtomBomb || nukeType === UnitType.HydrogenBomb)
-    ) {
-      this.connectedAllySmallIds.clear();
-      const allies = myPlayer.allies();
-      for (let i = 0; i < allies.length; i++) {
-        const ally = allies[i];
-        if (!ally.isDisconnected()) {
-          this.connectedAllySmallIds.add(ally.smallID());
-        }
-      }
-
-      if (this.connectedAllySmallIds.size > 0) {
-        targetingAlly = wouldNukeBreakAlliance({
-          game: this.game,
-          targetTile: tileRef,
-          magnitude: this.game.config().nukeMagnitudes(nukeType),
-          allySmallIds: this.connectedAllySmallIds,
-          threshold: this.game.config().nukeAllianceBreakThreshold(),
-        });
-      }
-    }
 
     this.game
       ?.myPlayer()
@@ -322,103 +295,8 @@ export class BuildPreviewController implements Controller {
    * has no silos. Unlike the ghost icon, the trajectory also renders when
    * hovering impassable terrain (cursorLoop adds the blocked X there).
    */
-  private updateNukeTrajectoryPreview(tileRef: TileRef | undefined): void {
-    if (!this.ghostUnit || tileRef === undefined) {
-      this.clearNukeTrajectory();
-      return;
-    }
-    const type = this.ghostUnit.buildableUnit.type;
-    if (type !== UnitType.AtomBomb && type !== UnitType.HydrogenBomb) {
-      this.clearNukeTrajectory();
-      return;
-    }
-    const myPlayer = this.game.myPlayer();
-    if (!myPlayer) {
-      this.clearNukeTrajectory();
-      return;
-    }
-
-    // Mirror PlayerImpl.nukeSpawn (the source NukeExecution actually fires
-    // from): only silos that are active, not reloading, and not under
-    // construction are eligible, and the nearest (Manhattan distance) is
-    // chosen. Keeping these in sync prevents the preview arc from
-    // originating from a silo the game wouldn't use.
-    const silos = myPlayer
-      .units(UnitType.MissileSilo)
-      .filter(
-        (u) => u.isActive() && !u.isInCooldown() && !u.isUnderConstruction(),
-      );
-    if (silos.length === 0) {
-      this.clearNukeTrajectory();
-      return;
-    }
-
-    const dstX = this.game.x(tileRef);
-    const dstY = this.game.y(tileRef);
-    silos.sort(
-      (a, b) =>
-        Math.abs(this.game.x(a.tile()) - dstX) +
-        Math.abs(this.game.y(a.tile()) - dstY) -
-        (Math.abs(this.game.x(b.tile()) - dstX) +
-          Math.abs(this.game.y(b.tile()) - dstY)),
-    );
-
-    const bestSilo = silos[0];
-    const directionUp = this.uiState.rocketDirectionUp;
-    const srcX = this.game.x(bestSilo.tile());
-    const srcY = this.game.y(bestSilo.tile());
-
-    // Non-friendly SAMs threaten the trajectory; own + teammate + allied SAMs
-    // don't — except allies this strike would betray: the alliance breaks at
-    // launch (NukeExecution.maybeBreakAlliances), so their SAMs will intercept.
-    // Teammates have no such exception (a strike never breaks a team).
-    // listNukeBreakAlliance is the same function the sim uses there.
-    const teammateIds = new Set<number>();
-    for (const p of this.game.players()) {
-      if (myPlayer.isOnSameTeam(p)) teammateIds.add(p.smallID());
-    }
-    const allyIds = new Set<number>();
-    for (const a of myPlayer.allies()) allyIds.add(a.smallID());
-    const betrayedIds: ReadonlySet<number> =
-      allyIds.size > 0
-        ? listNukeBreakAlliance({
-            game: this.game,
-            targetTile: tileRef,
-            magnitude: this.game.config().nukeMagnitudes(type),
-            threshold: this.game.config().nukeAllianceBreakThreshold(),
-          })
-        : new Set();
-    const sams: SAMInfo[] = [];
-    for (const s of this.game.units(UnitType.SAMLauncher)) {
-      if (!s.isActive()) continue;
-      const owner = s.owner();
-      if (owner === myPlayer) continue;
-      if (
-        !samThreatensNukePreview(
-          owner.smallID(),
-          teammateIds,
-          allyIds,
-          betrayedIds,
-        )
-      ) {
-        continue;
-      }
-      const r = this.game.config().samRange(s.level());
-      sams.push({
-        x: this.game.x(s.tile()),
-        y: this.game.y(s.tile()),
-        r,
-      });
-    }
-
-    // Stash the static inputs; cursorLoop rebuilds the Bezier each frame with
-    // the live cursor as the destination so the arc tracks smoothly.
-    this.nukeTrajectoryStatic = {
-      srcX,
-      srcY,
-      directionUp,
-      sams,
-    };
+  private updateNukeTrajectoryPreview(_tileRef: TileRef | undefined): void {
+    this.clearNukeTrajectory();
   }
 
   private clearNukeTrajectory(): void {
@@ -446,7 +324,9 @@ export class BuildPreviewController implements Controller {
     // Range circle: SAM placement preview shows targetable radius; nuke
     // previews show the outer blast radius at the target tile.
     let rangeRadius = 0;
-    switch (u.type) {
+    let radiusTileX = this.game.x(tileRef);
+    let radiusTileY = this.game.y(tileRef);
+    switch (u.type as UnitType) {
       case UnitType.SAMLauncher: {
         const level = this.resolveGhostRangeLevel(u) ?? 1;
         rangeRadius = this.game.config().samRange(level);
@@ -467,9 +347,20 @@ export class BuildPreviewController implements Controller {
         rangeRadius = this.game.config().portGunRange(level);
         break;
       }
+      case UnitType.NavalMine: {
+        rangeRadius = this.game.config().navalMineRange();
+        const shore = nearestOwnedLandTileView(
+          this.game,
+          myPlayer.smallID(),
+          tileRef,
+        );
+        if (shore !== null) {
+          radiusTileX = this.game.x(shore);
+          radiusTileY = this.game.y(shore);
+        }
+        break;
+      }
     }
-    let radiusTileX = this.game.x(tileRef);
-    let radiusTileY = this.game.y(tileRef);
     if (
       rangeRadius > 0 &&
       u.canUpgrade !== false &&
@@ -479,18 +370,10 @@ export class BuildPreviewController implements Controller {
       radiusTileY = this.game.y(upgradeTargetTile);
     }
 
-    const isNuke = u.type === UnitType.AtomBomb;
     const multiplier =
-      u.canUpgrade !== false || isNuke
-        ? (this.uiState.upgradeMultiplier ?? 1)
-        : 1;
+      u.canUpgrade !== false ? (this.uiState.upgradeMultiplier ?? 1) : 1;
     const cost = bulkCost(u, multiplier);
-    // Drives the red cost label: gold short of the bulk total, or (for
-    // bombs) fewer loaded silo tubes than the selected amount.
-    let canAfford = myPlayer.gold() >= cost;
-    if (isNuke) {
-      canAfford &&= myPlayer.readyMissileCount() >= multiplier;
-    }
+    const canAfford = myPlayer.gold() >= cost;
     return {
       ghostType: u.type,
       tileX: this.game.x(tileRef),
@@ -547,25 +430,15 @@ export class BuildPreviewController implements Controller {
       );
       this.removeGhostStructure();
     } else if (this.ghostUnit.buildableUnit.canBuild) {
-      const unitType = this.ghostUnit.buildableUnit.type;
+      const unitType: UnitType = this.ghostUnit.buildableUnit.type;
       const targetTile = this.game.ref(tile.x, tile.y);
 
       if (this.shouldBlockRecentAllyNuke(targetTile, unitType)) {
         return;
       }
 
-      const isNuke = unitType === UnitType.AtomBomb;
-      const rocketDirectionUp =
-        unitType === UnitType.AtomBomb || unitType === UnitType.HydrogenBomb
-          ? this.uiState.rocketDirectionUp
-          : undefined;
       this.eventBus.emit(
-        new BuildUnitIntentEvent(
-          unitType,
-          targetTile,
-          rocketDirectionUp,
-          isNuke ? this.uiState.upgradeMultiplier || 1 : undefined,
-        ),
+        new BuildUnitIntentEvent(unitType, targetTile),
       );
       if (!shouldPreserveGhostAfterBuild(unitType)) {
         this.removeGhostStructure();
@@ -669,7 +542,7 @@ export class BuildPreviewController implements Controller {
     buildableUnit: BuildableUnit,
   ): number | undefined {
     if (
-      buildableUnit.type !== UnitType.SAMLauncher &&
+      (buildableUnit.type as UnitType) !== UnitType.SAMLauncher &&
       buildableUnit.type !== UnitType.PortGun
     ) {
       return undefined;
@@ -684,4 +557,36 @@ export class BuildPreviewController implements Controller {
     }
     return 1;
   }
+}
+
+function nearestOwnedLandTileView(
+  game: GameView,
+  ownerSmallID: number,
+  from: TileRef,
+): TileRef | null {
+  const seen = new Set<TileRef>([from]);
+  let frontier: TileRef[] = [from];
+  let dist = 0;
+  const maxDist = game.config().navalMineRange() + 5;
+  while (frontier.length > 0 && dist <= maxDist) {
+    const next: TileRef[] = [];
+    for (const cur of frontier) {
+      if (
+        game.isLand(cur) &&
+        !game.isImpassable(cur) &&
+        game.ownerID(cur) === ownerSmallID
+      ) {
+        return cur;
+      }
+      for (const n of game.neighbors(cur)) {
+        if (!seen.has(n)) {
+          seen.add(n);
+          next.push(n);
+        }
+      }
+    }
+    frontier = next;
+    dist++;
+  }
+  return null;
 }

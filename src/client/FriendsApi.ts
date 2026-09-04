@@ -6,6 +6,7 @@ import {
   type SendFriendRequestResponse,
   SendFriendRequestResponseSchema,
 } from "../core/ApiSchemas";
+import { fetchAccountApi } from "./accountApiFetch";
 import { getApiBase } from "./Api";
 import { getAuthHeader } from "./Auth";
 
@@ -13,7 +14,7 @@ async function friendsFetch(
   path: string,
   options?: RequestInit,
 ): Promise<Response> {
-  return fetch(`${getApiBase()}${path}`, {
+  return fetchAccountApi(`${getApiBase()}${path}`, {
     ...options,
     headers: {
       Accept: "application/json",
@@ -55,7 +56,7 @@ export async function fetchFriends(
     const url = new URL(`${getApiBase()}/friends`);
     url.searchParams.set("page", String(page));
     url.searchParams.set("limit", String(limit));
-    const res = await fetch(url.toString(), {
+    const res = await fetchAccountApi(url.toString(), {
       headers: {
         Accept: "application/json",
         Authorization: await getAuthHeader(),

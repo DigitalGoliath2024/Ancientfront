@@ -14,6 +14,7 @@ import {
   UT_TRAIN,
   UT_WARSHIP,
   UT_MARAUDER,
+  UT_NAVAL_MINE,
 } from "../../../types";
 import { DynamicInstanceBuffer } from "../../DynamicBuffer";
 import type { RenderSettings } from "../../RenderSettings";
@@ -359,6 +360,12 @@ export class FxSpritePass {
       } else {
         this.pushFx(x, y, FX_SAM_EXPLOSION, now);
       }
+      return;
+    }
+
+    if (typeName === UT_NAVAL_MINE) {
+      this.pushFx(x, y, FX_UNIT_EXPLOSION, now);
+      this.pushFx(x, y, FX_MINI_EXPLOSION, now);
       return;
     }
 

@@ -1,7 +1,6 @@
 import { LitElement, html } from "lit";
 import { customElement } from "lit/decorators.js";
 import { assetUrl } from "../../core/AssetUrls";
-import "./NavAccountMenu";
 import "./NavUtilityIcons";
 
 @customElement("play-page")
@@ -14,7 +13,7 @@ export class PlayPage extends LitElement {
     return html`
       <div
         id="page-play"
-        class="flex flex-col gap-2 w-full px-0 lg:px-4 min-h-0 lg:flex-1 lg:h-full lg:overflow-hidden"
+        class="flex flex-col gap-2 w-full px-0 lg:px-4 min-h-0 lg:flex-1 lg:h-full lg:overflow-y-auto"
       >
         <token-login class="absolute"></token-login>
         <rewards-modal class="absolute"></rewards-modal>
@@ -53,18 +52,25 @@ export class PlayPage extends LitElement {
             <div
               class="col-start-2 flex items-center justify-center text-malibu-blue min-w-0"
             >
-              <img
-                src=${assetUrl("images/GameLogo.jpg")}
-                alt="Marauder's Sea"
-                class="h-full w-auto max-h-12 object-contain"
-              />
+              <button
+                type="button"
+                class="nav-menu-item cursor-pointer bg-transparent border-0 p-0 h-full"
+                data-page="page-play"
+                data-i18n-aria-label="main.title"
+                data-i18n-title="main.title"
+              >
+                <img
+                  src=${assetUrl("images/GameLogo.jpg")}
+                  alt="Marauder's Sea"
+                  class="h-full w-auto max-h-12 object-contain"
+                />
+              </button>
             </div>
 
             <div
               class="col-start-3 justify-self-end shrink-0 flex items-center gap-0.5"
             >
               <nav-utility-icons size="mobile"></nav-utility-icons>
-              <nav-account-menu variant="mobile"></nav-account-menu>
             </div>
           </div>
         </div>

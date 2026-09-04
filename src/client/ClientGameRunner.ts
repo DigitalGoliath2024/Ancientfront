@@ -15,7 +15,7 @@ import { createPartialGameRecord, findClosestBy, replacer } from "../core/Util";
 import {
   BuildableUnit,
   PlayerType,
-  Structures,
+  BuildMenus,
   UnitType,
 } from "../core/game/Game";
 import { TileRef } from "../core/game/GameMap";
@@ -1207,7 +1207,7 @@ export class ClientGameRunner {
   }
 
   private findAndUpgradeNearestBuilding(clickedTile: TileRef) {
-    this.myPlayer!.actions(clickedTile, Structures.types).then((actions) => {
+    this.myPlayer!.actions(clickedTile, BuildMenus.types).then((actions) => {
       const upgradeUnits: {
         unitId: number;
         unitType: UnitType;

@@ -4,6 +4,7 @@ import { parse } from "node-html-parser";
 import path from "path";
 import type { Logger } from "winston";
 import { z } from "zod";
+import { isOpenFrontAccountApiEnabled } from "../core/OpenFrontAccountApi";
 import { GAME_ID_REGEX, GameInfo } from "../core/Schemas";
 import { replacer } from "../core/Util";
 import type { GameManager } from "./GameManager";
@@ -47,6 +48,7 @@ export function registerGamePreviewRoute(opts: {
   const fetchPublicGameInfo = async (
     gameID: string,
   ): Promise<ExternalGameInfo | null> => {
+    if (!isOpenFrontAccountApiEnabled()) return null;
     if (!gameIDSchema.safeParse(gameID).success) return null;
 
     const controller = new AbortController();

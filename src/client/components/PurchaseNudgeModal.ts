@@ -1,6 +1,7 @@
 import { html, LitElement, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import type { UserMeResponse } from "../../core/ApiSchemas";
+import { isOpenFrontAccountApiEnabled } from "../../core/OpenFrontAccountApi";
 import { crazyGamesSDK } from "../CrazyGamesSDK";
 import { isDesktopShell } from "../DesktopShell";
 import { getGamesPlayed, translateText } from "../Utils";
@@ -25,6 +26,7 @@ export class PurchaseNudgeModal extends LitElement {
   @state() private isVisible = false;
 
   private onUserMeResponse = (event: Event) => {
+    if (!isOpenFrontAccountApiEnabled()) return;
     if (this.isVisible) return;
     const detail = (event as CustomEvent<UserMeResponse | false>).detail;
     if (detail !== false && detail.player.adfree === true) {

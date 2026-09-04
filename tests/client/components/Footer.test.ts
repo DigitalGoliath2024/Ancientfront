@@ -1,9 +1,14 @@
 import version from "resources/version.txt?raw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  AGPL_LICENSE_URL,
+  ASSET_CREDITS_URL,
+  FLYING_V_STUDIOS_URL,
+  SOURCE_REPO_URL,
+} from "../../../src/client/Attribution";
 import { Footer } from "../../../src/client/components/Footer";
 
-// version.txt is a build-time placeholder in the repo, so derive the expected
-// label from the same source the component reads rather than hardcoding it.
+// version.txt is the shipped game version shown next to the GitHub icon.
 const gameVersion = `v${version.trim().replace(/^v/, "")}`;
 
 describe("page-footer version line", () => {
@@ -32,7 +37,14 @@ describe("page-footer version line", () => {
     await mount();
 
     const line = footer.querySelector(".footer-version");
+    expect(line?.textContent?.trim()).toBe("v0.1.0");
     expect(line?.textContent?.trim()).toBe(gameVersion);
+    const github = footer.querySelector('a[href="' + SOURCE_REPO_URL + '"] img');
+    expect(github).toBeTruthy();
+    expect(github?.parentElement?.nextElementSibling).toBe(line);
+    const bar = footer.querySelector("footer");
+    expect(bar?.className).toContain("py-1");
+    expect(bar?.className).not.toContain("py-2");
   });
 
   it("appends the shell version inside the desktop shell", async () => {
@@ -50,6 +62,25 @@ describe("page-footer version line", () => {
 
   // The bridge lives in a separate private repo, so the footer must degrade to
   // the game version alone rather than render a broken label.
+  it("keeps OpenFront copyright and source, license, and credits links", async () => {
+    await mount();
+
+    expect(footer.querySelector('[data-i18n="main.copyright"]')).toBeTruthy();
+    expect(
+      footer.querySelector('[data-i18n="main.footer_product_prefix"]'),
+    ).toBeTruthy();
+    expect(
+      footer.querySelector('[data-i18n="main.modification_notice"]'),
+    ).toBeTruthy();
+    expect(footer.querySelector('[data-i18n="main.not_affiliated"]')).toBeTruthy();
+
+    const hrefs = [...footer.querySelectorAll("a")].map((a) => a.getAttribute("href"));
+    expect(hrefs).toContain(FLYING_V_STUDIOS_URL);
+    expect(hrefs).toContain(SOURCE_REPO_URL);
+    expect(hrefs).toContain(AGPL_LICENSE_URL);
+    expect(hrefs).toContain(ASSET_CREDITS_URL);
+  });
+
   it("falls back to the game version when the bridge rejects", async () => {
     window.openfrontDesktop = {
       version: () => Promise.reject(new Error("boom")),

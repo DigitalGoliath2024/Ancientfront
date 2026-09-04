@@ -109,82 +109,96 @@ export class NewsBox extends LitElement {
   }
 
   render() {
-    if (this.items.length === 0) return nothing;
-
     const item = this.items[this.activeIndex];
 
     return html`
       <div
-        class="px-3 py-3 bg-surface border-y border-white/10 lg:border-y-0 lg:rounded-xl w-full h-[clamp(5.5rem,28vw,150px)] overflow-hidden flex"
+        class="px-3 py-2 bg-surface border-y border-white/10 lg:border-y-0 lg:rounded-xl w-full min-h-0 overflow-hidden flex flex-col gap-1"
       >
-        <div class="flex items-start gap-3 w-full min-h-0">
-          <span
-            class="shrink-0 text-[10px] font-bold tracking-wider px-2 py-0.5 rounded ${typeLabelColors[
-              item.type
-            ] ?? typeLabelColors["announcement"]}"
-            >${translateText(
-              typeLabelKeys[item.type] ?? typeLabelKeys["announcement"],
-            )}</span
+        <p
+          class="shrink-0 text-sm sm:text-base font-display font-bold leading-snug text-gold"
+          data-news-welcome
+        >
+          ${translateText("news_box.welcome")}
+          <span class="text-ember"
+            >${translateText("news_box.welcome_strategy")}</span
           >
-          <div class="flex-1 min-w-0">
-            ${item.url
-              ? html`<a
-                  href="${item.url}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-sm font-medium text-white hover:text-white/70 transition-colors line-clamp-2 block"
-                  >${item.title}</a
-                >`
-              : html`<span
-                  class="text-sm font-medium text-white line-clamp-2 block"
-                  >${item.title}</span
-                >`}
-            <span
-              class="text-xs text-white/70 block line-clamp-3 [&_a]:text-white [&_a:hover]:underline"
-              >${renderMarkdown(
-                item.descriptionTranslationKey
-                  ? translateText(item.descriptionTranslationKey)
-                  : (item.description ?? ""),
-              )}</span
-            >
-          </div>
-          ${this.items.length > 1
-            ? html`
-                <div class="flex gap-1 shrink-0">
-                  ${this.items.map(
-                    (_, i) => html`
-                      <button
-                        @click=${() => this.goTo(i)}
-                        class="w-1.5 h-1.5 rounded-full transition-colors ${i ===
-                        this.activeIndex
-                          ? "bg-white/60"
-                          : "bg-white/20 hover:bg-white/40"}"
-                        aria-label="${translateText("news_box.go_to_item", {
-                          num: i + 1,
-                        })}"
-                      ></button>
-                    `,
-                  )}
+        </p>
+        ${item
+          ? html`
+              <div class="flex items-start gap-3 w-full min-h-0">
+                <span
+                  class="shrink-0 text-[10px] font-bold tracking-wider px-2 py-0.5 rounded ${typeLabelColors[
+                    item.type
+                  ] ?? typeLabelColors["announcement"]}"
+                  >${translateText(
+                    typeLabelKeys[item.type] ?? typeLabelKeys["announcement"],
+                  )}</span
+                >
+                <div class="flex-1 min-w-0">
+                  ${item.url
+                    ? html`<a
+                        href="${item.url}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-sm font-medium text-white hover:text-white/70 transition-colors line-clamp-2 block"
+                        >${item.title}</a
+                      >`
+                    : html`<span
+                        class="text-sm font-medium text-white line-clamp-2 block"
+                        >${item.title}</span
+                      >`}
+                  <span
+                    class="text-xs text-white/70 block line-clamp-3 [&_a]:text-white [&_a:hover]:underline"
+                    >${renderMarkdown(
+                      item.descriptionTranslationKey
+                        ? translateText(item.descriptionTranslationKey)
+                        : (item.description ?? ""),
+                    )}</span
+                  >
                 </div>
-              `
-            : nothing}
-          <button
-            @click=${() => this.dismiss(item.id)}
-            class="shrink-0 p-0.5 text-white/30 hover:text-white/70 transition-colors"
-            aria-label="${translateText("news_box.dismiss")}"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              class="w-3.5 h-3.5"
-            >
-              <path
-                d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"
-              />
-            </svg>
-          </button>
-        </div>
+                ${this.items.length > 1
+                  ? html`
+                      <div class="flex gap-1 shrink-0">
+                        ${this.items.map(
+                          (_, i) => html`
+                            <button
+                              @click=${() => this.goTo(i)}
+                              class="w-1.5 h-1.5 rounded-full transition-colors ${i ===
+                              this.activeIndex
+                                ? "bg-white/60"
+                                : "bg-white/20 hover:bg-white/40"}"
+                              aria-label="${translateText(
+                                "news_box.go_to_item",
+                                {
+                                  num: i + 1,
+                                },
+                              )}"
+                            ></button>
+                          `,
+                        )}
+                      </div>
+                    `
+                  : nothing}
+                <button
+                  @click=${() => this.dismiss(item.id)}
+                  class="shrink-0 p-0.5 text-white/30 hover:text-white/70 transition-colors"
+                  aria-label="${translateText("news_box.dismiss")}"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    class="w-3.5 h-3.5"
+                  >
+                    <path
+                      d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"
+                    />
+                  </svg>
+                </button>
+              </div>
+            `
+          : nothing}
       </div>
     `;
   }

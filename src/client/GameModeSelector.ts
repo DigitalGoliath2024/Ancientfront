@@ -2,6 +2,7 @@ import { html, LitElement, nothing, type TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { ClientEnv } from "src/client/ClientEnv";
 import { UserMeResponse } from "../core/ApiSchemas";
+import { assetUrl } from "../core/AssetUrls";
 import {
   Duos,
   GameMapType,
@@ -11,7 +12,11 @@ import {
   Quads,
   Trios,
 } from "../core/game/Game";
-import { PublicGameInfo, PublicGames } from "../core/Schemas";
+import {
+  PublicGameInfo,
+  PublicGames,
+  SCHEDULED_PUBLIC_GAME_TYPES,
+} from "../core/Schemas";
 import { getDesktopSessionState } from "./Auth";
 import "./components/CosmeticBackground";
 import "./components/IOSAddToHomeScreenBanner";
@@ -39,7 +44,6 @@ import { PublicLobbySocket } from "./LobbySocket";
 import { JoinLobbyEvent } from "./Main";
 import { SinglePlayerModal } from "./SinglePlayerModal";
 import { UsernameInput } from "./UsernameInput";
-import { assetUrl } from "../core/AssetUrls";
 import {
   calculateServerTimeOffset,
   getSecondsUntilServerTimestamp,
@@ -95,6 +99,76 @@ export function shouldBlockDesktopJoin(
 ): boolean {
   if (!joinIsGateable(lobby)) return false;
   return shouldBlockMultiplayerAction(update, session);
+}
+
+/** Live countdown games shown first on the homepage. */
+export const FEATURED_FILLING_COUNT = 3;
+/** Queued public games shown after the filling row, labeled "Up next". */
+export const FEATURED_UP_NEXT_COUNT = 3;
+export const FEATURED_LOBBY_COUNT =
+  FEATURED_FILLING_COUNT + FEATURED_UP_NEXT_COUNT;
+
+export interface FeaturedLobby {
+  lobby: PublicGameInfo;
+  upNext: boolean;
+}
+
+/**
+ * Homepage lobby cards: the three games currently filling, then the three
+ * queued behind them.
+ *
+ * Filling is the live lobby for each scheduled type (ffa / team / special) —
+ * the one with startsAt, else the front of that type's advertised list —
+ * ordered by soonest startsAt. Up next walks the same per-type queues in
+ * lockstep so the second row stays one of each type rather than three FFAs.
+ * Hosted listings are omitted; they are not part of the master's public queue.
+ */
+export function selectFeaturedLobbies(
+  games: PublicGames["games"] | undefined | null,
+): FeaturedLobby[] {
+  if (!games) return [];
+
+  const used = new Set<string>();
+  const filling: PublicGameInfo[] = [];
+
+  for (const type of SCHEDULED_PUBLIC_GAME_TYPES) {
+    const list = games[type];
+    if (!list?.length) continue;
+    const live = list.find((game) => game.startsAt !== undefined) ?? list[0];
+    if (used.has(live.gameID)) continue;
+    used.add(live.gameID);
+    filling.push(live);
+  }
+
+  filling.sort((a, b) => {
+    const aAt = a.startsAt;
+    const bAt = b.startsAt;
+    if (aAt === undefined && bAt === undefined) return 0;
+    if (aAt === undefined) return 1;
+    if (bAt === undefined) return -1;
+    return aAt - bAt;
+  });
+
+  const fillingPicks = filling
+    .slice(0, FEATURED_FILLING_COUNT)
+    .map((lobby) => ({ lobby, upNext: false }));
+
+  const queued: PublicGameInfo[] = [];
+  const maxLen = Math.max(
+    0,
+    ...SCHEDULED_PUBLIC_GAME_TYPES.map((type) => games[type]?.length ?? 0),
+  );
+  for (let i = 0; i < maxLen && queued.length < FEATURED_UP_NEXT_COUNT; i++) {
+    for (const type of SCHEDULED_PUBLIC_GAME_TYPES) {
+      const game = games[type]?.[i];
+      if (game === undefined || used.has(game.gameID)) continue;
+      used.add(game.gameID);
+      queued.push(game);
+      if (queued.length >= FEATURED_UP_NEXT_COUNT) break;
+    }
+  }
+
+  return [...fillingPicks, ...queued.map((lobby) => ({ lobby, upNext: true }))];
 }
 
 @customElement("game-mode-selector")
@@ -242,25 +316,27 @@ export class GameModeSelector extends LitElement {
 
     return html`
       <div
-        class="w-full h-full min-h-0 px-4 sm:px-0 mx-auto pb-4 lg:pb-0 flex flex-col lg:flex-row lg:items-stretch lg:justify-between gap-4 lg:gap-6"
+        class="w-full h-full min-h-0 px-4 sm:px-0 mx-auto pb-4 lg:pb-3 flex flex-col lg:flex-row lg:items-stretch lg:justify-between gap-4 lg:gap-6"
       >
         <div
-          class="flex flex-col gap-3 w-full lg:flex-1 lg:min-w-0 lg:min-h-0 lg:overflow-hidden"
+          class="flex flex-col gap-3 w-full lg:flex-1 lg:min-w-0 lg:min-h-0 lg:overflow-y-auto"
         >
           <news-box class="block w-full shrink-0"></news-box>
 
           <div
-            class="relative bg-black rounded-xl overflow-visible flex flex-col gap-2 p-2 sm:p-3"
+            class="relative bg-black rounded-xl overflow-hidden flex flex-col gap-2 p-2 sm:p-3 lg:flex-1 lg:min-h-0"
           >
             <cosmetic-background
               class="absolute inset-0 z-0 overflow-hidden rounded-xl pointer-events-none"
             ></cosmetic-background>
-            <div class="relative z-10 flex flex-col gap-2">
-              <div class="flex items-center justify-center px-2 pt-1 pb-1">
+            <div class="relative z-10 flex flex-col gap-2 flex-1 min-h-0">
+              <div
+                class="flex items-center justify-center px-2 pt-1 pb-1 flex-1 min-h-[10rem] lg:min-h-0"
+              >
                 <img
                   src=${assetUrl("images/GameLogo.jpg")}
                   alt="Marauder's Sea"
-                  class="w-auto max-w-full h-[250px] lg:h-[280px] object-contain"
+                  class="w-auto max-w-full object-contain h-52 sm:h-64 lg:h-full lg:max-h-[17.5rem]"
                 />
               </div>
               <div class="rounded-lg bg-black/80 p-1 shrink-0">
@@ -269,21 +345,21 @@ export class GameModeSelector extends LitElement {
                 ></username-input>
               </div>
               <div class="grid grid-cols-2 gap-2 shrink-0">
-                <div class="h-11 lg:h-14">
+                <div class="h-11">
                   ${this.renderSmallActionCard(
                     translateText("main.solo"),
                     this.openSinglePlayerModal,
                     SOLO_BTN,
                   )}
                 </div>
-                <div class="h-11 lg:h-14">
+                <div class="h-11">
                   ${this.renderSmallActionCard(
                     translateText("main.detailed_view"),
                     this.openDetailedView,
                     ACTION_BTN,
                   )}
                 </div>
-                <div class="h-11 lg:h-14">
+                <div class="h-11">
                   ${this.renderSmallActionCard(
                     translateText("main.create"),
                     this.openHostLobby,
@@ -292,16 +368,22 @@ export class GameModeSelector extends LitElement {
                     true,
                   )}
                 </div>
-                <div class="h-11 lg:h-14">
+                <div class="h-11">
                   ${this.renderSmallActionCard(
                     translateText("mode_selector.ranked_title"),
                     this.openRankedMenu,
                     ACTION_BTN,
                     undefined,
                     true,
+                    {
+                      unavailable: true,
+                      subtitle: translateText(
+                        "mode_selector.ranked_coming_soon",
+                      ),
+                    },
                   )}
                 </div>
-                <div class="col-span-2 h-11 lg:h-14">
+                <div class="col-span-2 h-11">
                   ${this.renderSmallActionCard(
                     translateText("main.join"),
                     this.openJoinLobby,
@@ -324,29 +406,27 @@ export class GameModeSelector extends LitElement {
         </div>
 
         <div
-          class="w-full min-w-0 shrink-0 flex justify-center lg:justify-end lg:h-full lg:max-h-full lg:aspect-square lg:w-auto"
+          class="w-full min-w-0 shrink-0 flex justify-center lg:justify-end lg:items-start lg:flex-[1.25] lg:w-auto lg:min-h-0 lg:overflow-y-auto"
         >
           ${this.lobbies === null
             ? html`<div
-                class="flex items-center justify-center rounded-2xl bg-black/40 w-full aspect-square"
+                class="flex items-center justify-center rounded-2xl bg-black/40 w-full aspect-square lg:aspect-auto lg:min-h-64"
               >
                 <span
                   class="w-24 h-24 border-[6px] border-white/20 border-t-white rounded-full animate-spin"
                 ></span>
               </div>`
             : html`<div
-                class="grid grid-cols-2 gap-3 w-full lg:h-full"
+                class="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 w-full"
               >
-                ${[0, 1, 2, 3].map((i) => {
-                  const lobby = picks[i];
-                  return html`<div
-                    class="min-w-0"
-                    style="aspect-ratio: 1 / 1"
-                  >
-                    ${lobby
+                ${Array.from({ length: FEATURED_LOBBY_COUNT }, (_, i) => {
+                  const pick = picks[i];
+                  return html`<div class="min-w-0 aspect-square">
+                    ${pick
                       ? this.renderLobbyCard(
-                          lobby,
-                          this.getLobbyTitle(lobby),
+                          pick.lobby,
+                          this.getLobbyTitle(pick.lobby),
+                          pick.upNext,
                         )
                       : html`<div
                           class="h-full w-full rounded-2xl bg-surface/40 border border-white/10"
@@ -365,24 +445,8 @@ export class GameModeSelector extends LitElement {
     `;
   }
 
-  private featuredLobbies(): PublicGameInfo[] {
-    const games = this.lobbies?.games;
-    if (!games) return [];
-    const picks: PublicGameInfo[] = [];
-    const used = new Set<string>();
-    const push = (game?: PublicGameInfo) => {
-      if (game === undefined || used.has(game.gameID)) return;
-      used.add(game.gameID);
-      picks.push(game);
-    };
-    push(games.ffa?.[0]);
-    push(games.team?.[0]);
-    push(games.special?.[0]);
-    push(games.ffa?.[1]);
-    push(games.team?.[1]);
-    push(games.hosted?.[0]);
-    push(games.special?.[1]);
-    return picks.slice(0, 4);
+  private featuredLobbies(): FeaturedLobby[] {
+    return selectFeaturedLobbies(this.lobbies?.games);
   }
 
   private blockedByUpdate(): boolean {
@@ -405,11 +469,8 @@ export class GameModeSelector extends LitElement {
     return true;
   }
 
-  private openRankedMenu = () => {
-    if (this.blockedByUpdate()) return;
-    if (!this.validateUsername()) return;
-    window.showPage?.("page-ranked");
-  };
+  // Ranked matchmaking is not shipped in this fork; the card stays visible.
+  private openRankedMenu = () => undefined;
 
   private openDetailedView = () => {
     if (!this.validateUsername()) return;
@@ -450,6 +511,7 @@ export class GameModeSelector extends LitElement {
     // the solo card is never gated (see openSinglePlayerModal) and must never
     // show as disabled here.
     gated: boolean = false,
+    extras: { unavailable?: boolean; subtitle?: string } = {},
   ) {
     const blocked =
       gated &&
@@ -457,24 +519,33 @@ export class GameModeSelector extends LitElement {
         this.desktopUpdateState,
         this.desktopSessionState,
       );
+    const unavailable = extras.unavailable === true;
+    const disabled = !this.inputValid || unavailable;
     const labelColor =
       bgClass.includes("text-white") || bgClass.includes("text-black")
         ? ""
         : "text-white";
     return html`
       <button
-        @click=${onClick}
-        ?disabled=${!this.inputValid}
-        aria-disabled=${blocked}
-        class="relative flex items-center justify-center w-full h-full rounded-lg font-button ${bgClass} ${labelColor} transition-all duration-200 text-sm lg:text-base font-medium uppercase tracking-wider text-center ${!this
-          .inputValid
+        @click=${unavailable ? undefined : onClick}
+        ?disabled=${disabled}
+        aria-disabled=${blocked || unavailable}
+        class="relative flex items-center justify-center w-full h-full rounded-lg font-button ${bgClass} ${labelColor} transition-all duration-200 text-sm lg:text-base font-medium uppercase tracking-wider text-center ${disabled
           ? "opacity-50 cursor-not-allowed pointer-events-none"
           : blocked
             ? "opacity-50 cursor-not-allowed"
             : ""}"
         style="color: white"
       >
-        ${title}
+        <span class="flex flex-col items-center justify-center leading-tight">
+          <span>${title}</span>
+          ${extras.subtitle
+            ? html`<span
+                class="normal-case tracking-normal text-[10px] lg:text-xs font-normal opacity-80"
+                >${extras.subtitle}</span
+              >`
+            : nothing}
+        </span>
         ${badge
           ? html`<span
               class="absolute -top-2 -right-2 min-w-[1.375rem] h-[1.375rem] px-1.5 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold tracking-normal"
@@ -488,6 +559,7 @@ export class GameModeSelector extends LitElement {
   private renderLobbyCard(
     lobby: PublicGameInfo,
     titleContent: string | TemplateResult,
+    upNext = false,
   ) {
     const timeRemaining = lobby.startsAt
       ? getSecondsUntilServerTimestamp(lobby.startsAt, this.serverTimeOffset)
@@ -496,7 +568,9 @@ export class GameModeSelector extends LitElement {
     let timeDisplay: string;
     let timeDisplayUppercase = false;
     if (timeRemaining === undefined) {
-      timeDisplay = renderDuration(this.defaultLobbyTime);
+      // Queued games have no countdown yet; the "Up next" pill is the label.
+      // Filling cards without startsAt keep the default duration placeholder.
+      timeDisplay = upNext ? "" : renderDuration(this.defaultLobbyTime);
     } else if (timeRemaining > 0) {
       timeDisplay = renderDuration(timeRemaining);
     } else {
@@ -513,6 +587,7 @@ export class GameModeSelector extends LitElement {
       subtitle: titleContent,
       timeDisplay,
       timeDisplayUppercase,
+      upNext,
       disabled: !this.inputValid,
       blocked: shouldBlockMultiplayerAction(
         this.desktopUpdateState,

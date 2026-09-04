@@ -1,4 +1,5 @@
 import { ShellExecution } from "../src/core/execution/ShellExecution";
+import { WarshipExecution } from "../src/core/execution/WarshipExecution";
 import {
   Game,
   Player,
@@ -7,7 +8,14 @@ import {
   Unit,
   UnitType,
 } from "../src/core/game/Game";
+import {
+  assignWarshipVolleyTargets,
+  warshipMaxRankRepairHpThisTick,
+  warshipShellCountForVeterancy,
+  warshipShellDamagePercent,
+} from "../src/core/game/Veterancy";
 import { setup } from "./util/Setup";
+import { executeTicks } from "./util/utils";
 
 const coastX = 7;
 let game: Game;
@@ -158,17 +166,34 @@ describe("Warship veterancy", () => {
     expect(transport.veterancy()).toBe(0);
   });
 
-  test("shell damage scales with the firing warship's veterancy", () => {
-    const maxVet = game.config().warshipMaxVeterancy();
-    const bonusPercent = game.config().warshipVeterancyShellDamageBonus();
-    const target = buildWarship(defender, coastX + 5, 10);
+  test("warship shell count is 1, 1, 2, 3 by veterancy rank", () => {
+    expect(warshipShellCountForVeterancy(0)).toBe(1);
+    expect(warshipShellCountForVeterancy(1)).toBe(1);
+    expect(warshipShellCountForVeterancy(2)).toBe(2);
+    expect(warshipShellCountForVeterancy(3)).toBe(3);
+    expect(game.config().warshipVeterancyShellCount(0)).toBe(1);
+    expect(game.config().warshipVeterancyShellCount(1)).toBe(1);
+    expect(game.config().warshipVeterancyShellCount(2)).toBe(2);
+    expect(game.config().warshipVeterancyShellCount(3)).toBe(3);
+  });
 
+  test("heavy-round damage is +50% from rank 1 onward, not stacked", () => {
+    const bonusPercent = game.config().warshipVeterancyShellDamageBonus();
+    expect(bonusPercent).toBe(50);
+    expect(warshipShellDamagePercent(0, bonusPercent)).toBe(100);
+    expect(warshipShellDamagePercent(1, bonusPercent)).toBe(150);
+    expect(warshipShellDamagePercent(3, bonusPercent)).toBe(150);
+
+    const target = buildWarship(defender, coastX + 5, 10);
     const baseShooter = buildWarship(attacker, coastX, 10);
-    const vetShooter = buildWarship(attacker, coastX + 1, 10);
-    for (let i = 0; i < maxVet; i++) {
-      vetShooter.recordKill(UnitType.Warship);
+    const rank1 = buildWarship(attacker, coastX + 1, 10);
+    const rank3 = buildWarship(attacker, coastX + 2, 10);
+    rank1.recordKill(UnitType.Warship);
+    for (let i = 0; i < 3; i++) {
+      rank3.recordKill(UnitType.Warship);
     }
-    expect(vetShooter.veterancy()).toBe(maxVet);
+    expect(rank1.veterancy()).toBe(1);
+    expect(rank3.veterancy()).toBe(3);
 
     const boostedValues = new Set<number>();
     for (let i = 0; i < 30; i++) {
@@ -181,28 +206,71 @@ describe("Warship veterancy", () => {
         baseShooter,
         target,
       );
-      const vetShell = new ShellExecution(
-        vetShooter.tile(),
+      const rank1Shell = new ShellExecution(
+        rank1.tile(),
         attacker,
-        vetShooter,
+        rank1,
+        target,
+      );
+      const rank3Shell = new ShellExecution(
+        rank3.tile(),
+        attacker,
+        rank3,
         target,
       );
       baseShell.init(game, game.ticks());
-      vetShell.init(game, game.ticks());
+      rank1Shell.init(game, game.ticks());
+      rank3Shell.init(game, game.ticks());
 
       const dBase = baseShell.getEffectOnTargetForTesting();
-      const dVet = vetShell.getEffectOnTargetForTesting();
+      const d1 = rank1Shell.getEffectOnTargetForTesting();
+      const d3 = rank3Shell.getEffectOnTargetForTesting();
 
-      // Same seed → same roll. Base damage is 250, so dBase equals the rolled
-      // multiplier and the veteran's shot is the integer-boosted value.
-      expect(dVet).toBe(
-        Math.floor((dBase * (100 + maxVet * bonusPercent)) / 100),
-      );
-      boostedValues.add(dVet);
+      // Same seed → same roll. Heavy damage is 3/2, identical at rank 1 and 3.
+      expect(d1).toBe(Math.floor((dBase * 150) / 100));
+      expect(d3).toBe(d1);
+      boostedValues.add(d1);
     }
 
-    // The roll varied across ticks (not a constant).
     expect(boostedValues.size).toBeGreaterThan(1);
+  });
+
+  test("marauder shell damage still stacks +20% per stripe", () => {
+    const bonusPercent = game.config().marauderVeterancyShellDamageBonus();
+    expect(bonusPercent).toBe(20);
+    const target = buildWarship(defender, coastX + 5, 10);
+    const base = defender.buildUnit(UnitType.Marauder, game.ref(coastX, 10), {
+      patrolTile: game.ref(coastX, 10),
+    });
+    const vet = defender.buildUnit(UnitType.Marauder, game.ref(coastX + 1, 10), {
+      patrolTile: game.ref(coastX + 1, 10),
+    });
+    for (let i = 0; i < 3; i++) {
+      vet.recordKill(UnitType.Warship);
+    }
+    expect(vet.veterancy()).toBe(3);
+
+    const baseShell = new ShellExecution(base.tile(), defender, base, target);
+    const vetShell = new ShellExecution(vet.tile(), defender, vet, target);
+    baseShell.init(game, game.ticks());
+    vetShell.init(game, game.ticks());
+    expect(vetShell.getEffectOnTargetForTesting()).toBe(
+      Math.floor(
+        (baseShell.getEffectOnTargetForTesting() * (100 + 3 * bonusPercent)) /
+          100,
+      ),
+    );
+  });
+
+  test("volley assignment focuses one ship or splits extras by rank order", () => {
+    expect(assignWarshipVolleyTargets(["a"], 3)).toEqual(["a", "a", "a"]);
+    expect(assignWarshipVolleyTargets(["a", "b"], 3)).toEqual(["a", "b", "a"]);
+    expect(assignWarshipVolleyTargets(["a", "b", "c"], 3)).toEqual([
+      "a",
+      "b",
+      "c",
+    ]);
+    expect(assignWarshipVolleyTargets(["a", "b", "c"], 2)).toEqual(["a", "b"]);
   });
 
   test("a shell landing the killing blow awards veterancy to the firing warship", () => {
@@ -222,5 +290,197 @@ describe("Warship veterancy", () => {
 
     expect(target.isActive()).toBe(false);
     expect(shooter.veterancy()).toBe(1);
+  });
+
+  function promote(ship: Unit, ranks: number): void {
+    for (let i = 0; i < ranks; i++) {
+      ship.recordKill(UnitType.Warship);
+    }
+  }
+
+  function fireVolley(shooter: Unit): ShellExecution[] {
+    game.config().warshipShellAttackRate = () => 0;
+    game.config().warshipTargettingRange = () => 20;
+    const fired: ShellExecution[] = [];
+    const original = game.addExecution.bind(game);
+    game.addExecution = (...execs) => {
+      for (const exec of execs) {
+        if (exec instanceof ShellExecution) {
+          fired.push(exec);
+        }
+      }
+      original(...execs);
+    };
+    original(new WarshipExecution(shooter));
+    executeTicks(game, 2);
+    return fired;
+  }
+
+  function volleyTargets(fired: ShellExecution[]): Unit[] {
+    return fired.map((shell) => shell.getTargetForTesting());
+  }
+
+  test.each([
+    { rank: 0, shells: 1 },
+    { rank: 1, shells: 1 },
+    { rank: 2, shells: 2 },
+    { rank: 3, shells: 3 },
+  ])(
+    "a rank-$rank warship fires $shells shells at a single target",
+    ({ rank, shells }) => {
+      const shooter = buildWarship(attacker, coastX + 1, 10);
+      promote(shooter, rank);
+      const target = buildWarship(defender, coastX + 2, 10);
+
+      const fired = fireVolley(shooter);
+
+      expect(fired).toHaveLength(shells);
+      expect(volleyTargets(fired)).toEqual(Array(shells).fill(target));
+    },
+  );
+
+  test("a rank-3 warship splits three shells across three ships", () => {
+    const shooter = buildWarship(attacker, coastX + 1, 10);
+    promote(shooter, 3);
+    const near = buildWarship(defender, coastX + 2, 10);
+    const mid = buildWarship(defender, coastX + 3, 10);
+    const far = buildWarship(defender, coastX + 4, 10);
+
+    const fired = fireVolley(shooter);
+
+    expect(fired).toHaveLength(3);
+    expect(volleyTargets(fired)).toEqual([near, mid, far]);
+  });
+
+  test("a rank-3 warship with two targets stacks the leftover on the primary", () => {
+    const shooter = buildWarship(attacker, coastX + 1, 10);
+    promote(shooter, 3);
+    const near = buildWarship(defender, coastX + 2, 10);
+    const mid = buildWarship(defender, coastX + 3, 10);
+
+    const fired = fireVolley(shooter);
+
+    expect(fired).toHaveLength(3);
+    expect(volleyTargets(fired)).toEqual([near, mid, near]);
+  });
+
+  test("max-rank repair formula is 1 HP every 2 ticks at rank 3 only", () => {
+    const max = 3;
+    const pulse = 1;
+    const interval = 2;
+    expect(warshipMaxRankRepairHpThisTick(3, max, 0, pulse, interval)).toBe(1);
+    expect(warshipMaxRankRepairHpThisTick(3, max, 1, pulse, interval)).toBe(0);
+    expect(warshipMaxRankRepairHpThisTick(3, max, 2, pulse, interval)).toBe(1);
+    expect(warshipMaxRankRepairHpThisTick(2, max, 0, pulse, interval)).toBe(0);
+    expect(warshipMaxRankRepairHpThisTick(1, max, 0, pulse, interval)).toBe(0);
+    expect(warshipMaxRankRepairHpThisTick(0, max, 0, pulse, interval)).toBe(0);
+    expect(game.config().warshipMaxRankRepairHpPerPulse()).toBe(1);
+    expect(game.config().warshipMaxRankRepairIntervalTicks()).toBe(2);
+    expect(game.config().warshipMaxRankRepairHp(3, 0)).toBe(1);
+    expect(game.config().warshipMaxRankRepairHp(2, 0)).toBe(0);
+  });
+
+  function expectedMaxRankRepair(fromTick: number, numTicks: number): number {
+    let healed = 0;
+    for (let i = 0; i < numTicks; i++) {
+      healed += game.config().warshipMaxRankRepairHp(3, fromTick + i);
+    }
+    return healed;
+  }
+
+  function tickWarship(ship: Unit, numTicks: number): void {
+    game.addExecution(new WarshipExecution(ship));
+    executeTicks(game, 1); // init only
+    executeTicks(game, numTicks);
+  }
+
+  test("a rank-3 warship passively repairs hull HP over ticks", () => {
+    const ship = buildWarship(attacker, coastX, 10);
+    promote(ship, 3);
+    expect(ship.veterancy()).toBe(3);
+
+    const missing = 80;
+    ship.modifyHealth(-missing);
+    const damaged = ship.health();
+
+    game.addExecution(new WarshipExecution(ship));
+    executeTicks(game, 1); // init
+    const startTick = game.ticks();
+    const ticks = 20;
+    executeTicks(game, ticks);
+
+    const healed = expectedMaxRankRepair(startTick, ticks);
+    expect(healed).toBeGreaterThan(0);
+    expect(ship.health()).toBe(damaged + healed);
+    expect(ship.health()).toBeLessThan(ship.maxHealth());
+  });
+
+  test.each([0, 1, 2])(
+    "a rank-%s warship does not passively repair hull HP",
+    (rank) => {
+      const ship = buildWarship(attacker, coastX, 10);
+      promote(ship, rank);
+      expect(ship.veterancy()).toBe(rank);
+
+      ship.modifyHealth(-80);
+      const damaged = ship.health();
+      tickWarship(ship, 20);
+      expect(ship.health()).toBe(damaged);
+    },
+  );
+
+  test("rank-3 hull repair does not exceed max HP", () => {
+    const ship = buildWarship(attacker, coastX, 10);
+    promote(ship, 3);
+    // Rank-up raises the cap without filling it; push to max first so the
+    // repairman would overshoot if modifyHealth did not clamp.
+    ship.modifyHealth(ship.maxHealth());
+    ship.modifyHealth(-1);
+    expect(ship.health()).toBe(ship.maxHealth() - 1);
+
+    tickWarship(ship, 20);
+    expect(ship.health()).toBe(ship.maxHealth());
+  });
+
+  test("a rank-3 marauder does not get the battleship repairman", () => {
+    const marauder = defender.buildUnit(
+      UnitType.Marauder,
+      game.ref(coastX, 10),
+      { patrolTile: game.ref(coastX, 10) },
+    );
+    promote(marauder, 3);
+    expect(marauder.veterancy()).toBe(3);
+
+    marauder.modifyHealth(-80);
+    const damaged = marauder.health();
+    tickWarship(marauder, 20);
+    expect(marauder.health()).toBe(damaged);
+  });
+
+  test("a destroyed rank-3 warship does not repair back to life", () => {
+    const ship = buildWarship(attacker, coastX, 10);
+    promote(ship, 3);
+    ship.modifyHealth(-ship.health());
+    expect(ship.health()).toBe(0);
+    expect(ship.isActive()).toBe(false);
+
+    tickWarship(ship, 20);
+    expect(ship.health()).toBe(0);
+    expect(ship.isActive()).toBe(false);
+  });
+
+  test("a rank-3 marauder still fires one shell", () => {
+    const shooter = defender.buildUnit(
+      UnitType.Marauder,
+      game.ref(coastX + 1, 10),
+      { patrolTile: game.ref(coastX + 1, 10) },
+    );
+    promote(shooter, 3);
+    expect(shooter.veterancy()).toBe(3);
+    buildWarship(attacker, coastX + 2, 10);
+
+    const fired = fireVolley(shooter);
+
+    expect(fired).toHaveLength(1);
   });
 });

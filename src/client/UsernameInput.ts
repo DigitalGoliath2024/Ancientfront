@@ -1,4 +1,4 @@
-import { html, LitElement } from "lit";
+import { html, LitElement, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { translateText } from "../client/Utils";
 import { UserMeResponse } from "../core/ApiSchemas";
@@ -36,6 +36,8 @@ interface LangSelectorLike {
 const usernameKey: string = "username";
 const clanTagKey: string = "clanTag";
 const useVerifiedNameKey: string = "useVerifiedName";
+/** Flip to show the Use Verified / Use Custom toggle on the play-page name bar. */
+export const SHOW_USE_VERIFIED_BUTTON = false;
 // "The stored username is one we generated, not one the player chose." Written
 // alongside the name itself; see usernameIsGenerated.
 const usernameIsGeneratedKey: string = "usernameIsGenerated";
@@ -599,7 +601,7 @@ export class UsernameInput extends LitElement {
   render() {
     return html`
       <!-- The name field takes whatever the tag picker and trailing button
-           leave, so the row always fills the strip. -->
+           (when shown) leave, so the row always fills the strip. -->
       <div class="flex items-center w-full h-10 gap-1.5 sm:gap-2">
         ${this.renderClanControl()} ${this.renderNameControl()}
       </div>
@@ -784,14 +786,18 @@ export class UsernameInput extends LitElement {
       ${this.verifiedActive
         ? this.renderVerifiedChip()
         : this.renderNameInput()}
-      <!-- The buttons differ in width, so this resizes the name field — which
-           is transparent and left-aligned, so only its invisible right edge
-           moves. -->
-      <div class="no-crazygames shrink-0 h-10">
-        ${this.verifiedActive
-          ? this.renderUseCustomButton()
-          : this.renderUseVerifiedButton()}
-      </div>
+      ${SHOW_USE_VERIFIED_BUTTON
+        ? html`
+            <!-- The buttons differ in width, so this resizes the name field —
+                 which is transparent and left-aligned, so only its invisible
+                 right edge moves. -->
+            <div class="no-crazygames shrink-0 h-10">
+              ${this.verifiedActive
+                ? this.renderUseCustomButton()
+                : this.renderUseVerifiedButton()}
+            </div>
+          `
+        : nothing}
     `;
   }
 

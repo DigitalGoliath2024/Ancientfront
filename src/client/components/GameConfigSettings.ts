@@ -40,7 +40,7 @@ function cardClass(active: boolean, extra = ""): string {
 }
 
 const CARD_LABEL_CLASS =
-  "text-xs uppercase font-bold tracking-wider leading-tight break-words hyphens-auto";
+  "font-map text-xs uppercase font-bold tracking-wider leading-tight break-words hyphens-auto";
 
 const DIFFICULTY_OPTIONS = Object.entries(Difficulty).filter(([key]) =>
   isNaN(Number(key)),
@@ -116,6 +116,7 @@ const unitOptions: { type: UnitType; translationKey: string }[] = [
   { type: UnitType.TransportShip, translationKey: "unit_type.boat" },
   { type: UnitType.Factory, translationKey: "unit_type.factory" },
   { type: UnitType.Armory, translationKey: "unit_type.armory" },
+  { type: UnitType.NavalMine, translationKey: "unit_type.naval_mine" },
 ];
 
 const MAP_ICON = svg`<path
@@ -354,7 +355,7 @@ export class GameConfigSettings extends LitElement {
         ${toggle.checked
           ? html`
               <select
-                class="bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-white text-xs"
+                class="font-map bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-white text-xs"
                 @click=${(e: Event) => e.stopPropagation()}
                 @change=${this.handleDoomsdayClockSpeedChange}
               >
@@ -504,7 +505,7 @@ export class GameConfigSettings extends LitElement {
                     @click=${() => this.handleGameModeSelect(mode)}
                   >
                     <span
-                      class="text-sm font-bold text-white uppercase tracking-widest"
+                      class="font-map text-sm font-bold text-white uppercase tracking-widest"
                     >
                       ${mode === GameMode.FFA
                         ? translateText("game_mode.ffa")

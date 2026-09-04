@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { TokenPayload } from "../../src/core/ApiSchemas";
+import { setOpenFrontAccountApiEnabled } from "../../src/core/OpenFrontAccountApi";
 import {
   isSteamAuthenticated,
   planJoinVerify,
@@ -17,6 +18,18 @@ function jsonResponse(body: unknown, status = 200) {
 describe("verifyJoin", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    setOpenFrontAccountApiEnabled(true);
+  });
+
+  it("does not contact OpenFront when the account API is off", async () => {
+    setOpenFrontAccountApiEnabled(false);
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    expect(await verifyJoin("1.2.3.4", "tok", "Alice", null)).toEqual({
+      status: "error",
+      reason: "OpenFront account API disabled",
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("returns the display-ready pair on approval and posts the identity", async () => {

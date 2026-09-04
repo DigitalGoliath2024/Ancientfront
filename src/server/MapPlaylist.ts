@@ -8,6 +8,9 @@ import {
   GameMode,
   GameType,
   HumansVsNations,
+  type MapCategory,
+  type MapInfo,
+  PUBLIC_LOBBY_EXCLUDED_MODIFIERS,
   PublicGameModifiers,
   Quads,
   RankedType,
@@ -24,6 +27,59 @@ import { logger } from "./Logger";
 import { getMapLandTiles } from "./MapLandTiles";
 
 const log = logger.child({});
+
+/**
+ * Cosmic and Tournament maps stay in map data / private search, but never
+ * enter the scheduled public lobby rotation (FFA, team, special — the
+ * homepage join cards). Flip this set empty to put them back in rotation.
+ */
+const PUBLIC_PLAYLIST_EXCLUDED_CATEGORIES: ReadonlySet<MapCategory> = new Set([
+  "cosmic",
+  "tournament",
+]);
+
+export function isExcludedFromPublicPlaylist(mapInfo: MapInfo): boolean {
+  return mapInfo.categories.some((category) =>
+    PUBLIC_PLAYLIST_EXCLUDED_CATEGORIES.has(category),
+  );
+}
+
+export function buildPublicPlaylistMaps(
+  type: ScheduledPublicGameType,
+): GameMapType[] {
+  const maps: GameMapType[] = [];
+  allMaps.forEach((mapInfo) => {
+    if (isExcludedFromPublicPlaylist(mapInfo)) return;
+
+    const map = mapInfo.type;
+    // Use per-mode frequency if set (>= 0), otherwise fall back to multiplayerFrequency.
+    let freq: number;
+    switch (type) {
+      case "ffa":
+        freq =
+          mapInfo.ffaFrequency >= 0
+            ? mapInfo.ffaFrequency
+            : mapInfo.multiplayerFrequency;
+        break;
+      case "team":
+        freq =
+          mapInfo.teamFrequency >= 0
+            ? mapInfo.teamFrequency
+            : mapInfo.multiplayerFrequency;
+        break;
+      case "special":
+        freq =
+          mapInfo.specialFrequency >= 0
+            ? mapInfo.specialFrequency
+            : mapInfo.multiplayerFrequency;
+        break;
+    }
+    for (let i = 0; i < freq; i++) {
+      maps.push(map);
+    }
+  });
+  return maps;
+}
 
 // Hard cap on player count for performance. Applied after compact-map reduction.
 const MAX_PLAYER_COUNT = 125;
@@ -73,6 +129,22 @@ type ModifierKey =
   | "isPeaceTime"
   | "isWaterNukes"
   | "isDoomsdayClock";
+
+/**
+ * Same keys as PUBLIC_LOBBY_EXCLUDED_MODIFIERS — empty that array to put
+ * water nukes / no-SAM / no-nukes back in the public special rotation.
+ */
+const PUBLIC_PLAYLIST_EXCLUDED_MODIFIERS: ReadonlySet<ModifierKey> = new Set(
+  PUBLIC_LOBBY_EXCLUDED_MODIFIERS,
+);
+
+export function isExcludedFromPublicPlaylistModifiers(key: string): boolean {
+  return PUBLIC_PLAYLIST_EXCLUDED_MODIFIERS.has(key as ModifierKey);
+}
+
+export function publicPlaylistExcludedModifiers(): readonly ModifierKey[] {
+  return [...PUBLIC_PLAYLIST_EXCLUDED_MODIFIERS];
+}
 
 // Each entry represents one "ticket" in the pool. More tickets = higher chance of selection.
 // Weights are roughly informed by the community "favorite modifier" poll.
@@ -202,7 +274,9 @@ export class MapPlaylist {
     let playerTeams =
       mode === GameMode.Team ? this.getTeamCount(map) : undefined;
 
-    const excludedModifiers: ModifierKey[] = [];
+    const excludedModifiers: ModifierKey[] = [
+      ...PUBLIC_PLAYLIST_EXCLUDED_MODIFIERS,
+    ];
 
     // Check if compact map would leave every team with at least 2 players
     const supportsCompact =
@@ -528,7 +602,7 @@ export class MapPlaylist {
   }
 
   private generateNewPlaylist(type: ScheduledPublicGameType): GameMapType[] {
-    const maps = this.buildMapsList(type);
+    const maps = buildPublicPlaylistMaps(type);
     const rand = new PseudoRandom(Date.now());
     const playlist: GameMapType[] = [];
 
@@ -576,39 +650,6 @@ export class MapPlaylist {
     return false;
   }
 
-  private buildMapsList(type: ScheduledPublicGameType): GameMapType[] {
-    const maps: GameMapType[] = [];
-    allMaps.forEach((mapInfo) => {
-      const map = mapInfo.type;
-      // Use per-mode frequency if set (>= 0), otherwise fall back to multiplayerFrequency.
-      let freq: number;
-      switch (type) {
-        case "ffa":
-          freq =
-            mapInfo.ffaFrequency >= 0
-              ? mapInfo.ffaFrequency
-              : mapInfo.multiplayerFrequency;
-          break;
-        case "team":
-          freq =
-            mapInfo.teamFrequency >= 0
-              ? mapInfo.teamFrequency
-              : mapInfo.multiplayerFrequency;
-          break;
-        case "special":
-          freq =
-            mapInfo.specialFrequency >= 0
-              ? mapInfo.specialFrequency
-              : mapInfo.multiplayerFrequency;
-          break;
-      }
-      for (let i = 0; i < freq; i++) {
-        maps.push(map);
-      }
-    });
-    return maps;
-  }
-
   private getTeamCount(map: GameMapType): TeamCountConfig {
     // Override team count for specific maps
     const forcedTeamCount = SPECIAL_TEAM_MAPS.get(map);
@@ -645,7 +686,9 @@ export class MapPlaylist {
 
     // Shuffle the pool, then pick the first k unique modifier keys.
     const pool = SPECIAL_MODIFIER_POOL.filter(
-      (key) => !excludedModifiers.includes(key),
+      (key) =>
+        !excludedModifiers.includes(key) &&
+        !PUBLIC_PLAYLIST_EXCLUDED_MODIFIERS.has(key),
     ).sort(() => Math.random() - 0.5);
 
     const selected = new Set<ModifierKey>();

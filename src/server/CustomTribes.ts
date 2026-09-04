@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isOpenFrontAccountApiEnabled } from "../core/OpenFrontAccountApi";
 import { Tribe, TribeSchema } from "../core/Schemas";
 import { ServerEnv } from "./ServerEnv";
 
@@ -27,6 +28,9 @@ export interface TribePoolPlayer {
 export async function fetchCustomTribes(
   players: TribePoolPlayer[],
 ): Promise<Tribe[]> {
+  if (!isOpenFrontAccountApiEnabled()) {
+    return [];
+  }
   const response = await fetch(`${ServerEnv.jwtIssuer()}/custom_tribes`, {
     method: "POST",
     signal: AbortSignal.timeout(1500),

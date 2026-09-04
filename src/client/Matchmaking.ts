@@ -2,6 +2,7 @@ import { html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { ClientEnv } from "src/client/ClientEnv";
 import { UserMeResponse } from "../core/ApiSchemas";
+import { isOpenFrontAccountApiEnabled } from "../core/OpenFrontAccountApi";
 import { responseHasLinkedIdentity } from "./AccountIdentity";
 import { getUserMe, invalidateUserMe } from "./Api";
 import { getPlayToken } from "./Auth";
@@ -233,6 +234,9 @@ export class MatchmakingModal extends BaseModal {
   }
 
   private async connect() {
+    if (!isOpenFrontAccountApiEnabled()) {
+      return;
+    }
     // Pending timers from a previous socket must not fire on this one.
     this.clearWatchdog();
     if (this.connectTimeout) {

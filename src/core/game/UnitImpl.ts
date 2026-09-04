@@ -19,6 +19,7 @@ import { GameImpl } from "./GameImpl";
 import { TileRef } from "./GameMap";
 import { GameUpdateType, UnitUpdate } from "./GameUpdates";
 import { PlayerImpl } from "./PlayerImpl";
+import { applyPortIntegrityDelta } from "./PortDamage";
 import { maxHealthWithVeterancy } from "./Veterancy";
 
 export class UnitImpl implements Unit {
@@ -42,6 +43,8 @@ export class UnitImpl implements Unit {
   private _missileTimerQueue: number[] = [];
   private _hasTrainStation: boolean = false;
   private _level: number = 1;
+  /** Hidden damage toward the next Port demotion. Unused on other types. */
+  private _portDemotionDamage = 0;
   private _targetable: boolean = true;
   private _loaded: boolean | undefined;
   private _trainType: TrainType | undefined;
@@ -112,6 +115,7 @@ export class UnitImpl implements Unit {
       case UnitType.Factory:
       case UnitType.PortGun:
       case UnitType.Armory:
+      case UnitType.NavalMine:
         this.mg.stats().unitBuild(_owner, this._type);
     }
   }
@@ -244,6 +248,7 @@ export class UnitImpl implements Unit {
       case UnitType.Factory:
       case UnitType.PortGun:
       case UnitType.Armory:
+      case UnitType.NavalMine:
         this.mg.stats().unitCapture(newOwner, this._type);
         this.mg.stats().unitLose(this._owner, this._type);
         break;
@@ -279,6 +284,11 @@ export class UnitImpl implements Unit {
   }
 
   modifyHealth(delta: number, attacker?: Player): void {
+    if (this._type === UnitType.Port) {
+      this.modifyPortHealth(delta, attacker);
+      return;
+    }
+
     const previousHealth = this._health;
     const nextHealth = withinInt(
       this._health + toInt(delta),
@@ -301,6 +311,58 @@ export class UnitImpl implements Unit {
     this.mg.addUpdate(this.toUpdate());
     if (this._health === 0n) {
       this.delete(true, attacker);
+    }
+  }
+
+  /**
+   * Ports: L2+ absorb damage as hidden demotion progress (reported HP stays
+   * at max so the renderer never draws a health bar). L1 chips real HP.
+   */
+  private modifyPortHealth(delta: number, attacker?: Player): void {
+    const maxHealth = this.maxHealth();
+    const previousHealth = Number(this._health);
+    const result = applyPortIntegrityDelta(
+      {
+        level: this._level,
+        health: previousHealth,
+        demotionDamage: this._portDemotionDamage,
+      },
+      delta,
+      maxHealth,
+    );
+
+    if (
+      result.level === this._level &&
+      result.health === previousHealth &&
+      result.demotionDamage === this._portDemotionDamage &&
+      !result.destroyed
+    ) {
+      return;
+    }
+
+    const drops = this._level - result.level;
+    for (let i = 0; i < drops; i++) {
+      if (!this._active) {
+        return;
+      }
+      this.decreaseLevel(attacker);
+    }
+    if (!this._active) {
+      return;
+    }
+
+    this._portDemotionDamage = result.demotionDamage;
+    this._health = toInt(result.health);
+
+    if (result.destroyed || this._health === 0n) {
+      this.delete(true, attacker);
+      return;
+    }
+
+    // Level drops already published via decreaseLevel. Hidden L2+ demotion
+    // is not sent (HP stays at max). L1 HP chips need a fresh update.
+    if (result.health !== previousHealth) {
+      this.mg.addUpdate(this.toUpdate());
     }
   }
 
@@ -367,6 +429,7 @@ export class UnitImpl implements Unit {
         case UnitType.Factory:
         case UnitType.PortGun:
         case UnitType.Armory:
+        case UnitType.NavalMine:
           this.mg.stats().unitDestroy(destroyer, this._type);
           this.mg.stats().unitLose(this.owner(), this._type);
           break;
@@ -723,6 +786,10 @@ export class UnitImpl implements Unit {
       };
     }
     this._level++;
+    if (this._type === UnitType.Port) {
+      this._portDemotionDamage = 0;
+      this._health = toInt(this.maxHealth());
+    }
     // unitCount()/unitsOwned() are level-weighted and memoised on these versions
     this.mg.bumpUnitsVersion();
     this._owner._myUnitsVersion++;
@@ -734,6 +801,9 @@ export class UnitImpl implements Unit {
 
   decreaseLevel(destroyer?: Player): void {
     this._level--;
+    if (this._type === UnitType.Port) {
+      this._portDemotionDamage = 0;
+    }
     if ([UnitType.MissileSilo, UnitType.SAMLauncher].includes(this.type())) {
       this._missileTimerQueue.pop();
     }

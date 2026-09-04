@@ -119,6 +119,7 @@ beforeEach(async () => {
   stub("host-lobby-modal", { open: hostOpen });
   stub("single-player-modal", { open: vi.fn() });
   stub("desktop-status-bar", { wiggle });
+  stub("username-input", { canPlay: () => true });
   (window as { showPage?: (id: string) => void }).showPage = vi.fn();
   // validateAndJoin dispatches "join-lobby" as a bubbling/composed CustomEvent
   // rather than calling a modal's open() -- catch it at the document the same
@@ -252,6 +253,23 @@ describe("the multiplayer gate at its real call sites", () => {
 
     expect(solo).toHaveBeenCalled();
   });
+
+  it("keeps Ranked visible but disabled with a coming-soon subtitle", async () => {
+    await setUpdateState({ status: "current", bytes: 0, total: 0 });
+
+    const ranked = Array.from(selector.querySelectorAll("button")).find((b) =>
+      (b.textContent ?? "").includes("mode_selector.ranked_title"),
+    );
+    expect(ranked).toBeDefined();
+    expect((ranked as HTMLButtonElement).disabled).toBe(true);
+    expect(ranked!.getAttribute("aria-disabled")).toBe("true");
+    expect(ranked!.textContent).toContain("mode_selector.ranked_coming_soon");
+
+    ranked!.click();
+    expect(
+      (window as { showPage?: (id: string) => void }).showPage,
+    ).not.toHaveBeenCalled();
+  });
 });
 
 /**
@@ -305,5 +323,79 @@ describe("the public lobby card (validateAndJoin)", () => {
     card!.click();
 
     expect(joinLobby).not.toHaveBeenCalled();
+  });
+});
+
+describe("featured lobby cards (3 filling + 3 up next)", () => {
+  it("renders six slots and labels the queued row Up next", async () => {
+    const now = Date.now();
+    await pushLobbies({
+      ffa: [
+        { ...publicLobby("ffa-live"), startsAt: now + 30_000 },
+        publicLobby("ffa-next"),
+      ],
+      team: [
+        {
+          ...publicLobby("team-live"),
+          publicGameType: "team",
+          startsAt: now + 20_000,
+        },
+        { ...publicLobby("team-next"), publicGameType: "team" },
+      ],
+      special: [
+        {
+          ...publicLobby("special-live"),
+          publicGameType: "special",
+          startsAt: now + 10_000,
+        },
+        { ...publicLobby("special-next"), publicGameType: "special" },
+      ],
+    });
+
+    const cards = Array.from(
+      selector.querySelectorAll<HTMLButtonElement>("button.group"),
+    );
+    expect(cards).toHaveLength(6);
+    expect(
+      cards.filter((c) => c.getAttribute("data-up-next") === "true"),
+    ).toHaveLength(3);
+    expect(
+      cards.filter((c) => c.getAttribute("data-up-next") === "false"),
+    ).toHaveLength(3);
+  });
+
+  it("still joins an up-next lobby from the public broadcast", async () => {
+    const now = Date.now();
+    await pushLobbies({
+      ffa: [
+        { ...publicLobby("ffa-live"), startsAt: now + 30_000 },
+        publicLobby("ffa-next"),
+      ],
+      team: [
+        {
+          ...publicLobby("team-live"),
+          publicGameType: "team",
+          startsAt: now + 20_000,
+        },
+      ],
+      special: [
+        {
+          ...publicLobby("special-live"),
+          publicGameType: "special",
+          startsAt: now + 10_000,
+        },
+      ],
+    });
+    await setUpdateState({ status: "current", bytes: 0, total: 0 });
+
+    const upNext = selector.querySelector<HTMLButtonElement>(
+      'button.group[data-up-next="true"]',
+    );
+    expect(upNext).not.toBeNull();
+    upNext!.click();
+
+    expect(joinLobby).toHaveBeenCalled();
+    expect(joinLobby.mock.calls[0][0].detail.gameID).toBe("ffa-next");
+    expect(joinLobby.mock.calls[0][0].detail.source).toBe("public");
   });
 });

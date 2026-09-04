@@ -23,7 +23,7 @@ const BUILDING_ORDER = {
   silo: 7,
   saml: 8,
 } as const satisfies Record<
-  Exclude<(typeof otherUnits)[number], "wshp" | "mrdr">,
+  Exclude<(typeof otherUnits)[number], "wshp" | "mrdr" | "nmine">,
   number
 >;
 
@@ -47,6 +47,7 @@ const UNIT_LABEL_KEYS = {
   mrdr: "unit_type.marauder",
   pgun: "unit_type.port_gun",
   armr: "unit_type.armory",
+  nmine: "unit_type.naval_mine",
   abomb: "unit_type.atom_bomb",
   hbomb: "unit_type.hydrogen_bomb",
   mirv: "unit_type.mirv",

@@ -471,6 +471,12 @@ export class GameView implements GameMap {
       }
     }
     gu.updates[GameUpdateType.Unit].forEach((update) => {
+      if (
+        update.unitType === UnitType.NavalMine &&
+        !this.canSeeNavalMineUpdate(update.ownerID)
+      ) {
+        return;
+      }
       let unit = this._units.get(update.id);
       const isStructure = STRUCTURE_TYPES.has(update.unitType);
       if (unit !== undefined) {
@@ -1042,6 +1048,26 @@ export class GameView implements GameMap {
     for (const p of this._players.values()) {
       p.refreshColors();
     }
+  }
+
+  /** Owner + teammates see friendly mines; everyone else sees ocean. */
+  private canSeeNavalMineUpdate(ownerSmallID: number): boolean {
+    const me = this._myPlayer;
+    if (me === null) {
+      return false;
+    }
+    if (me.smallID() === ownerSmallID) {
+      return true;
+    }
+    const ownerId = this.smallIDToID.get(ownerSmallID);
+    if (ownerId === undefined) {
+      return false;
+    }
+    const owner = this._players.get(ownerId);
+    if (owner === undefined) {
+      return false;
+    }
+    return me.isOnSameTeam(owner);
   }
 
   playerBySmallID(id: number): PlayerView | TerraNullius {

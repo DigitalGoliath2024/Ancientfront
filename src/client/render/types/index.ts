@@ -57,4 +57,5 @@ export {
   UT_MARAUDER,
   UT_PORT_GUN,
   UT_ARMORY,
+  UT_NAVAL_MINE,
 } from "./UnitType";

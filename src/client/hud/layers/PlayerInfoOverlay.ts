@@ -164,6 +164,7 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
           UnitType.Marauder,
           UnitType.TradeShip,
           UnitType.TransportShip,
+          UnitType.NavalMine,
         )
         .filter((u) => euclideanDistWorld(worldCoord, u.tile(), this.game) < 50)
         .sort(distSortUnitWorld(worldCoord, this.game));
@@ -531,11 +532,7 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
             ${this.displayUnitCount(player, UnitType.Factory, factoryIcon)}
             ${this.displayUnitCount(player, UnitType.Armory, troopIconWhite)}
             ${this.displayUnitCount(player, UnitType.Port, portIcon)}
-            ${this.displayUnitCount(
-              player,
-              UnitType.PortGun,
-              samLauncherIcon,
-            )}
+            ${this.displayUnitCount(player, UnitType.PortGun, samLauncherIcon)}
             ${this.displayUnitCount(player, UnitType.Warship, warshipIcon)}
             ${this.displayUnitCount(player, UnitType.Marauder, marauderIcon)}
           </div>
@@ -610,7 +607,8 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
         </div>
         <div class="mt-1">
           <div class="text-sm opacity-80">${unit.type()}</div>
-          ${unit.hasHealth()
+          ${unit.hasHealth() &&
+          (unit.type() !== UnitType.Port || unit.level() <= 1)
             ? html` <div class="text-sm">Health: ${unit.health()}</div> `
             : ""}
           ${unit.type() === UnitType.TransportShip

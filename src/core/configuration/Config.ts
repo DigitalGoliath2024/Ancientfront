@@ -20,6 +20,10 @@ import {
   UnitType,
 } from "../game/Game";
 import { UserSettings } from "../game/UserSettings";
+import {
+  warshipMaxRankRepairHpThisTick,
+  warshipShellCountForVeterancy,
+} from "../game/Veterancy";
 import { GameConfig, TeamCountConfig } from "../Schemas";
 import { NukeType } from "../StatsSchemas";
 import { assertNever, sigmoid, toInt, within } from "../Util";
@@ -519,6 +523,9 @@ export class Config {
             UnitType.Port,
             UnitType.Factory,
           ),
+          // L1 hull. Each extra level is one full hull of hidden demotion
+          // damage; ~4 unbuffed warship shells (200–325 each) flatten L1.
+          maxHealth: this.portMaxHealth(),
           constructionDuration: this.instantBuild() ? 0 : 5 * 10,
           upgradable: true,
         };
@@ -559,6 +566,7 @@ export class Config {
       case UnitType.MissileSilo:
         info = {
           cost: this.costWrapper(() => 1_000_000, UnitType.MissileSilo),
+          maxHealth: this.missileSiloMaxHealth(),
           constructionDuration: this.instantBuild() ? 0 : 10 * 10,
           upgradable: true,
         };
@@ -569,6 +577,7 @@ export class Config {
             (numUnits: number) => Math.min(250_000, (numUnits + 1) * 50_000),
             UnitType.DefensePost,
           ),
+          maxHealth: this.defensePostMaxHealth(),
           constructionDuration: this.instantBuild() ? 0 : 5 * 10,
         };
         break;
@@ -579,6 +588,7 @@ export class Config {
               Math.min(3_000_000, (numUnits + 1) * 1_500_000),
             UnitType.SAMLauncher,
           ),
+          maxHealth: this.samLauncherMaxHealth(),
           constructionDuration: this.instantBuild()
             ? 0
             : SAM_CONSTRUCTION_TICKS,
@@ -591,6 +601,7 @@ export class Config {
             (numUnits: number) => Math.min(1_000_000, pow2(numUnits) * 125_000),
             UnitType.City,
           ),
+          maxHealth: this.cityMaxHealth(),
           constructionDuration: this.instantBuild() ? 0 : 2 * 10,
           upgradable: true,
         };
@@ -602,6 +613,7 @@ export class Config {
             UnitType.Factory,
             UnitType.Port,
           ),
+          maxHealth: this.factoryMaxHealth(),
           constructionDuration: this.instantBuild() ? 0 : 2 * 10,
           upgradable: true,
         };
@@ -620,18 +632,36 @@ export class Config {
         break;
       case UnitType.Armory:
         info = {
-          cost: this.costWrapper(
-            (numUnits: number) => {
-              if (numUnits <= 0) return 500_000;
-              if (numUnits === 1) return 1_500_000;
-              return 3_000_000;
-            },
-            UnitType.Armory,
-          ),
+          cost: this.costWrapper((numUnits: number) => {
+            if (numUnits <= 0) return 500_000;
+            if (numUnits === 1) return 1_500_000;
+            if (numUnits === 2) return 3_000_000;
+            return 2_000_000;
+          }, UnitType.Armory),
+          maxHealth: this.armoryMaxHealth(),
           constructionDuration: this.instantBuild() ? 0 : 8 * 10,
           upgradable: true,
           unique: true,
-          maxLevel: this.weaponTechMaxLevel(),
+          maxLevel: this.armoryMaxLevel(),
+        };
+        break;
+      case UnitType.NavalMine:
+        info = {
+          cost: (_game: Game, player: Player) => {
+            if (
+              player.type() === PlayerType.Human &&
+              this.hasInfiniteGoldFor(player)
+            ) {
+              return 0n;
+            }
+            let active = 0;
+            for (const unit of player.units(UnitType.NavalMine)) {
+              if (unit.isActive()) {
+                active++;
+              }
+            }
+            return BigInt(active <= 0 ? 250_000 : 500_000);
+          },
         };
         break;
       case UnitType.Train:
@@ -932,8 +962,13 @@ export class Config {
     return Math.floor(attacker.troops() / 5);
   }
 
+  /**
+   * Max flight time for navy shells (warship, marauder, transport) even while
+   * the shooter is alive. 34 ticks × 3 tiles/tick ≈ 102 tiles. Port-gun shells
+   * keep the dead-shooter-only `shellLifetime` so L10 batteries still reach 113.
+   */
   warshipShellLifetime(): number {
-    return 20; // in ticks (one tick is 100ms)
+    return 34;
   }
 
   radiusPortSpawn() {
@@ -1161,12 +1196,12 @@ export class Config {
   }
 
   warshipTargettingRange(): number {
-    return 130;
+    return 85;
   }
 
   /** Light deck guns on transports. Half a warship's targeting range. */
   transportTargettingRange(): number {
-    return (this.warshipTargettingRange() * 50) / 100;
+    return ((this.warshipTargettingRange() * 50) / 100) | 0;
   }
 
   warshipShellAttackRate(): number {
@@ -1212,10 +1247,55 @@ export class Config {
     return 20;
   }
 
-  /** Shell-damage boost per veterancy level, as an integer percent of the
-   *  rolled damage. Integer-only to keep src/core deterministic. */
+  /**
+   * Heavy-round shell-damage boost for Warships at veterancy 1+.
+   * Applied once (not stacked per stripe): +50% = 3/2 of a fresh ship's roll.
+   * Integer-only to keep src/core deterministic.
+   */
   warshipVeterancyShellDamageBonus(): number {
+    return 50;
+  }
+
+  /**
+   * Marauders keep the old stacked +20% per stripe (single shot).
+   * Integer-only to keep src/core deterministic.
+   */
+  marauderVeterancyShellDamageBonus(): number {
     return 20;
+  }
+
+  /**
+   * Shells a Warship fires per volley at the given veterancy (0–3 → 1, 1, 2, 3).
+   * Marauders always fire one.
+   */
+  warshipVeterancyShellCount(veterancy: number): number {
+    return warshipShellCountForVeterancy(veterancy);
+  }
+
+  /**
+   * Onboard hull repair for max-rank Warships only (veterancy === max).
+   * 1 HP every 2 ticks = 5 HP/s ≈ 3% of rank-3 max (1600) per 10 seconds.
+   * Half of port-proximity heal; cannot out-heal a shell (250–375).
+   * Empty hull → full takes 320s. Marauders never get this.
+   */
+  warshipMaxRankRepairHpPerPulse(): number {
+    return 1;
+  }
+
+  /** Ticks between onboard-repairman pulses (2 → 5 HP/s at 10 ticks/s). */
+  warshipMaxRankRepairIntervalTicks(): number {
+    return 2;
+  }
+
+  /** HP restored this tick by a max-rank Warship repairman, else 0. */
+  warshipMaxRankRepairHp(veterancy: number, tick: number): number {
+    return warshipMaxRankRepairHpThisTick(
+      veterancy,
+      this.warshipMaxVeterancy(),
+      tick,
+      this.warshipMaxRankRepairHpPerPulse(),
+      this.warshipMaxRankRepairIntervalTicks(),
+    );
   }
 
   /** Transport ships a warship must destroy to gain one veterancy level. */
@@ -1240,6 +1320,41 @@ export class Config {
     return 75;
   }
 
+  /**
+   * L1 port hull HP. Each level above 1 is one hidden demotion bucket of
+   * the same size. Unbuffed warship shells deal 200–325, so a few volleys
+   * flatten a level-1 port without a one-scratch wipe.
+   */
+  portMaxHealth(): number {
+    return 1000;
+  }
+
+  /** Unbuffed shells deal 200–325; a few warship volleys flatten a city. */
+  cityMaxHealth(): number {
+    return 2000;
+  }
+
+  factoryMaxHealth(): number {
+    return 2000;
+  }
+
+  defensePostMaxHealth(): number {
+    return 1500;
+  }
+
+  missileSiloMaxHealth(): number {
+    return 1500;
+  }
+
+  samLauncherMaxHealth(): number {
+    return 1500;
+  }
+
+  /** Unique / expensive; tankier than a city. */
+  armoryMaxHealth(): number {
+    return 3000;
+  }
+
   /** Highest Port Gun level. Range, armor, volley, and Repairman all peak here. */
   portGunMaxLevel(): number {
     return 10;
@@ -1262,8 +1377,8 @@ export class Config {
   }
 
   /**
-   * Stays inside warship targeting range (130) so a navy can still out-range
-   * a fully upgraded battery.
+   * L10 batteries reach 113 tiles — past the navy's 85-tile acquisition — so a
+   * fully upgraded port gun out-ranges warships. Intentional.
    */
   portGunMaxRange(): number {
     return 113;
@@ -1275,7 +1390,9 @@ export class Config {
   }
 
   portGunDamageBonusForLevel(level: number): number {
-    return (this.portGunEffectiveLevel(level) - 1) * this.portGunDamageBonusPercent();
+    return (
+      (this.portGunEffectiveLevel(level) - 1) * this.portGunDamageBonusPercent()
+    );
   }
 
   /** Incoming shell damage reduction at this level, peaking at the max at level 10. */
@@ -1314,6 +1431,43 @@ export class Config {
    */
   weaponTechMaxLevel(): number {
     return 3;
+  }
+
+  /** Armory L4 unlocks naval mines; weapon tech still caps at rifles. */
+  armoryMaxLevel(): number {
+    return 4;
+  }
+
+  navalMineArmingTicks(): number {
+    return 100;
+  }
+
+  navalMineRange(): number {
+    return 30;
+  }
+
+  navalMineSpacing(): number {
+    return 15;
+  }
+
+  navalMineMaxActive(): number {
+    return 3;
+  }
+
+  navalMineFirstCost(): number {
+    return 250_000;
+  }
+
+  navalMineAdditionalCost(): number {
+    return 500_000;
+  }
+
+  navalMineWarshipDamagePercent(): number {
+    return 70;
+  }
+
+  navalMineUnlockArmoryLevel(): number {
+    return 4;
   }
 
   weaponTechBonusPercent(): number {

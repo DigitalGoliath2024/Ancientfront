@@ -135,6 +135,11 @@ export interface LobbyCardOptions {
   viewerTrusted?: boolean;
   /** Card height; defaults to the homepage's fill-the-grid-cell sizing. */
   heightClass?: string;
+  /**
+   * Queued public game shown on the homepage after the filling row. Adds an
+   * "Up next" pill; the card stays a real joinable lobby from the broadcast.
+   */
+  upNext?: boolean;
 }
 
 export function lobbyCard({
@@ -147,6 +152,7 @@ export function lobbyCard({
   blocked = false,
   viewerTrusted = false,
   heightClass = "h-44 sm:h-full",
+  upNext = false,
 }: LobbyCardOptions): TemplateResult {
   const mapType = lobby.gameConfig!.gameMap as GameMapType;
   const mapImageSrc = terrainMapFileLoader.getMapData(mapType).webpPath;
@@ -182,13 +188,17 @@ export function lobbyCard({
   }
 
   const trustedOnly = lobby.gameConfig?.trusted === true;
+  const upNextLabel = upNext
+    ? translateText("mode_selector.up_next")
+    : undefined;
 
   return html`
     <button
       @click=${onClick}
       ?disabled=${disabled}
       aria-disabled=${blocked}
-      class="group relative w-full ${heightClass} text-white uppercase rounded-2xl overflow-hidden transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] bg-surface hover:shadow-[var(--shadow-lobby-card-hover)] ${disabled
+      data-up-next=${upNext ? "true" : "false"}
+      class="group relative w-full ${heightClass} text-white uppercase rounded-2xl overflow-hidden transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] bg-surface hover:shadow-[var(--shadow-lobby-card-hover)] ${disabled}
         ? "opacity-50 cursor-not-allowed pointer-events-none"
         : blocked
           ? "opacity-50 cursor-not-allowed"
@@ -197,43 +207,56 @@ export function lobbyCard({
       <!-- The card is the only rounded, clipping box: a radius on this layer
            and on the name bar too drew a rim along the corners. -->
       <div class="absolute inset-0 pointer-events-none">
-        ${mapImageSrc
-          ? html`<img
-              src="${mapImageSrc}"
-              alt="${mapName ?? lobby.gameConfig?.gameMap ?? "map"}"
-              draggable="false"
-              class="absolute inset-0 w-full h-full ${useContain
-                ? "object-contain"
-                : "object-cover object-center scale-[1.05]"} [image-rendering:auto]"
-            />`
-          : null}
+        ${
+          mapImageSrc
+            ? html`<img
+                src="${mapImageSrc}"
+                alt="${mapName ?? lobby.gameConfig?.gameMap ?? "map"}"
+                draggable="false"
+                class="absolute inset-0 w-full h-full ${useContain
+                  ? "object-contain"
+                  : "object-cover object-center scale-[1.05]"} [image-rendering:auto]"
+              />`
+            : null
+        }
       </div>
       <!-- Top row: modifiers + timer -->
       <div
         class="absolute inset-x-2 top-2 flex items-start justify-between gap-2"
       >
-        ${modifierLabels.length > 0
-          ? html`<div class="flex flex-col items-start gap-1 min-w-0">
-              ${modifierLabels.map(
-                (label) =>
-                  html`<span class="${CARD_PILL_CLASS} uppercase"
-                    >${label}</span
-                  >`,
-              )}
-            </div>`
-          : html`<div></div>`}
-        <span
-          class="${CARD_PILL_CLASS} shrink-0 ${timeDisplayUppercase
-            ? "uppercase"
-            : "normal-case"}"
-          >${timeDisplay}</span
-        >
+        ${
+          upNextLabel || modifierLabels.length > 0
+            ? html`<div class="flex flex-col items-start gap-1 min-w-0">
+                ${upNextLabel
+                  ? html`<span class="${CARD_PILL_CLASS} uppercase"
+                      >${upNextLabel}</span
+                    >`
+                  : null}
+                ${modifierLabels.map(
+                  (label) =>
+                    html`<span class="${CARD_PILL_CLASS} uppercase"
+                      >${label}</span
+                    >`,
+                )}
+              </div>`
+            : html`<div></div>`
+        }
+        ${
+          timeDisplay
+            ? html`<span
+                class="${CARD_PILL_CLASS} shrink-0 ${timeDisplayUppercase
+                  ? "uppercase"
+                  : "normal-case"}"
+                >${timeDisplay}</span
+              >`
+            : html`<div></div>`
+        }
       </div>
       <!-- Bottom bar: map name + mode, with player count floating above -->
       <div
-        class="absolute bottom-0 left-0 right-0 flex flex-col px-3 py-2 bg-black/55 backdrop-blur-sm ${trustedOnly
-          ? "pr-10"
-          : ""}"
+        class="absolute bottom-0 left-0 right-0 flex flex-col px-3 py-2 bg-black/55 backdrop-blur-sm ${
+          trustedOnly ? "pr-10" : ""
+        }"
         style="overflow: visible;"
       >
         ${trustedOnly ? trustLockIcon(viewerTrusted) : null}
@@ -252,13 +275,15 @@ export function lobbyCard({
             ></path>
           </svg>
         </span>
-        ${title
-          ? html`<p
-              class="font-map text-sm sm:text-base font-bold uppercase tracking-wider text-left leading-tight"
-            >
-              ${title}
-            </p>`
-          : ""}
+        ${
+          title
+            ? html`<p
+                class="font-map text-sm sm:text-base font-bold uppercase tracking-wider text-left leading-tight"
+              >
+                ${title}
+              </p>`
+            : ""
+        }
         <h3 class="font-sans text-xs text-white/70 uppercase tracking-wider text-left">
           ${subtitleLine}
         </h3>

@@ -46,7 +46,10 @@ vi.mock("../src/client/Utils", async (importOriginal) => ({
 
 // Side-effect import registers <username-input>; vi.mock is hoisted above it.
 import "../src/client/UsernameInput";
-import type { UsernameInput as UsernameInputEl } from "../src/client/UsernameInput";
+import {
+  SHOW_USE_VERIFIED_BUTTON,
+  type UsernameInput as UsernameInputEl,
+} from "../src/client/UsernameInput";
 
 function premiumUser(
   clans: { tag: string; name: string }[] = [],
@@ -83,6 +86,21 @@ const q = <T extends HTMLElement>(el: UsernameInputEl, sel: string) =>
 
 const TOGGLE = 'button[aria-pressed="false"]';
 const CHANGE = 'button[aria-label="username.verified_use_custom"]';
+
+function expectVerifiedButtons(el: UsernameInputEl, state: "off" | "on") {
+  if (!SHOW_USE_VERIFIED_BUTTON) {
+    expect(q(el, TOGGLE)).toBeNull();
+    expect(q(el, CHANGE)).toBeNull();
+    return;
+  }
+  if (state === "off") {
+    expect(q(el, TOGGLE)).not.toBeNull();
+    expect(q(el, CHANGE)).toBeNull();
+  } else {
+    expect(q(el, CHANGE)).not.toBeNull();
+    expect(q(el, TOGGLE)).toBeNull();
+  }
+}
 
 beforeEach(() => {
   localStorage.clear();
@@ -606,10 +624,7 @@ describe("UsernameInput verified name", () => {
 
     expect(el.isVerified()).toBe(true);
     expect(el.getUsername()).toBe("RyanTheGreat");
-    // Only the active trailing button exists, so neither can be tabbed to or
-    // read out while it doesn't apply.
-    expect(q(el, CHANGE)).not.toBeNull();
-    expect(q(el, TOGGLE)).toBeNull();
+    expectVerifiedButtons(el, "on");
   });
 
   // The regression this guards: before the default existed the toggle rendered
@@ -625,7 +640,7 @@ describe("UsernameInput verified name", () => {
 
     expect(el.isVerified()).toBe(false);
     expect(el.getUsername()).toBe("MyCoolName");
-    expect(q(el, TOGGLE)).not.toBeNull();
+    expectVerifiedButtons(el, "off");
   });
 
   // The cohort has to be recorded, not recomputed: one boot later the new
@@ -670,23 +685,25 @@ describe("UsernameInput verified name", () => {
 
     expect(el.isVerified()).toBe(false);
     expect(el.getUsername()).toBe("MyCoolName");
-    expect(q(el, TOGGLE)).not.toBeNull();
-    expect(q(el, CHANGE)).toBeNull();
+    expectVerifiedButtons(el, "off");
   });
 
   // Leaving the default unpersisted is what keeps a later opt-out
   // distinguishable from it.
-  it("does not persist the default, and records an explicit opt-out", async () => {
-    const el = await mount();
-    await signIn(el, premiumUser());
-    expect(localStorage.getItem("useVerifiedName")).toBeNull();
+  it.skipIf(!SHOW_USE_VERIFIED_BUTTON)(
+    "does not persist the default, and records an explicit opt-out",
+    async () => {
+      const el = await mount();
+      await signIn(el, premiumUser());
+      expect(localStorage.getItem("useVerifiedName")).toBeNull();
 
-    q(el, CHANGE)!.click();
-    await el.updateComplete;
+      q(el, CHANGE)!.click();
+      await el.updateComplete;
 
-    expect(localStorage.getItem("useVerifiedName")).toBe("false");
-    expect(el.isVerified()).toBe(false);
-  });
+      expect(localStorage.getItem("useVerifiedName")).toBe("false");
+      expect(el.isVerified()).toBe(false);
+    },
+  );
 
   it("renders the free-text field and an off-state toggle when ineligible", async () => {
     const el = await mount();
@@ -695,8 +712,7 @@ describe("UsernameInput verified name", () => {
     } as unknown as UserMeResponse);
 
     expect(el.isVerified()).toBe(false);
-    expect(q(el, TOGGLE)).not.toBeNull();
-    expect(q(el, CHANGE)).toBeNull();
+    expectVerifiedButtons(el, "off");
   });
 
   it("swaps the input for a labelled chip when playing verified", async () => {
@@ -715,29 +731,31 @@ describe("UsernameInput verified name", () => {
     expect(
       el.querySelector('svg[aria-label="username.verified_player"]'),
     ).not.toBeNull();
-    expect(q(el, CHANGE)).not.toBeNull();
-    expect(q(el, TOGGLE)).toBeNull();
+    expectVerifiedButtons(el, "on");
   });
 
-  it("restores the stored custom name when switching back", async () => {
-    // Starts opted out so the round trip begins on the free-form name; the
-    // default-on case is covered above.
-    localStorage.setItem("useVerifiedName", "false");
-    localStorage.setItem("username", "MyCoolName");
-    const el = await mount();
-    await signIn(el, premiumUser());
-    expect(el.getUsername()).toBe("MyCoolName");
+  it.skipIf(!SHOW_USE_VERIFIED_BUTTON)(
+    "restores the stored custom name when switching back",
+    async () => {
+      // Starts opted out so the round trip begins on the free-form name; the
+      // default-on case is covered above.
+      localStorage.setItem("useVerifiedName", "false");
+      localStorage.setItem("username", "MyCoolName");
+      const el = await mount();
+      await signIn(el, premiumUser());
+      expect(el.getUsername()).toBe("MyCoolName");
 
-    q(el, 'button[aria-pressed="false"]')!.click();
-    await el.updateComplete;
-    expect(el.isVerified()).toBe(true);
-    expect(el.getUsername()).toBe("RyanTheGreat");
+      q(el, 'button[aria-pressed="false"]')!.click();
+      await el.updateComplete;
+      expect(el.isVerified()).toBe(true);
+      expect(el.getUsername()).toBe("RyanTheGreat");
 
-    q(el, 'button[aria-label="username.verified_use_custom"]')!.click();
-    await el.updateComplete;
-    expect(el.isVerified()).toBe(false);
-    expect(el.getUsername()).toBe("MyCoolName");
-  });
+      q(el, 'button[aria-label="username.verified_use_custom"]')!.click();
+      await el.updateComplete;
+      expect(el.isVerified()).toBe(false);
+      expect(el.getUsername()).toBe("MyCoolName");
+    },
+  );
 
   it("stays on the free-text name when the account is not eligible", async () => {
     localStorage.setItem("useVerifiedName", "true");
@@ -750,4 +768,14 @@ describe("UsernameInput verified name", () => {
     expect(el.isVerified()).toBe(false);
     expect(el.getUsername()).toBe("MyCoolName");
   });
+
+  it.skipIf(SHOW_USE_VERIFIED_BUTTON)(
+    "hides the Use Verified toggle from the name bar",
+    async () => {
+      const el = await mount();
+      await signIn(el, premiumUser());
+      expect(el.textContent).not.toContain("username.verified_use");
+      expectVerifiedButtons(el, "on");
+    },
+  );
 });

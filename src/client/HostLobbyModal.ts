@@ -550,6 +550,10 @@ export class HostLobbyModal extends BaseModal {
                   {
                     labelKey: "game_settings.water_nukes",
                     checked: this.waterNukes,
+                    // Hidden to match the public-lobby era theme (no nuke
+                    // specials in host UI). Remove `hidden: true` to offer
+                    // Water Nukes again; engine/config still supports it.
+                    hidden: true,
                   },
                   {
                     labelKey: "game_settings.doomsday_clock",

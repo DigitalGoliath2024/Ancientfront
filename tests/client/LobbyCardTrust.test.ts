@@ -58,6 +58,33 @@ function trustIcon(host: HTMLElement): HTMLElement | null {
   return host.querySelector("[data-trust]");
 }
 
+describe("lobbyCard up-next pill", () => {
+  it("marks queued cards and shows the Up next label", () => {
+    const host = document.createElement("div");
+    render(
+      lobbyCard({
+        lobby: lobby(),
+        subtitle: "FFA",
+        timeDisplay: "",
+        upNext: true,
+        onClick: () => {},
+      }),
+      host,
+    );
+    const card = host.querySelector("button.group");
+    expect(card?.getAttribute("data-up-next")).toBe("true");
+    expect(host.textContent).toContain("mode_selector.up_next");
+  });
+
+  it("does not label a filling card as up next", () => {
+    const host = renderCard(lobby(), false);
+    expect(
+      host.querySelector("button.group")?.getAttribute("data-up-next"),
+    ).toBe("false");
+    expect(host.textContent).not.toContain("mode_selector.up_next");
+  });
+});
+
 describe("lobbyCard trust lock", () => {
   it("shows no lock on a lobby that is not trusted-only", () => {
     expect(trustIcon(renderCard(lobby(), false))).toBeNull();

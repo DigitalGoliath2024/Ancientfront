@@ -6,6 +6,7 @@ import {
   HumansVsNations,
   maps,
   MessageType,
+  PUBLIC_LOBBY_EXCLUDED_MODIFIERS,
   PublicGameModifiers,
   Quads,
   Team,
@@ -268,9 +269,23 @@ export function getModifierLabels(
   modifiers: PublicGameModifiers | undefined,
   doomsdayClockSpeed?: DoomsdayClockSpeed,
 ): string[] {
-  return getActiveModifiers(modifiers, doomsdayClockSpeed).map((m) =>
-    translateText(m.badgeKey, m.badgeParams),
-  );
+  return getActiveModifiers(
+    omitPublicLobbyExcludedModifiers(modifiers),
+    doomsdayClockSpeed,
+  ).map((m) => translateText(m.badgeKey, m.badgeParams));
+}
+
+function omitPublicLobbyExcludedModifiers(
+  modifiers: PublicGameModifiers | undefined,
+): PublicGameModifiers | undefined {
+  if (!modifiers) {
+    return modifiers;
+  }
+  const next: PublicGameModifiers = { ...modifiers };
+  for (const key of PUBLIC_LOBBY_EXCLUDED_MODIFIERS) {
+    delete next[key];
+  }
+  return next;
 }
 
 export function renderDuration(totalSeconds: number): string {
@@ -561,12 +576,14 @@ export function getMessageTypeClasses(type: MessageType): string {
     case MessageType.CAPTURED_ENEMY_UNIT:
     case MessageType.CONQUERED_PLAYER:
     case MessageType.ALLIANCE_ACCEPTED:
+    case MessageType.NAVAL_MINE_TRIGGERED:
       return severityColors["success"];
     case MessageType.ATTACK_FAILED:
     case MessageType.ALLIANCE_REJECTED:
     case MessageType.ALLIANCE_BROKEN:
     case MessageType.UNIT_DESTROYED:
     case MessageType.NUKE_DETONATED:
+    case MessageType.NAVAL_MINE_STRUCK:
       return severityColors["fail"];
     case MessageType.ATTACK_CANCELLED:
     case MessageType.ATTACK_REQUEST:

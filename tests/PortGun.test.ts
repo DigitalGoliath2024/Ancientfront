@@ -161,7 +161,11 @@ describe("Port Gun", () => {
 
   test("transport light guns deal half warship shell damage", () => {
     const spawn = game.ref(coastX + 1, 10);
-    const target = player2.buildUnit(UnitType.PortGun, game.ref(coastX, 10), {});
+    const target = player2.buildUnit(
+      UnitType.PortGun,
+      game.ref(coastX, 10),
+      {},
+    );
     const warship = player1.buildUnit(UnitType.Warship, spawn, {
       patrolTile: spawn,
     });
@@ -190,12 +194,15 @@ describe("Port Gun", () => {
     expect(BuildMenus.has(UnitType.MissileSilo)).toBe(false);
     expect(BuildMenus.has(UnitType.AtomBomb)).toBe(false);
     expect(BuildableAttacks.has(UnitType.Warship)).toBe(true);
+    expect(BuildableAttacks.has(UnitType.NavalMine)).toBe(true);
     expect(BuildMenus.has(UnitType.PortGun)).toBe(true);
   });
 
   test("transport light guns shoot half as far as warships", () => {
     const warshipRange = game.config().warshipTargettingRange();
-    expect(game.config().transportTargettingRange()).toBe(warshipRange / 2);
+    expect(game.config().transportTargettingRange()).toBe(
+      ((warshipRange * 50) / 100) | 0,
+    );
   });
 
   test("Repairman does not heal below level 4", () => {
@@ -226,11 +233,19 @@ describe("Port Gun", () => {
   });
 
   test("Repairman heals a bit faster above level 4", () => {
-    const level4 = player1.buildUnit(UnitType.PortGun, game.ref(coastX, 10), {});
+    const level4 = player1.buildUnit(
+      UnitType.PortGun,
+      game.ref(coastX, 10),
+      {},
+    );
     level4.increaseLevel();
     level4.increaseLevel();
     level4.increaseLevel();
-    const level5 = player1.buildUnit(UnitType.PortGun, game.ref(coastX, 12), {});
+    const level5 = player1.buildUnit(
+      UnitType.PortGun,
+      game.ref(coastX, 12),
+      {},
+    );
     level5.increaseLevel();
     level5.increaseLevel();
     level5.increaseLevel();

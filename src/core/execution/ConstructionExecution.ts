@@ -10,6 +10,7 @@ import { NukeExecution } from "./NukeExecution";
 import { PortExecution } from "./PortExecution";
 import { PortGunExecution } from "./PortGunExecution";
 import { SAMLauncherExecution } from "./SAMLauncherExecution";
+import { NavalMineExecution } from "./NavalMineExecution";
 import { WarshipExecution } from "./WarshipExecution";
 
 export class ConstructionExecution implements Execution {
@@ -165,6 +166,9 @@ export class ConstructionExecution implements Execution {
         break;
       case UnitType.Armory:
         this.mg.addExecution(new ArmoryExecution(this.structure!));
+        break;
+      case UnitType.NavalMine:
+        this.mg.addExecution(new NavalMineExecution(player, this.tile));
         break;
       default:
         console.warn(

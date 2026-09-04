@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
+import { ASSET_CREDITS_URL, FLYING_V_STUDIOS_URL } from "./Attribution";
 import { translateText } from "./Utils";
 
 @customElement("game-starting-modal")
@@ -25,17 +26,31 @@ export class GameStartingModal extends LitElement {
           : "opacity-0 invisible -translate-y-[48%]"}"
       >
         <div
-          class="text-base font-medium tracking-wider uppercase text-white/40 mb-3"
+          class="text-xl font-medium tracking-wider text-white mb-2"
+          data-starting-title
         >
+          ${translateText("main.title")}
+        </div>
+        <div class="text-sm text-white/45 mb-1">
+          ${translateText("main.independent_modified")}
+        </div>
+        <div class="text-sm text-white/45 mb-1" data-starting-copyright>
           ${translateText("main.copyright")}
         </div>
-        <div
-          class="text-sm font-medium tracking-wider uppercase text-white/35 mb-3"
-        >
-          ${translateText("main.based_on")}
+        <div class="text-sm text-white/45 mb-1">
+          ${translateText("main.modified_by_prefix")}<a
+            href=${FLYING_V_STUDIOS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-white/70 hover:text-white transition-colors"
+            >${translateText("main.studio_name")}</a
+          >${translateText("main.modified_by_suffix")}
+        </div>
+        <div class="text-sm text-white/45 mb-3">
+          ${translateText("main.not_affiliated")}
         </div>
         <a
-          href="https://github.com/DigitalGoliath2024/Ancientfront/blob/main/CREDITS.md"
+          href=${ASSET_CREDITS_URL}
           target="_blank"
           rel="noopener noreferrer"
           class="block mb-4 text-lg font-medium tracking-wider uppercase text-malibu-blue no-underline transition-colors duration-200 hover:text-aquarius"

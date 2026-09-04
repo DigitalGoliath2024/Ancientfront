@@ -1,4 +1,5 @@
 import z from "zod";
+import { isOpenFrontAccountApiEnabled } from "../core/OpenFrontAccountApi";
 import {
   GameID,
   GameRecord,
@@ -13,6 +14,9 @@ import { ServerEnv } from "./ServerEnv";
 const log = logger.child({ component: "Archive" });
 
 export async function archive(gameRecord: GameRecord) {
+  if (!isOpenFrontAccountApiEnabled()) {
+    return;
+  }
   try {
     const parsed = GameRecordSchema.safeParse(gameRecord);
     if (!parsed.success) {
@@ -47,6 +51,9 @@ export async function archive(gameRecord: GameRecord) {
 export async function readGameRecord(
   gameId: GameID,
 ): Promise<GameRecord | null> {
+  if (!isOpenFrontAccountApiEnabled()) {
+    return null;
+  }
   try {
     if (!ID.safeParse(gameId).success) {
       log.error(`invalid game ID: ${gameId}`);

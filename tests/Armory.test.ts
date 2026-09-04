@@ -73,7 +73,7 @@ describe("Armory", () => {
 
   test("caps at three weapon tiers: swords, muskets, cartridge guns", () => {
     expect(game.config().weaponTechMaxLevel()).toBe(3);
-    expect(game.config().unitInfo(UnitType.Armory).maxLevel).toBe(3);
+    expect(game.config().unitInfo(UnitType.Armory).maxLevel).toBe(4);
     expect(game.config().unitInfo(UnitType.Armory).unique).toBe(true);
   });
 
@@ -86,7 +86,7 @@ describe("Armory", () => {
     expect(game.config().weaponTechLevel(player1)).toBe(1);
   });
 
-  test("two upgrades reach cartridge guns and cannot go further", () => {
+  test("two upgrades reach cartridge guns; a third unlocks mines", () => {
     const tile = game.ref(5, 10);
     conquerPatch(player1, 5, 10);
     const armory = player1.buildUnit(UnitType.Armory, tile, {});
@@ -94,6 +94,10 @@ describe("Armory", () => {
     armory.increaseLevel();
     expect(game.config().weaponTechLevel(player1)).toBe(2);
     armory.increaseLevel();
+    expect(game.config().weaponTechLevel(player1)).toBe(3);
+    expect(player1.canUpgradeUnit(armory)).toBe(true);
+    armory.increaseLevel();
+    expect(armory.level()).toBe(4);
     expect(game.config().weaponTechLevel(player1)).toBe(3);
     expect(player1.canUpgradeUnit(armory)).toBe(false);
   });
@@ -131,7 +135,7 @@ describe("Armory", () => {
     expect(bothCartridge.tickFraction).toBe(fists.tickFraction);
   });
 
-  test("build and two upgrades cost 500k, 1.5M, then 3M", async () => {
+  test("build and three upgrades cost 500k, 1.5M, 3M, then 2M", async () => {
     game = await setup(
       "half_land_half_ocean",
       { infiniteGold: false, instantBuild: true },
@@ -152,6 +156,9 @@ describe("Armory", () => {
     expect(info.cost(game, player1)).toBe(3_000_000n);
     player1.upgradeUnit(armory);
     expect(armory.level()).toBe(3);
+    expect(info.cost(game, player1)).toBe(2_000_000n);
+    player1.upgradeUnit(armory);
+    expect(armory.level()).toBe(4);
     expect(player1.canUpgradeUnit(armory)).toBe(false);
   });
 

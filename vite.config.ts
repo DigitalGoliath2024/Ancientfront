@@ -313,6 +313,11 @@ export default defineConfig(({ mode }) => {
       "process.env.API_DOMAIN": JSON.stringify(
         mode === "test" ? "" : (env.API_DOMAIN ?? ""),
       ),
+      // Empty unless explicitly set — the client kill switch then falls
+      // through to OPENFRONT_ACCOUNT_API_ENABLED (false in this fork).
+      "process.env.OPENFRONT_ACCOUNT_API_ENABLED": JSON.stringify(
+        env.OPENFRONT_ACCOUNT_API_ENABLED ?? "",
+      ),
       // Add other process.env variables if needed, OR migrate code to import.meta.env
     },
 

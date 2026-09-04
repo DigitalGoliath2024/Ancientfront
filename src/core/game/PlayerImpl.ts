@@ -40,6 +40,7 @@ import {
   UnitParams,
   UnitType,
 } from "./Game";
+import { canPlaceNavalMine, navalMinesUnlocked } from "./NavalMine";
 import { GameImpl } from "./GameImpl";
 import { andFN, manhattanDistFN, TileRef } from "./GameMap";
 import {
@@ -1430,6 +1431,9 @@ export class PlayerImpl implements Player {
     if (this.mg.config().isUnitDisabled(unitType)) {
       return false;
     }
+    if (unitType === UnitType.NavalMine && !navalMinesUnlocked(this)) {
+      return false;
+    }
     const cost = knownCost ?? this.mg.unitInfo(unitType).cost(this.mg, this);
     if (this._gold < cost) {
       return false;
@@ -1622,6 +1626,10 @@ export class PlayerImpl implements Player {
       case UnitType.Factory:
       case UnitType.Armory:
         return this.landBasedStructureSpawn(targetTile, validTiles);
+      case UnitType.NavalMine:
+        return canPlaceNavalMine(this.mg, this, targetTile)
+          ? targetTile
+          : false;
       default:
         assertNever(unitType);
     }

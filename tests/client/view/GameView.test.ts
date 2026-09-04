@@ -855,3 +855,106 @@ describe("GameView.unitsOwnedBy — per-tick owner index", () => {
     expect(alice.units()).toHaveLength(3);
   });
 });
+
+describe("GameView.update — naval mine visibility", () => {
+  function seedPlayers(
+    game: ReturnType<typeof makeGameView>,
+    players: ReturnType<typeof makePlayerUpdate>[],
+  ) {
+    game.update(withPlayers(1, players));
+  }
+
+  it("owner sees own mines; enemies do not", () => {
+    const game = makeGameView({ myClientID: "client-a" });
+    seedPlayers(game, [
+      makePlayerUpdate({ id: "alice", smallID: 1, clientID: "client-a" }),
+      makePlayerUpdate({ id: "bob", smallID: 2, clientID: "client-b" }),
+    ]);
+    const gu = makeEmptyGu(2);
+    gu.updates[GameUpdateType.Unit] = [
+      makeUnitUpdate({
+        id: 10,
+        unitType: UnitType.NavalMine,
+        ownerID: 1,
+        isActive: true,
+      }),
+      makeUnitUpdate({
+        id: 11,
+        unitType: UnitType.NavalMine,
+        ownerID: 2,
+        isActive: true,
+      }),
+    ];
+    game.update(gu);
+    expect(game.unit(10)).toBeDefined();
+    expect(game.unit(11)).toBeUndefined();
+  });
+
+  it("teammates see friendly mines", () => {
+    const game = makeGameView({ myClientID: "client-a" });
+    seedPlayers(game, [
+      makePlayerUpdate({
+        id: "alice",
+        smallID: 1,
+        clientID: "client-a",
+        team: "Red",
+      }),
+      makePlayerUpdate({
+        id: "bob",
+        smallID: 2,
+        clientID: "client-b",
+        team: "Red",
+      }),
+    ]);
+    const gu = makeEmptyGu(2);
+    gu.updates[GameUpdateType.Unit] = [
+      makeUnitUpdate({
+        id: 11,
+        unitType: UnitType.NavalMine,
+        ownerID: 2,
+        isActive: true,
+      }),
+    ];
+    game.update(gu);
+    expect(game.unit(11)).toBeDefined();
+  });
+
+  it("enemy detonations still emit explosion FX without revealing the live mine", () => {
+    const game = makeGameView({ myClientID: "client-a" });
+    seedPlayers(game, [
+      makePlayerUpdate({ id: "alice", smallID: 1, clientID: "client-a" }),
+      makePlayerUpdate({ id: "bob", smallID: 2, clientID: "client-b" }),
+    ]);
+    const live = makeEmptyGu(2);
+    live.updates[GameUpdateType.Unit] = [
+      makeUnitUpdate({
+        id: 11,
+        unitType: UnitType.NavalMine,
+        ownerID: 2,
+        isActive: true,
+        pos: 44,
+      }),
+    ];
+    game.update(live);
+    expect(game.unit(11)).toBeUndefined();
+
+    const dead = makeEmptyGu(3);
+    dead.updates[GameUpdateType.Unit] = [
+      makeUnitUpdate({
+        id: 11,
+        unitType: UnitType.NavalMine,
+        ownerID: 2,
+        isActive: false,
+        pos: 44,
+      }),
+    ];
+    game.update(dead);
+    expect(game.unit(11)).toBeUndefined();
+    expect(game.frameData().events.deadUnits).toEqual([
+      expect.objectContaining({
+        unitType: UnitType.NavalMine,
+        pos: 44,
+      }),
+    ]);
+  });
+});

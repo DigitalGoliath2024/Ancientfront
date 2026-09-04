@@ -9,7 +9,6 @@ import {
   ClaimRewardResponseSchema,
   GetMyTribeNamesResponse,
   GetMyTribeNamesResponseSchema,
-  NewsItemSchema,
   PlayerGameModeFilter,
   PlayerGameTypeFilter,
   PlayerProfile,
@@ -48,6 +47,7 @@ import {
   userAuth,
 } from "./Auth";
 import { ClientEnv } from "./ClientEnv";
+import { fetchAccountApi } from "./accountApiFetch";
 
 export async function fetchPlayerById(
   playerId: string,
@@ -59,7 +59,7 @@ export async function fetchPlayerById(
 
     const url = `${getApiBase()}/player/${encodeURIComponent(playerId)}`;
 
-    const res = await fetch(url, {
+    const res = await fetchAccountApi(url, {
       headers: {
         Accept: "application/json",
         Authorization: `Bearer ${jwt}`,
@@ -97,7 +97,7 @@ export async function fetchPublicPlayerProfile(
   try {
     const url = `${getApiBase()}/public/player/${encodeURIComponent(publicId)}`;
 
-    const res = await fetch(url, {
+    const res = await fetchAccountApi(url, {
       headers: { Accept: "application/json" },
     });
 
@@ -147,7 +147,7 @@ export async function fetchPublicPlayerGames(
     if (opts.type) url.searchParams.set("type", opts.type);
     if (opts.cursor) url.searchParams.set("cursor", opts.cursor);
 
-    const res = await fetch(url.toString(), {
+    const res = await fetchAccountApi(url.toString(), {
       headers: { Accept: "application/json" },
     });
     if (!res.ok) {
@@ -194,7 +194,7 @@ export async function getUserMe(): Promise<UserMeResponse | false> {
       const { jwt, claims } = userAuthResult;
 
       // Get the user object
-      const response = await fetch(getApiBase() + "/users/@me", {
+      const response = await fetchAccountApi(getApiBase() + "/users/@me", {
         headers: {
           authorization: `Bearer ${jwt}`,
         },
@@ -257,7 +257,7 @@ export type DeleteAccountResult =
 // again during the 24 hours works but does not cancel the deletion.
 export async function deleteAccount(): Promise<DeleteAccountResult> {
   try {
-    const response = await fetch(`${getApiBase()}/users/@me`, {
+    const response = await fetchAccountApi(`${getApiBase()}/users/@me`, {
       method: "DELETE",
       credentials: "include",
     });
@@ -298,14 +298,17 @@ export async function setMarketingConsent(
   consented: boolean,
 ): Promise<boolean> {
   try {
-    const response = await fetch(`${getApiBase()}/marketing/consent`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: await getAuthHeader(),
+    const response = await fetchAccountApi(
+      `${getApiBase()}/marketing/consent`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: await getAuthHeader(),
+        },
+        body: JSON.stringify({ consented }),
       },
-      body: JSON.stringify({ consented }),
-    });
+    );
     if (response.status === 401) {
       await logOut();
       return false;
@@ -349,14 +352,17 @@ export async function updateUsername(
   username: string,
 ): Promise<UpdateUsernameResult> {
   try {
-    const response = await fetch(`${getApiBase()}/users/@me/username`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: await getAuthHeader(),
+    const response = await fetchAccountApi(
+      `${getApiBase()}/users/@me/username`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: await getAuthHeader(),
+        },
+        body: JSON.stringify({ username }),
       },
-      body: JSON.stringify({ username }),
-    });
+    );
     if (response.status === 401) {
       await logOut();
       return { ok: false, code: "failed" };
@@ -412,11 +418,14 @@ export async function getMyTribeNames(): Promise<
   GetMyTribeNamesResponse | false
 > {
   try {
-    const response = await fetch(`${getApiBase()}/users/@me/tribe_names`, {
-      headers: {
-        Authorization: await getAuthHeader(),
+    const response = await fetchAccountApi(
+      `${getApiBase()}/users/@me/tribe_names`,
+      {
+        headers: {
+          Authorization: await getAuthHeader(),
+        },
       },
-    });
+    );
     if (response.status === 401) {
       await logOut();
       return false;
@@ -463,14 +472,17 @@ export async function purchaseTribeName(
   name: string,
 ): Promise<PurchaseTribeNameResult> {
   try {
-    const response = await fetch(`${getApiBase()}/users/@me/tribe_names`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: await getAuthHeader(),
+    const response = await fetchAccountApi(
+      `${getApiBase()}/users/@me/tribe_names`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: await getAuthHeader(),
+        },
+        body: JSON.stringify({ name }),
       },
-      body: JSON.stringify({ name }),
-    });
+    );
     if (response.status === 401) {
       await logOut();
       return { ok: false, code: "failed" };
@@ -536,7 +548,7 @@ export async function boostTribeName(
   idempotencyKey: string,
 ): Promise<BoostTribeNameResult> {
   try {
-    const response = await fetch(
+    const response = await fetchAccountApi(
       `${getApiBase()}/users/@me/tribe_names/${encodeURIComponent(id)}/boosts`,
       {
         method: "POST",
@@ -594,7 +606,7 @@ export async function fetchTribeStats(
   name: string,
 ): Promise<TribeStatsResponse | false> {
   try {
-    const res = await fetch(
+    const res = await fetchAccountApi(
       `${getApiBase()}/public/tribe/${encodeURIComponent(name)}`,
       { headers: { Accept: "application/json" } },
     );
@@ -625,7 +637,7 @@ export async function purchaseWithCurrency(
   colorPaletteName?: string,
 ): Promise<boolean> {
   try {
-    const response = await fetch(`${getApiBase()}/shop/purchase`, {
+    const response = await fetchAccountApi(`${getApiBase()}/shop/purchase`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -691,14 +703,17 @@ export async function purchaseCosmeticPack(
   packName: string,
 ): Promise<PurchaseCosmeticPackResult> {
   try {
-    const response = await fetch(`${getApiBase()}/shop/purchase/pack`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: await getAuthHeader(),
+    const response = await fetchAccountApi(
+      `${getApiBase()}/shop/purchase/pack`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: await getAuthHeader(),
+        },
+        body: JSON.stringify({ packName }),
       },
-      body: JSON.stringify({ packName }),
-    });
+    );
     if (response.status === 401) {
       await logOut();
       return { ok: false, code: "failed" };
@@ -761,7 +776,7 @@ export async function claimReward(
   rewardId: string,
 ): Promise<ClaimRewardResponse | "not_found" | false> {
   try {
-    const response = await fetch(
+    const response = await fetchAccountApi(
       `${getApiBase()}/rewards/${encodeURIComponent(rewardId)}/claim`,
       {
         method: "POST",
@@ -801,12 +816,15 @@ export async function claimAllRewards(): Promise<
   ClaimAllRewardsResponse | false
 > {
   try {
-    const response = await fetch(`${getApiBase()}/rewards/claim-all`, {
-      method: "POST",
-      headers: {
-        Authorization: await getAuthHeader(),
+    const response = await fetchAccountApi(
+      `${getApiBase()}/rewards/claim-all`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: await getAuthHeader(),
+        },
       },
-    });
+    );
     if (response.status === 401) {
       await logOut();
       return false;
@@ -838,7 +856,7 @@ export async function createCheckoutSession(
   colorPaletteName?: string,
 ): Promise<string | false> {
   try {
-    const response = await fetch(
+    const response = await fetchAccountApi(
       `${getApiBase()}/stripe/create-checkout-session`,
       {
         method: "POST",
@@ -873,7 +891,7 @@ export async function createCustomCurrencyCheckout(
   hardAmount: number,
 ): Promise<string | false> {
   try {
-    const response = await fetch(
+    const response = await fetchAccountApi(
       `${getApiBase()}/stripe/create-custom-currency-checkout`,
       {
         method: "POST",
@@ -905,12 +923,15 @@ export async function createCustomCurrencyCheckout(
 
 export async function cancelSubscription(): Promise<boolean> {
   try {
-    const response = await fetch(`${getApiBase()}/subscriptions/@me/cancel`, {
-      method: "POST",
-      headers: {
-        Authorization: await getAuthHeader(),
+    const response = await fetchAccountApi(
+      `${getApiBase()}/subscriptions/@me/cancel`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: await getAuthHeader(),
+        },
       },
-    });
+    );
     if (response.status === 401) {
       await logOut();
       return false;
@@ -934,7 +955,7 @@ export async function changeSubscriptionTier(
   tierName: string,
 ): Promise<boolean | "rate_limited"> {
   try {
-    const response = await fetch(
+    const response = await fetchAccountApi(
       `${getApiBase()}/subscriptions/@me/change-tier`,
       {
         method: "POST",
@@ -970,16 +991,19 @@ export async function changeSubscriptionTier(
 
 export async function openSubscriptionPortal(): Promise<string | false> {
   try {
-    const response = await fetch(`${getApiBase()}/subscriptions/@me/portal`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: await getAuthHeader(),
+    const response = await fetchAccountApi(
+      `${getApiBase()}/subscriptions/@me/portal`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: await getAuthHeader(),
+        },
+        body: JSON.stringify({
+          returnUrl: window.location.origin,
+        }),
       },
-      body: JSON.stringify({
-        returnUrl: window.location.origin,
-      }),
-    });
+    );
     if (response.status === 401) {
       await logOut();
       return false;
@@ -1143,7 +1167,7 @@ export async function fetchGameById(
 ): Promise<AnalyticsRecord | false> {
   try {
     const url = `${getApiBase()}/game/${encodeURIComponent(gameId)}`;
-    const res = await fetch(url, {
+    const res = await fetchAccountApi(url, {
       headers: {
         Accept: "application/json",
       },
@@ -1195,7 +1219,7 @@ export async function fetchPlayerLeaderboard(
   try {
     const url = new URL(`${getApiBase()}/leaderboard/ranked`);
     url.searchParams.set("page", String(page));
-    const res = await fetch(url.toString(), {
+    const res = await fetchAccountApi(url.toString(), {
       headers: { Accept: "application/json" },
     });
 
@@ -1238,7 +1262,7 @@ async function fetchTribeLeaderboardPage(
   try {
     const url = new URL(`${getApiBase()}/leaderboard/tribes`);
     url.searchParams.set("page", String(page));
-    const res = await fetch(url.toString(), {
+    const res = await fetchAccountApi(url.toString(), {
       headers: { Accept: "application/json" },
     });
 
@@ -1286,25 +1310,7 @@ export async function fetchTribeLeaderboard(): Promise<
 }
 
 export async function getNews(): Promise<NewsItem[]> {
-  try {
-    const res = await fetch(`${getApiBase()}/news.json`, {
-      headers: { Accept: "application/json" },
-    });
-    if (res.status !== 200) {
-      console.warn("getNews: unexpected status", res.status);
-      return newsItemsFallback as NewsItem[];
-    }
-    const json = await res.json();
-    const parsed = z.array(NewsItemSchema).safeParse(json);
-    if (!parsed.success) {
-      console.warn("getNews: Zod validation failed", parsed.error);
-      return newsItemsFallback as NewsItem[];
-    }
-    return parsed.data;
-  } catch (err) {
-    console.warn("getNews: request failed, using fallback", err);
-    return newsItemsFallback as NewsItem[];
-  }
+  return newsItemsFallback as NewsItem[];
 }
 
 // Fetch an API-served JSON config (news.json-style: served file + bundled fallback).
@@ -1317,7 +1323,7 @@ async function getServedConfig<T>(
   fallback: unknown,
 ): Promise<T> {
   try {
-    const res = await fetch(`${getApiBase()}/${name}`, {
+    const res = await fetchAccountApi(`${getApiBase()}/${name}`, {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(10_000),
     });

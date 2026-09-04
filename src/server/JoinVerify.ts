@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { TokenPayload } from "../core/ApiSchemas";
+import { isOpenFrontAccountApiEnabled } from "../core/OpenFrontAccountApi";
 import { ServerEnv } from "./ServerEnv";
 
 const JoinVerifyVerdictSchema = z.discriminatedUnion("status", [
@@ -105,6 +106,9 @@ export async function verifyJoin(
   username: string,
   clanTag: string | null,
 ): Promise<JoinVerifyResponse> {
+  if (!isOpenFrontAccountApiEnabled()) {
+    return { status: "error", reason: "OpenFront account API disabled" };
+  }
   try {
     const response = await fetch(`${ServerEnv.jwtIssuer()}/join_verify`, {
       method: "POST",

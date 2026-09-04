@@ -12,6 +12,7 @@ import {
 } from "../core/Schemas";
 import { toWireGameStartInfo } from "../core/Util";
 import { GameEnv } from "../core/configuration/Config";
+import { isDisplayAdsEnabled } from "../core/DisplayAds";
 import { UserSettings } from "../core/game/UserSettings";
 import "./AccountModal";
 import "./AccountSettingsModal";
@@ -48,6 +49,7 @@ import {
 } from "./GameModeSelector";
 import { GameStartingModal } from "./GameStartingModal";
 import "./GameStatsModal";
+import "./GuideModal";
 import { HelpModal } from "./HelpModal";
 import "./HomepagePromos";
 import { HostLobbyModal as HostPrivateLobbyModal } from "./HostLobbyModal";
@@ -293,6 +295,7 @@ class Client {
       tag: "player-profile-modal",
       pageId: "page-profile",
     });
+    modalRouter.register("guide", { tag: "guide-modal", pageId: "page-guide" });
     modalRouter.register("help", { tag: "help-modal", pageId: "page-help" });
     modalRouter.register("news", { tag: "news-modal", pageId: "page-news" });
     modalRouter.register("language", {
@@ -500,7 +503,10 @@ class Client {
       const isAdFree =
         userMeResponse !== false && userMeResponse.player?.adfree === true;
       window.adsEnabled =
-        !isAdFree && !crazyGamesSDK.isOnCrazyGames() && !isDesktopShell();
+        isDisplayAdsEnabled() &&
+        !isAdFree &&
+        !crazyGamesSDK.isOnCrazyGames() &&
+        !isDesktopShell();
       // Ad-eligible users only: paid/adfree users must never load Admiral (its
       // adblock popup fires autonomously once the payload runs). Start watching
       // adblock state; once a blocker is ever detected the in-game ad is
@@ -1193,6 +1199,7 @@ class Client {
         "single-player-modal",
         "game-starting-modal",
         "game-top-bar",
+        "guide-modal",
         "help-modal",
         "user-setting",
         "troubleshooting-modal",

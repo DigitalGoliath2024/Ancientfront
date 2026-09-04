@@ -2,7 +2,7 @@
  * BarPass — instanced health/progress bars and warship veterancy pips.
  *
  * Three draw calls per frame (all share one program + instance buffer):
- *   1. Health bars (11x3 tiles, above warships)
+ *   1. Health bars (11x3 tiles, above warships / damaged structures)
  *   2. Progress bars (14x3 tiles, below structures — construction + missile readiness)
  *   3. Veterancy pips (solid gold rank bars stacked at a warship's bottom-right)
  *
@@ -13,10 +13,16 @@
  */
 
 import type { Config } from "../../../../core/configuration/Config";
-import { UnitType } from "../../../../core/game/Game";
+import { Structures, UnitType } from "../../../../core/game/Game";
+import { portHasVisibleHealthBar } from "../../../../core/game/PortDamage";
 import { maxHealthWithVeterancy } from "../../../../core/game/Veterancy";
 import type { RendererConfig, UnitState } from "../../types";
-import { UT_MARAUDER, UT_MISSILE_SILO, UT_PORT_GUN, UT_SAM_LAUNCHER } from "../../types";
+import {
+  UT_MARAUDER,
+  UT_MISSILE_SILO,
+  UT_PORT,
+  UT_SAM_LAUNCHER,
+} from "../../types";
 import type { RenderSettings } from "../RenderSettings";
 import { createProgram } from "../utils/GlUtils";
 
@@ -66,7 +72,8 @@ export class BarPass {
   private mapW: number;
   private warshipMaxHealth: number;
   private marauderMaxHealth: number;
-  private portGunMaxHealth: number;
+  private portMaxHealth: number;
+  private structureMaxHealth = new Map<string, number>();
   private veterancyHealthBonus: number;
 
   constructor(
@@ -80,7 +87,10 @@ export class BarPass {
     this.mapW = header.mapWidth;
     this.warshipMaxHealth = config.unitInfo(UnitType.Warship).maxHealth ?? 0;
     this.marauderMaxHealth = config.unitInfo(UnitType.Marauder).maxHealth ?? 0;
-    this.portGunMaxHealth = config.unitInfo(UnitType.PortGun).maxHealth ?? 0;
+    this.portMaxHealth = config.unitInfo(UnitType.Port).maxHealth ?? 0;
+    for (const type of Structures.types) {
+      this.structureMaxHealth.set(type, config.unitInfo(type).maxHealth ?? 0);
+    }
     this.veterancyHealthBonus = config.warshipVeterancyHealthBonus();
 
     // --- Shader program ---
@@ -167,18 +177,22 @@ export class BarPass {
       }
     }
 
-    // --- Progress bars + port-gun health (structures) ---
+    // --- Progress bars + structure health (L1 ports; other buildings when chipped) ---
     for (const unit of structures.values()) {
       if (!unit.isActive) continue;
-      if (
-        unit.unitType === UT_PORT_GUN &&
-        unit.health !== null &&
-        unit.health > 0 &&
-        !unit.underConstruction &&
-        this.portGunMaxHealth > 0 &&
-        unit.health < this.portGunMaxHealth
-      ) {
-        this.pushHealth(unit, unit.health / this.portGunMaxHealth);
+      if (unit.health !== null && unit.health > 0 && !unit.underConstruction) {
+        if (unit.unitType === UT_PORT) {
+          if (
+            portHasVisibleHealthBar(unit.level, unit.health, this.portMaxHealth)
+          ) {
+            this.pushHealth(unit, unit.health / this.portMaxHealth);
+          }
+        } else {
+          const maxHealth = this.structureMaxHealth.get(unit.unitType) ?? 0;
+          if (maxHealth > 0 && unit.health < maxHealth) {
+            this.pushHealth(unit, unit.health / maxHealth);
+          }
+        }
       }
       const progress = this.computeStructureProgress(unit, gameTick);
       if (progress !== null) this.pushProgress(unit, progress);

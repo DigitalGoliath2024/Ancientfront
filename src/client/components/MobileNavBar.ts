@@ -1,7 +1,10 @@
-import { html, LitElement, TemplateResult } from "lit";
+import { html, LitElement, nothing, TemplateResult } from "lit";
 import { customElement } from "lit/decorators.js";
 import { assetUrl } from "../../core/AssetUrls";
 import { NavNotificationsController } from "./NavNotificationsController";
+
+/** Flip to show Store / Inventory / Leaderboard / Clans in homepage chrome. */
+const SHOW_STORE_INVENTORY_LEADERBOARD_CLANS = false;
 
 const MOBILE_ITEM =
   "nav-menu-item font-button block w-full text-left font-bold uppercase tracking-[0.05em] " +
@@ -85,46 +88,80 @@ export class MobileNavBar extends LitElement {
           class="flex flex-col text-malibu-blue mb-4 ml-[clamp(0.2rem,0.4vw,0.4vh)]"
         >
           <div class="flex flex-col items-center">
-            <img
-              src=${assetUrl("images/GameLogo.jpg")}
-              alt="Marauder's Sea"
-              class="w-auto h-auto max-w-[220px] max-h-[5.5rem] object-contain"
-            />
+            <button
+              type="button"
+              class="nav-menu-item cursor-pointer bg-transparent border-0 p-0"
+              data-page="page-play"
+              data-i18n-aria-label="main.title"
+              data-i18n-title="main.title"
+            >
+              <img
+                src=${assetUrl("images/GameLogo.jpg")}
+                alt="Marauder's Sea"
+                class="w-auto h-auto max-w-[220px] max-h-[5.5rem] object-contain"
+              />
+            </button>
           </div>
         </div>
         <!-- Mobile Navigation Menu Items (same order as the desktop bar) -->
         <button
-          class="${MOBILE_ITEM} ${currentPage === "page-play" ? "active" : ""}"
-          data-page="page-play"
-          data-i18n="main.play"
+          class="${MOBILE_ITEM} ${currentPage === "page-guide" ? "active" : ""}"
+          data-page="page-guide"
+          data-i18n="main.guide"
         ></button>
-        <div
-          class="no-crazygames nav-menu-item flex items-center w-full cursor-pointer"
-          data-page="page-item-store"
-          @click=${this._notifications.onStoreClick}
-        >
-          <button class="${MOBILE_ITEM}" data-i18n="main.store"></button>
-          ${this._notifications.showStoreDot()
-            ? this._renderDot("bg-red-500")
-            : ""}
-        </div>
         <button
-          class="${MOBILE_ITEM} ${currentPage === "page-inventory"
+          class="${MOBILE_ITEM} ${currentPage === "page-help" ? "active" : ""}"
+          data-page="page-help"
+          data-i18n="main.help"
+          @click=${this._notifications.onHelpClick}
+        ></button>
+        <button
+          class="${MOBILE_ITEM} ${currentPage === "page-news" ? "active" : ""}"
+          data-page="page-news"
+          data-i18n="main.news"
+          @click=${this._notifications.onNewsClick}
+        ></button>
+        <button
+          class="${MOBILE_ITEM} ${currentPage === "page-settings"
             ? "active"
             : ""}"
-          data-page="page-inventory"
-          data-i18n="main.inventory"
+          data-page="page-settings"
+          data-i18n="nav_account_menu.game_settings"
         ></button>
-        <button
-          class="${MOBILE_ITEM}"
-          data-page="page-leaderboard"
-          data-i18n="main.leaderboard"
-        ></button>
-        <button
-          class="no-crazygames ${MOBILE_ITEM}"
-          data-page="page-clan"
-          data-i18n="main.clans"
-        ></button>
+        ${SHOW_STORE_INVENTORY_LEADERBOARD_CLANS
+          ? html`
+              <div
+                class="no-crazygames nav-menu-item flex items-center w-full cursor-pointer"
+                data-page="page-item-store"
+                @click=${this._notifications.onStoreClick}
+              >
+                <button
+                  class="${MOBILE_ITEM}"
+                  data-i18n="main.store"
+                ></button>
+                ${this._notifications.showStoreDot()
+                  ? this._renderDot("bg-red-500")
+                  : ""}
+              </div>
+              <button
+                class="${MOBILE_ITEM} ${currentPage === "page-inventory"
+                  ? "active"
+                  : ""}"
+                data-page="page-inventory"
+                data-i18n="main.inventory"
+              ></button>
+              <button
+                class="${MOBILE_ITEM}"
+                data-page="page-leaderboard"
+                data-i18n="main.leaderboard"
+              ></button>
+              <button
+                class="no-crazygames ${MOBILE_ITEM}"
+                data-page="page-clan"
+                data-i18n="main.clans"
+              ></button>
+            `
+          : nothing}
         <div
           class="flex flex-col w-full mt-auto [.in-game_&]:hidden items-end justify-end pt-4 border-t border-white/10"
         ></div>

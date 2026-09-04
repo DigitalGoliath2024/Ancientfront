@@ -19,6 +19,7 @@ import {
   decompressGameRecord,
   replacer,
 } from "../core/Util";
+import { fetchAccountApi } from "./accountApiFetch";
 import { getApiBase } from "./Api";
 import { getAuthHeader, getPersistentID } from "./Auth";
 import { LobbyConfig } from "./ClientGameRunner";
@@ -341,7 +342,7 @@ export class LocalServer {
         replacer,
       );
       const compressedData = await compress(jsonString);
-      const response = await fetch(
+      const response = await fetchAccountApi(
         `${getApiBase()}/archive_singleplayer_game`,
         {
           method: "POST",

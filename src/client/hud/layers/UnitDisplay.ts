@@ -8,6 +8,10 @@ import {
   PlayerBuildableUnitType,
   UnitType,
 } from "../../../core/game/Game";
+import {
+  NAVAL_MINE_MAX_ACTIVE,
+  navalMinesUnlocked,
+} from "../../../core/game/NavalMine";
 import { UserSettings } from "../../../core/game/UserSettings";
 import { Controller } from "../../Controller";
 import { ToggleStructureEvent } from "../../InputHandler";
@@ -23,6 +27,7 @@ import {
   samLauncherIcon,
   troopIconWhite,
   marauderIcon,
+  navalMineIcon,
   warshipIcon,
 } from "../HotbarIcons";
 
@@ -36,6 +41,7 @@ export class UnitDisplay extends LitElement implements Controller {
   private _cities = 0;
   private _warships = 0;
   private _marauders = 0;
+  private _navalMines = 0;
   private _factories = 0;
   private _armory = 0;
   private _port = 0;
@@ -71,18 +77,20 @@ export class UnitDisplay extends LitElement implements Controller {
     if (this.game?.config().isUnitDisabled(item)) return false;
     const player = this.game?.myPlayer();
     switch (item) {
-      case UnitType.AtomBomb:
-      case UnitType.HydrogenBomb:
-      case UnitType.MIRV:
-        return (
-          this.cost(item) <= (player?.gold() ?? 0n) &&
-          (player?.units(UnitType.MissileSilo).length ?? 0) > 0
-        );
       case UnitType.Warship:
       case UnitType.Marauder:
         return (
           this.cost(item) <= (player?.gold() ?? 0n) &&
           (player?.units(UnitType.Port).length ?? 0) > 0
+        );
+      case UnitType.NavalMine:
+        return (
+          player !== undefined &&
+          player !== null &&
+          navalMinesUnlocked(player) &&
+          this.cost(item) <= player.gold() &&
+          player.units(UnitType.NavalMine).filter((u) => u.isActive()).length <
+            NAVAL_MINE_MAX_ACTIVE
         );
       default:
         return this.cost(item) <= (player?.gold() ?? 0n);
@@ -103,6 +111,9 @@ export class UnitDisplay extends LitElement implements Controller {
     this._armory = player.totalUnitLevels(UnitType.Armory);
     this._warships = player.totalUnitLevels(UnitType.Warship);
     this._marauders = player.totalUnitLevels(UnitType.Marauder);
+    this._navalMines = player
+      .units(UnitType.NavalMine)
+      .filter((u) => u.isActive()).length;
     this.requestUpdate();
   }
 
@@ -179,6 +190,15 @@ export class UnitDisplay extends LitElement implements Controller {
             "marauder",
             "",
           )}
+          ${navalMinesUnlocked(myPlayer)
+            ? this.renderUnitItem(
+                navalMineIcon,
+                this._navalMines,
+                UnitType.NavalMine,
+                "naval_mine",
+                "",
+              )
+            : ""}
         </div>
       </div>
     `;
@@ -258,15 +278,6 @@ export class UnitDisplay extends LitElement implements Controller {
           }}
           @mouseenter=${() => {
             switch (unitType) {
-              case UnitType.AtomBomb:
-              case UnitType.HydrogenBomb:
-                this.eventBus?.emit(
-                  new ToggleStructureEvent([
-                    UnitType.MissileSilo,
-                    UnitType.SAMLauncher,
-                  ]),
-                );
-                break;
               case UnitType.Warship:
               case UnitType.Marauder:
                 this.eventBus?.emit(new ToggleStructureEvent([UnitType.Port]));

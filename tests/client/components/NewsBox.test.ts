@@ -1,8 +1,16 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import newsItems from "../../../resources/news.json";
 import {
   getVisibleNewsItems,
+  NewsBox,
   NewsItem,
 } from "../../../src/client/components/NewsBox";
+
+const getNews = vi.fn<() => Promise<NewsItem[]>>();
+vi.mock("../../../src/client/Api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../../src/client/Api")>()),
+  getNews: () => getNews(),
+}));
 
 const DISMISSED_NEWS_KEY = "dismissedNewsItems";
 const allItems = newsItems as NewsItem[];
@@ -87,6 +95,63 @@ describe("NewsBox", () => {
     it("contains a warning entry", () => {
       const items = getVisibleNewsItems(allItems);
       expect(items.some((i) => i.type === "warning")).toBe(true);
+    });
+
+    it("starts with the local Marauder's Sea 0.1.0 announcement", () => {
+      expect(allItems[0]?.id).toBe("marauders-sea-0.1.0");
+      expect(allItems[0]?.type).toBe("announcement");
+    });
+  });
+
+  describe("welcome line", () => {
+    async function mountBox(): Promise<NewsBox> {
+      const el = document.createElement("news-box") as NewsBox;
+      document.body.appendChild(el);
+      await el.updateComplete;
+      await vi.waitFor(() => {
+        expect(el.querySelector("[data-news-welcome]")).toBeTruthy();
+      });
+      return el;
+    }
+
+    beforeEach(() => {
+      getNews.mockResolvedValue(allItems);
+    });
+
+    afterEach(() => {
+      document.body.replaceChildren();
+    });
+
+    it("renders the gold welcome line above the local 0.1.0 announcement", async () => {
+      const el = await mountBox();
+      await vi.waitFor(() => {
+        expect(el.textContent).toContain("Marauder's Sea 0.1.0");
+      });
+      const welcome = el.querySelector("[data-news-welcome]");
+      expect(welcome).toBeTruthy();
+      expect(welcome?.className).toContain("text-gold");
+      expect(welcome?.className).toContain("text-lg");
+      expect(welcome?.textContent).toContain("news_box.welcome");
+      expect(welcome?.querySelector(".text-ember")?.textContent).toContain(
+        "news_box.welcome_strategy",
+      );
+
+      const announcement = el.querySelector(".text-sm");
+      expect(announcement?.textContent).toContain("Marauder's Sea 0.1.0");
+      expect(el.textContent).toContain("news_box.v0_1_0");
+
+      const box = welcome!.parentElement;
+      expect(box?.firstElementChild).toBe(welcome);
+      expect(
+        welcome!.compareDocumentPosition(announcement!),
+      ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+
+    it("keeps the welcome line when there are no news items", async () => {
+      getNews.mockResolvedValue([]);
+      const el = await mountBox();
+      expect(el.querySelector("[data-news-welcome]")).toBeTruthy();
+      expect(el.textContent).not.toContain("Firefox Performance Issues");
     });
   });
 });

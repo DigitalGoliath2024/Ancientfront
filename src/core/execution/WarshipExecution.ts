@@ -5,16 +5,21 @@ import {
   isCombatShip,
   isUnit,
   OwnerComp,
+  Structures,
   Unit,
   UnitParams,
   UnitType,
 } from "../game/Game";
 import { TileRef } from "../game/GameMap";
+import { assignWarshipVolleyTargets } from "../game/Veterancy";
 import { WaterPathFinder } from "../pathfinding/PathFinder";
 import { PathStatus } from "../pathfinding/types";
 import { PseudoRandom } from "../PseudoRandom";
 import { findMinimumBy } from "../Util";
 import { ShellExecution } from "./ShellExecution";
+
+/** Shore structures warships and marauders will shell. */
+const WARSHIP_SHORE_TARGETS: readonly UnitType[] = Structures.types;
 
 export class WarshipExecution implements Execution {
   private random: PseudoRandom;
@@ -151,6 +156,26 @@ export class WarshipExecution implements Execution {
     if (this.warship.warshipState().state === "docked") {
       this.applyActiveDockedHealing();
     }
+
+    this.applyMaxRankHullRepair();
+  }
+
+  /**
+   * Rank-3 Warships carry a repairman who patches the hull anywhere.
+   * Marauders never get this, even at the same max rank. Skipped when
+   * doomed (healWarship returns before this) or already dead (tick
+   * deletes first). modifyHealth clamps to max HP.
+   */
+  private applyMaxRankHullRepair(): void {
+    if (this.warship.type() !== UnitType.Warship) {
+      return;
+    }
+    const hp = this.mg
+      .config()
+      .warshipMaxRankRepairHp(this.warship.veterancy(), this.currentTick);
+    if (hp > 0) {
+      this.warship.modifyHealth(hp);
+    }
   }
 
   private isFullyHealed(): boolean {
@@ -223,7 +248,7 @@ export class WarshipExecution implements Execution {
     return this.findBestTarget([
       ...CombatShips.types,
       UnitType.TransportShip,
-      UnitType.PortGun,
+      ...WARSHIP_SHORE_TARGETS,
     ]);
   }
 
@@ -232,7 +257,7 @@ export class WarshipExecution implements Execution {
       [
         UnitType.TransportShip,
         ...CombatShips.types,
-        UnitType.PortGun,
+        ...WARSHIP_SHORE_TARGETS,
         UnitType.TradeShip,
       ],
       true,
@@ -272,15 +297,7 @@ export class WarshipExecution implements Execution {
     let bestDistSquared = 0;
 
     for (const { unit, distSquared } of ships) {
-      if (
-        unit === this.warship ||
-        unit.owner() === owner ||
-        !owner.canAttackPlayer(unit.owner(), true) ||
-        this.alreadySentShell.has(unit) ||
-        unit.isUnderConstruction() ||
-        (isCombatShip(unit.type()) &&
-          unit.warshipState().state === "docked")
-      ) {
+      if (!this.isValidHostileTarget(unit)) {
         continue;
       }
 
@@ -319,12 +336,18 @@ export class WarshipExecution implements Execution {
         }
       }
 
-      const typePriority =
-        type === UnitType.TransportShip
-          ? 0
-          : isCombatShip(type) || type === UnitType.PortGun
-            ? 1
-            : 2;
+      let typePriority: number;
+      if (type === UnitType.TransportShip) {
+        typePriority = 0;
+      } else if (isCombatShip(type) || type === UnitType.PortGun) {
+        typePriority = 1;
+      } else if (type === UnitType.TradeShip) {
+        typePriority = 2;
+      } else {
+        // Buildings after combat/piracy so a city does not steal shots from
+        // a warship in the face or a trade ship worth capturing.
+        typePriority = 3;
+      }
 
       if (
         bestUnit === undefined ||
@@ -338,6 +361,18 @@ export class WarshipExecution implements Execution {
     }
 
     return bestUnit;
+  }
+
+  private isValidHostileTarget(unit: Unit): boolean {
+    const owner = this.warship.owner();
+    return (
+      unit !== this.warship &&
+      unit.owner() !== owner &&
+      owner.canAttackPlayer(unit.owner(), true) &&
+      !this.alreadySentShell.has(unit) &&
+      !unit.isUnderConstruction() &&
+      !(isCombatShip(unit.type()) && unit.warshipState().state === "docked")
+    );
   }
 
   private startRepairRetreat(): void {
@@ -641,25 +676,66 @@ export class WarshipExecution implements Execution {
     this.warship.updateWarshipState({ isInCombat: true });
     const shellAttackRate = this.mg.config().warshipShellAttackRate();
     if (this.mg.ticks() - this.lastShellAttack > shellAttackRate) {
-      if (this.warship.targetUnit()?.type() !== UnitType.TransportShip) {
+      const primary = this.warship.targetUnit()!;
+      if (primary.type() !== UnitType.TransportShip) {
         // Warships don't need to reload when attacking transport ships.
         this.lastShellAttack = this.mg.ticks();
       }
-      this.mg.addExecution(
-        new ShellExecution(
-          this.warship.tile(),
-          this.warship.owner(),
-          this.warship,
-          this.warship.targetUnit()!,
-        ),
-      );
-      if (!this.warship.targetUnit()!.hasHealth()) {
-        // Don't send multiple shells to target that can be oneshotted
-        this.alreadySentShell.add(this.warship.targetUnit()!);
+      const shotCount = this.shellsThisVolley(primary);
+      const targets = this.volleyTargets(primary, shotCount);
+      for (const target of targets) {
+        this.mg.addExecution(
+          new ShellExecution(
+            this.warship.tile(),
+            this.warship.owner(),
+            this.warship,
+            target,
+          ),
+        );
+        if (!target.hasHealth()) {
+          // Don't send multiple shells to a target that can be oneshotted.
+          this.alreadySentShell.add(target);
+        }
+      }
+      if (!primary.hasHealth()) {
         this.warship.setTargetUnit(undefined);
-        return;
       }
     }
+  }
+
+  /** Warships gain extra shells at rank 2–3. Marauders and oneshots stay at 1. */
+  private shellsThisVolley(primary: Unit): number {
+    if (this.warship.type() !== UnitType.Warship || !primary.hasHealth()) {
+      return 1;
+    }
+    return this.mg
+      .config()
+      .warshipVeterancyShellCount(this.warship.veterancy());
+  }
+
+  /**
+   * Primary target first; extra rounds split onto other ships in range,
+   * sorted by distance then unit id. Leftover shots stack back on the primary.
+   */
+  private volleyTargets(primary: Unit, shotCount: number): Unit[] {
+    if (shotCount <= 1) {
+      return [primary];
+    }
+    const nearby = this.mg.nearbyUnits(
+      this.warship.tile(),
+      this.mg.config().warshipTargettingRange(),
+      [UnitType.TransportShip, ...CombatShips.types, ...WARSHIP_SHORE_TARGETS],
+    );
+    const extras = nearby
+      .filter(({ unit }) => unit !== primary && this.isValidHostileTarget(unit))
+      .sort((a, b) => {
+        if (a.distSquared !== b.distSquared) {
+          return a.distSquared - b.distSquared;
+        }
+        return a.unit.id() - b.unit.id();
+      })
+      .map(({ unit }) => unit);
+    return assignWarshipVolleyTargets([primary, ...extras], shotCount);
   }
 
   private huntDownTradeShip() {

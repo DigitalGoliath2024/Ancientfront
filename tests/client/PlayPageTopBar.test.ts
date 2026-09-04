@@ -55,8 +55,13 @@ describe("play-page mobile top bar", () => {
   describe("off CrazyGames", () => {
     beforeEach(mount);
 
-    it("puts the bell/help icons beside the profile menu", () => {
-      expect(rightSlot()).toEqual(["nav-utility-icons", "nav-account-menu"]);
+    it("puts guide, help, news, and settings icons in the right slot", () => {
+      expect(rightSlot()).toEqual(["nav-utility-icons"]);
+      expect(el.querySelector("nav-account-menu")).toBeNull();
+      expect(el.querySelector('[data-page="page-guide"]')).toBeTruthy();
+      expect(el.querySelector('[data-page="page-settings"]')).toBeTruthy();
+      expect(el.querySelector('[data-page="page-help"]')).toBeTruthy();
+      expect(el.querySelector('[data-page="page-news"]')).toBeTruthy();
     });
   });
 
@@ -66,11 +71,9 @@ describe("play-page mobile top bar", () => {
       await mount();
     });
 
-    it("renders the same controls — the menu covers their sign-in too", () => {
-      // News and Help left the hamburger, so the icons have to be here for
-      // CrazyGames players; the profile menu's own "Sign in" item hands off to
-      // their SDK prompt, so no platform-specific button is needed.
-      expect(rightSlot()).toEqual(["nav-utility-icons", "nav-account-menu"]);
+    it("renders the same utility icons without a sign-in control", () => {
+      expect(rightSlot()).toEqual(["nav-utility-icons"]);
+      expect(el.querySelector("nav-account-menu")).toBeNull();
     });
   });
 });

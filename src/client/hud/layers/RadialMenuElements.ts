@@ -3,9 +3,9 @@ import { Config } from "../../../core/configuration/Config";
 import {
   AllPlayers,
   BuildableAttacks,
+  BuildMenus,
   bulkCost,
   maxBulkAmount,
-  NUKE_BULK_STEPS,
   PlayerActions,
   PlayerBuildableUnitType,
   STRUCTURE_BULK_STEPS,
@@ -24,6 +24,10 @@ import { PlayerActionHandler } from "./PlayerActionHandler";
 import { PlayerPanel } from "./PlayerPanel";
 import { TooltipItem } from "./RadialMenu";
 
+import {
+  NAVAL_MINE_MAX_ACTIVE,
+  navalMinesUnlocked,
+} from "../../../core/game/NavalMine";
 import { EventBus } from "../../../core/EventBus";
 import {
   BuildUnitIntentEvent,
@@ -391,6 +395,7 @@ export const infoMenuElement: MenuElement = {
 function getAllEnabledUnits(
   myPlayer: boolean,
   config: Config,
+  player?: PlayerView | null,
 ): Set<PlayerBuildableUnitType> {
   const units: Set<PlayerBuildableUnitType> =
     new Set<PlayerBuildableUnitType>();
@@ -402,12 +407,37 @@ function getAllEnabledUnits(
   };
 
   if (myPlayer) {
-    Structures.types.forEach(addIfEnabled);
+    BuildMenus.types.forEach(addIfEnabled);
   } else {
-    BuildableAttacks.types.forEach(addIfEnabled);
+    BuildableAttacks.types.forEach((unitType) => {
+      if (
+        unitType === UnitType.NavalMine &&
+        !(player && navalMinesUnlocked(player))
+      ) {
+        return;
+      }
+      addIfEnabled(unitType);
+    });
   }
 
   return units;
+}
+
+/** Tile-independent: unlocked, under cap, and (if cost is known) affordable. */
+function canEnterNavalMineGhost(params: MenuElementParams): boolean {
+  if (!navalMinesUnlocked(params.myPlayer)) {
+    return false;
+  }
+  const bu = params.playerActions.buildableUnits.find(
+    (u) => u.type === UnitType.NavalMine,
+  );
+  if (bu !== undefined && params.myPlayer.gold() < bu.cost) {
+    return false;
+  }
+  const active = params.myPlayer
+    .units(UnitType.NavalMine)
+    .filter((u) => u.isActive()).length;
+  return active < NAVAL_MINE_MAX_ACTIVE;
 }
 
 function createMenuElements(
@@ -418,6 +448,7 @@ function createMenuElements(
   const unitTypes: Set<PlayerBuildableUnitType> = getAllEnabledUnits(
     params.selected === params.myPlayer,
     params.game.config(),
+    params.myPlayer,
   );
 
   return flattenedBuildTable
@@ -435,9 +466,15 @@ function createMenuElements(
           ? item.key.replace("unit_type.", "")
           : item.unitType.toString(),
         disabled: (p: MenuElementParams) =>
-          !p.buildMenu.canBuildOrUpgrade(item),
+          item.unitType === UnitType.NavalMine
+            ? !canEnterNavalMineGhost(p)
+            : !p.buildMenu.canBuildOrUpgrade(item),
         color: (p: MenuElementParams) =>
-          p.buildMenu.canBuildOrUpgrade(item)
+          (
+            item.unitType === UnitType.NavalMine
+              ? canEnterNavalMineGhost(p)
+              : p.buildMenu.canBuildOrUpgrade(item)
+          )
             ? filterType === "attack"
               ? COLORS.attack
               : COLORS.building
@@ -466,34 +503,25 @@ function createMenuElements(
           if (!buildableUnit) {
             return [];
           }
-          const isStackableNuke =
-            item.unitType === UnitType.AtomBomb &&
-            buildableUnit.canBuild !== false;
           if (
-            (buildableUnit.canUpgrade === false && !isStackableNuke) ||
+            buildableUnit.canUpgrade === false ||
             !params.buildMenu.canBuildOrUpgrade(item)
           ) {
             return [];
           }
           // Always four slots in fixed positions for muscle memory — laid
           // out clockwise from the top: x1, the two fixed steps, then the
-          // largest amount the player can execute right now (bombs: top x1,
-          // right x2, bottom x5, left xMax). max is capped by gold, and for
-          // nukes by loaded silo tubes; slots beyond it render disabled.
-          // With no executable amount past x1 there is nothing to choose —
-          // return no submenu so the click falls through to an immediate x1
-          // (see action below).
+          // largest amount the player can execute right now. max is capped
+          // by gold; slots beyond it render disabled.
           const myPlayer = params.game.myPlayer();
-          let maxAmount = maxBulkAmount(buildableUnit, myPlayer?.gold() ?? 0n);
-          if (isStackableNuke) {
-            maxAmount = Math.min(maxAmount, myPlayer?.readyMissileCount() ?? 0);
-          }
+          const maxAmount = maxBulkAmount(
+            buildableUnit,
+            myPlayer?.gold() ?? 0n,
+          );
           if (maxAmount <= 1) {
             return [];
           }
-          const steps = isStackableNuke
-            ? NUKE_BULK_STEPS
-            : STRUCTURE_BULK_STEPS;
+          const steps = STRUCTURE_BULK_STEPS;
           const slots = [1, ...steps, maxAmount];
           return slots.map((amount, i) => {
             const isMaxSlot = i === slots.length - 1;
@@ -530,30 +558,27 @@ function createMenuElements(
               disabled: (p: MenuElementParams) =>
                 !executable || (p.game.myPlayer()?.gold() ?? 0n) < cost,
               action: (p: MenuElementParams) => {
-                if (isStackableNuke) {
-                  p.eventBus.emit(
-                    new BuildUnitIntentEvent(
-                      buildableUnit.type,
-                      p.tile,
-                      p.uiState?.rocketDirectionUp,
-                      amount,
-                    ),
-                  );
-                } else {
-                  p.eventBus.emit(
-                    new SendUpgradeStructureIntentEvent(
-                      buildableUnit.canUpgrade as number,
-                      buildableUnit.type,
-                      amount,
-                    ),
-                  );
-                }
+                p.eventBus.emit(
+                  new SendUpgradeStructureIntentEvent(
+                    buildableUnit.canUpgrade as number,
+                    buildableUnit.type,
+                    amount,
+                  ),
+                );
                 p.closeMenu();
               },
             };
           });
         },
         action: (params: MenuElementParams) => {
+          if (item.unitType === UnitType.NavalMine) {
+            if (params.uiState) {
+              params.uiState.upgradeMultiplier = 1;
+              params.uiState.ghostStructure = UnitType.NavalMine;
+            }
+            params.closeMenu();
+            return;
+          }
           const buildableUnit = params.playerActions.buildableUnits.find(
             (bu) => bu.type === item.unitType,
           );
@@ -569,17 +594,8 @@ function createMenuElements(
                 ),
               );
             } else if (buildableUnit.canBuild !== false) {
-              const rocketDirectionUp =
-                item.unitType === UnitType.AtomBomb ||
-                item.unitType === UnitType.HydrogenBomb
-                  ? params.uiState?.rocketDirectionUp
-                  : undefined;
               params.eventBus.emit(
-                new BuildUnitIntentEvent(
-                  buildableUnit.type,
-                  params.tile,
-                  rocketDirectionUp,
-                ),
+                new BuildUnitIntentEvent(buildableUnit.type, params.tile),
               );
             }
           }

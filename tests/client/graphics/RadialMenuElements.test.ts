@@ -65,6 +65,13 @@ vi.mock("../../../src/client/hud/layers/BuildMenu", async () => {
         icon: "mirv-icon",
         countable: false,
       },
+      {
+        unitType: UnitType.NavalMine,
+        key: "unit_type.naval_mine",
+        description: "unit_type.naval_mine_desc",
+        icon: "naval-mine-icon",
+        countable: true,
+      },
     ],
   };
 });
@@ -95,6 +102,8 @@ describe("RadialMenuElements", () => {
       isPlayer: vi.fn(() => true),
       isTraitor: vi.fn(() => false),
       isDisconnected: vi.fn(() => false),
+      gold: () => 1_000_000n,
+      units: () => [],
     } as unknown as PlayerView;
 
     mockGame = {
@@ -151,6 +160,12 @@ describe("RadialMenuElements", () => {
           canUpgrade: false,
           cost: 100n,
         },
+        {
+          type: UnitType.NavalMine,
+          canBuild: false,
+          canUpgrade: false,
+          cost: 250000n,
+        },
       ],
       canAttack: true,
       interaction: {
@@ -175,6 +190,12 @@ describe("RadialMenuElements", () => {
       playerPanel: {} as any,
       chatIntegration: {} as any,
       eventBus: { emit: vi.fn() } as any,
+      uiState: {
+        ghostStructure: null,
+        upgradeMultiplier: 1,
+        attackRatio: 20,
+        rocketDirectionUp: true,
+      },
       closeMenu: vi.fn(),
     };
   });
@@ -210,10 +231,9 @@ describe("RadialMenuElements", () => {
       expect(subMenu.length).toBeGreaterThan(0);
 
       const attackUnitTypes = [
-        UnitType.AtomBomb,
-        UnitType.MIRV,
-        UnitType.HydrogenBomb,
         UnitType.Warship,
+        UnitType.Marauder,
+        UnitType.NavalMine,
       ];
       const returnedUnitTypes = subMenu.map((item) => {
         const unitTypeStr = item.id.replace("attack_", "");
@@ -252,6 +272,72 @@ describe("RadialMenuElements", () => {
     it("should handle undefined params in submenu", () => {
       const subMenu = attackMenuElement.subMenu!(undefined as any);
       expect(subMenu).toEqual([]);
+    });
+
+    it("hides naval mines until Armory L4", () => {
+      const enemyPlayer = {
+        id: () => 2,
+        isPlayer: vi.fn(() => true),
+      } as unknown as PlayerView;
+      mockParams.selected = enemyPlayer;
+
+      const subMenu = attackMenuElement.subMenu!(mockParams);
+      expect(subMenu.find((item) => item.id === "attack_Naval Mine")).toBeUndefined();
+    });
+
+    it("shows naval mines on the ocean attack wheel when unlocked", () => {
+      const enemyPlayer = {
+        id: () => 2,
+        isPlayer: vi.fn(() => true),
+      } as unknown as PlayerView;
+      mockParams.selected = enemyPlayer;
+      mockPlayer.units = ((type: UnitType) => {
+        if (type === UnitType.Armory) {
+          return [
+            {
+              isActive: () => true,
+              isUnderConstruction: () => false,
+              level: () => 4,
+            },
+          ];
+        }
+        return [];
+      }) as PlayerView["units"];
+
+      const subMenu = attackMenuElement.subMenu!(mockParams);
+      const mine = subMenu.find((item) => item.id === "attack_Naval Mine");
+      expect(mine).toBeDefined();
+    });
+
+    it("selecting a naval mine enters ocean ghost mode even if the tile is invalid", () => {
+      const enemyPlayer = {
+        id: () => 2,
+        isPlayer: vi.fn(() => true),
+      } as unknown as PlayerView;
+      mockParams.selected = enemyPlayer;
+      mockBuildMenu.canBuildOrUpgrade = vi.fn(() => false);
+      mockPlayer.units = ((type: UnitType) => {
+        if (type === UnitType.Armory) {
+          return [
+            {
+              isActive: () => true,
+              isUnderConstruction: () => false,
+              level: () => 4,
+            },
+          ];
+        }
+        return [];
+      }) as PlayerView["units"];
+
+      const subMenu = attackMenuElement.subMenu!(mockParams);
+      const mine = subMenu.find((item) => item.id === "attack_Naval Mine");
+      expect(mine).toBeDefined();
+      expect(mine!.disabled(mockParams)).toBe(false);
+
+      mine!.action!(mockParams);
+      expect(mockParams.uiState!.ghostStructure).toBe(UnitType.NavalMine);
+      expect(mockParams.eventBus.emit).not.toHaveBeenCalled();
+      expect(mockParams.closeMenu).toHaveBeenCalled();
     });
   });
 
@@ -292,6 +378,24 @@ describe("RadialMenuElements", () => {
       });
     });
 
+    it("does not put naval mines on the land structure wheel even when unlocked", () => {
+      mockPlayer.units = ((type: UnitType) => {
+        if (type === UnitType.Armory) {
+          return [
+            {
+              isActive: () => true,
+              isUnderConstruction: () => false,
+              level: () => 4,
+            },
+          ];
+        }
+        return [];
+      }) as PlayerView["units"];
+
+      const subMenu = buildMenuElement.subMenu!(mockParams);
+      expect(subMenu.find((item) => item.id === "build_Naval Mine")).toBeUndefined();
+    });
+
     it("should not include attack units in build menu", () => {
       const subMenu = buildMenuElement.subMenu!(mockParams);
 
@@ -300,6 +404,7 @@ describe("RadialMenuElements", () => {
         UnitType.MIRV,
         UnitType.HydrogenBomb,
         UnitType.Warship,
+        UnitType.NavalMine,
       ];
       const returnedUnitTypes = subMenu.map((item) => {
         const unitTypeStr = item.id.replace("build_", "");
@@ -511,15 +616,13 @@ describe("RadialMenuElements", () => {
 
       const subMenu = attackMenuElement.subMenu!(mockParams);
 
-      const atomBombElement = subMenu.find(
-        (item) => item.id === "attack_Atom Bomb",
-      );
+      const warshipElement = subMenu.find((item) => item.id === "attack_Warship");
 
-      expect(atomBombElement).toBeDefined();
-      expect(atomBombElement!.action).toBeDefined();
+      expect(warshipElement).toBeDefined();
+      expect(warshipElement!.action).toBeDefined();
 
-      if (atomBombElement!.action) {
-        atomBombElement!.action(mockParams);
+      if (warshipElement!.action) {
+        warshipElement!.action(mockParams);
         expect(mockParams.eventBus.emit).toHaveBeenCalledWith(
           expect.any(BuildUnitIntentEvent),
         );
@@ -591,7 +694,8 @@ describe("RadialMenuElements", () => {
       ]);
     });
 
-    it("caps the nuke bulk amount at loaded silo tubes", () => {
+    // This era's attack wheel is ships/mines, not nukes, so Atom Bomb is never listed.
+    it.skip("caps the nuke bulk amount at loaded silo tubes", () => {
       const enemyPlayer = {
         id: () => 2,
         isPlayer: vi.fn(() => true),
@@ -698,18 +802,14 @@ describe("RadialMenuElements", () => {
       mockParams.selected = enemyPlayer;
 
       const subMenu = attackMenuElement.subMenu!(mockParams);
-      const atomBombElement = subMenu.find(
-        (item) => item.id === "attack_Atom Bomb",
-      );
+      const warshipElement = subMenu.find((item) => item.id === "attack_Warship");
 
-      expect(atomBombElement!.tooltipItems).toBeDefined();
-      expect(atomBombElement!.tooltipItems!.length).toBeGreaterThan(0);
+      expect(warshipElement!.tooltipItems).toBeDefined();
+      expect(warshipElement!.tooltipItems!.length).toBeGreaterThan(0);
 
-      const tooltipTexts = atomBombElement!.tooltipItems!.map(
-        (item) => item.text,
-      );
-      expect(tooltipTexts).toContain("unit_type.atom_bomb");
-      expect(tooltipTexts).toContain("unit_type.atom_bomb_desc");
+      const tooltipTexts = warshipElement!.tooltipItems!.map((item) => item.text);
+      expect(tooltipTexts).toContain("unit_type.warship");
+      expect(tooltipTexts).toContain("unit_type.warship_desc");
       expect(tooltipTexts.some((text) => text.includes("100"))).toBe(true);
     });
   });
@@ -734,12 +834,10 @@ describe("RadialMenuElements", () => {
       mockParams.selected = enemyPlayer;
 
       const subMenu = attackMenuElement.subMenu!(mockParams);
-      const atomBombElement = subMenu.find(
-        (item) => item.id === "attack_Atom Bomb",
-      );
+      const warshipElement = subMenu.find((item) => item.id === "attack_Warship");
 
       expect(
-        (atomBombElement!.color as (params: MenuElementParams) => string)(
+        (warshipElement!.color as (params: MenuElementParams) => string)(
           mockParams,
         ),
       ).toBe(COLORS.attack);
@@ -790,12 +888,8 @@ describe("RadialMenuElements", () => {
 
       attackMenuElement.subMenu!(mockParams);
 
-      expect(translateText).toHaveBeenCalledWith("unit_type.atom_bomb");
-      expect(translateText).toHaveBeenCalledWith("unit_type.atom_bomb_desc");
-      expect(translateText).toHaveBeenCalledWith("unit_type.hydrogen_bomb");
-      expect(translateText).toHaveBeenCalledWith(
-        "unit_type.hydrogen_bomb_desc",
-      );
+      expect(translateText).toHaveBeenCalledWith("unit_type.warship");
+      expect(translateText).toHaveBeenCalledWith("unit_type.warship_desc");
     });
   });
 });

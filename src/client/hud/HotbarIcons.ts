@@ -14,6 +14,7 @@ export const samLauncherIcon = assetUrl("images/SamLauncherIconWhite.svg");
 export const defensePostIcon = assetUrl("images/ShieldIconWhite.svg");
 export const soldierIcon = assetUrl("images/SoldierIcon.svg");
 export const troopIconWhite = assetUrl("images/TroopIconWhite.svg");
+export const navalMineIcon = assetUrl("images/NavalMineIconWhite.svg");
 export const claimIcon = assetUrl("images/ClaimIcon.svg");
 export const profileIcon = assetUrl("images/ProfileIcon.svg");
 export const guildIcon = assetUrl("images/GuildIconWhite.svg");

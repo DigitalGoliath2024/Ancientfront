@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  fetchCosmetics,
-  resolveCosmetics,
-  type ResolvedCosmetic,
-} from "../../../../src/client/Cosmetics";
-import type { PurchaseButton } from "../../../../src/client/components/PurchaseButton";
 import "../../../../src/client/hud/layers/WinModal";
 import type { WinModal } from "../../../../src/client/hud/layers/WinModal";
 import { RankedType } from "../../../../src/core/game/Game";
+
+const { fetchCosmetics } = vi.hoisted(() => ({
+  fetchCosmetics: vi.fn(async () => {
+    throw new Error("OpenFront cosmetics must not be fetched from WinModal");
+  }),
+}));
 
 vi.mock("../../../../src/client/Utils", () => ({
   translateText: vi.fn((key: string) => {
@@ -16,24 +16,17 @@ vi.mock("../../../../src/client/Utils", () => ({
       "win_modal.requeue": "Play Again",
       "win_modal.keep": "Keep Playing",
       "win_modal.spectate": "Spectate",
+      "win_modal.play_again_title": "Another round?",
+      "win_modal.play_again_body": "The sea isn't done with you.",
     };
     return translations[key] || key;
   }),
   getGamesPlayed: vi.fn(() => 10),
   isInIframe: vi.fn(() => false),
-  TUTORIAL_VIDEO_URL: "https://example.com/tutorial",
 }));
 
-vi.mock("../../../../src/client/Api", () => ({
-  getUserMe: vi.fn(async () => null),
-}));
-
-vi.mock("../../../../src/client/Cosmetics", async (importOriginal) => ({
-  ...(await importOriginal<
-    typeof import("../../../../src/client/Cosmetics")
-  >()),
-  fetchCosmetics: vi.fn(async () => null),
-  resolveCosmetics: vi.fn(() => []),
+vi.mock("../../../../src/client/Cosmetics", () => ({
+  fetchCosmetics,
 }));
 
 vi.mock("../../../../src/client/CrazyGamesSDK", () => ({
@@ -126,7 +119,7 @@ describe("WinModal Requeue", () => {
   });
 });
 
-describe("WinModal pattern promotion", () => {
+describe("WinModal play-again copy", () => {
   let modal: WinModal | undefined;
 
   afterEach(() => {
@@ -134,56 +127,17 @@ describe("WinModal pattern promotion", () => {
     modal = undefined;
   });
 
-  it("renders three card-and-purchase promotions from four purchasable patterns", async () => {
-    const purchasablePatterns: ResolvedCosmetic[] = [
-      "aurora",
-      "blaze",
-      "circuit",
-      "dawn",
-    ].map((name) => ({
-      type: "pattern",
-      cosmetic: {
-        name,
-        pattern: "AAAAAA",
-        product: null,
-        priceHard: 120,
-        rarity: "rare",
-      } as never,
-      colorPalette: null,
-      relationship: "purchasable",
-      key: `pattern:${name}`,
-    }));
-    vi.mocked(fetchCosmetics).mockResolvedValue(null);
-    vi.mocked(resolveCosmetics).mockReturnValue(purchasablePatterns);
-
+  it("prompts another round and does not load OpenFront cosmetics", async () => {
     modal = document.createElement("win-modal") as WinModal;
-    Object.assign(modal as unknown as { rand: number; isWin: boolean }, {
-      rand: 0.75,
-      isWin: true,
-    });
     document.body.appendChild(modal);
     await modal.updateComplete;
 
-    await modal.loadPatternContent();
-    modal.requestUpdate();
-    await modal.updateComplete;
-
-    const promotions = modal.querySelectorAll("[data-win-cosmetic-promo]");
-    expect(promotions).toHaveLength(3);
-    expect(modal.querySelectorAll("cosmetic-card")).toHaveLength(3);
-    expect(modal.querySelectorAll("purchase-button")).toHaveLength(3);
-    for (const button of modal.querySelectorAll<PurchaseButton>(
-      "purchase-button",
-    )) {
-      expect(button.rarity).toBe("rare");
-    }
-    for (const card of modal.querySelectorAll("cosmetic-card")) {
-      expect(card.querySelector("[data-cosmetic-main]")?.tagName).toBe("DIV");
-      expect(card.querySelectorAll("button")).toHaveLength(0);
-    }
-    const legacyButtonTag = ["cosmetic", "button"].join("-");
-    const legacyContainerTag = ["cosmetic", "container"].join("-");
-    expect(modal.querySelectorAll(legacyButtonTag)).toHaveLength(0);
-    expect(modal.querySelectorAll(legacyContainerTag)).toHaveLength(0);
+    expect(modal.textContent).toContain("Another round?");
+    expect(modal.textContent).toContain("The sea isn't done with you.");
+    expect(modal.querySelector("[data-win-cosmetic-promo]")).toBeNull();
+    expect(modal.querySelector("cosmetic-card")).toBeNull();
+    expect(modal.querySelector("purchase-button")).toBeNull();
+    expect(modal.querySelector("iframe")).toBeNull();
+    expect(fetchCosmetics).not.toHaveBeenCalled();
   });
 });

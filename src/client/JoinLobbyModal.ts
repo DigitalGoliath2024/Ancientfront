@@ -11,6 +11,7 @@ import {
 } from "../client/Utils";
 import { assetUrl } from "../core/AssetUrls";
 import { EventBus } from "../core/EventBus";
+import { isOpenFrontAccountApiEnabled } from "../core/OpenFrontAccountApi";
 import {
   ClientInfo,
   GAME_ID_REGEX,
@@ -36,6 +37,7 @@ import { terrainMapFileLoader } from "./TerrainMapFileLoader";
 import { SendSpectateEvent } from "./Transport";
 import { normaliseMapKey } from "./Utils";
 import { isReplayShellHost, versionedReplayUrl } from "./VersionedReplay";
+import { fetchAccountApi } from "./accountApiFetch";
 import { BaseModal } from "./components/BaseModal";
 import "./components/CopyButton";
 import "./components/LobbyConfigItem";
@@ -1283,12 +1285,15 @@ export class JoinLobbyModal extends BaseModal {
   ): Promise<
     "success" | "redirected" | "not_found" | "version_mismatch" | "error"
   > {
-    const archiveResponse = await fetch(`${getApiBase()}/game/${lobbyId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
+    const archiveResponse = await fetchAccountApi(
+      `${getApiBase()}/game/${lobbyId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
 
     if (archiveResponse.status === 404) {
       return "not_found";
@@ -1339,6 +1344,9 @@ export class JoinLobbyModal extends BaseModal {
   // (#4934). The probe requires text/html so a misrouted host that answers
   // 200 with something else can't strand the player on a broken page.
   private async redirectToVersionedShell(lobbyId: string): Promise<boolean> {
+    if (!isOpenFrontAccountApiEnabled()) {
+      return false;
+    }
     if (isReplayShellHost(window.location.hostname)) {
       return false;
     }

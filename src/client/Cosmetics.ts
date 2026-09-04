@@ -22,6 +22,7 @@ import {
   PlayerEffect,
   PlayerPattern,
 } from "../core/Schemas";
+import { fetchAccountApi } from "./accountApiFetch";
 import {
   changeSubscriptionTier,
   createCheckoutSession,
@@ -358,7 +359,7 @@ export async function fetchCosmetics(): Promise<Cosmetics | null> {
   }
   const request = (async () => {
     try {
-      const response = await fetch(`${getApiBase()}/cosmetics.json`);
+      const response = await fetchAccountApi(`${getApiBase()}/cosmetics.json`);
       if (!response.ok) {
         console.error(`HTTP error! status: ${response.status}`);
         return null;

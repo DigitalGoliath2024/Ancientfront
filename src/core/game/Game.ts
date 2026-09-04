@@ -168,6 +168,18 @@ export interface PublicGameModifiers {
   isDoomsdayClock?: boolean;
 }
 
+/**
+ * Nuke- and SAM-themed specials stay in the modifier pool and map forced lists,
+ * but never roll onto scheduled public games and never badge lobby cards
+ * (homepage + more-games). Empty the array to restore both. Create Lobby hides
+ * the Water Nukes toggle separately (HostLobbyModal).
+ */
+export const PUBLIC_LOBBY_EXCLUDED_MODIFIERS = [
+  "isWaterNukes",
+  "isSAMsDisabled",
+  "isNukesDisabled",
+] as const satisfies readonly (keyof PublicGameModifiers)[];
+
 // Largest bulk-purchase amount an intent may carry (mirrored by the intent
 // schemas' max). Also the length of BuildableUnit.upgradeCosts.
 export const MAX_UPGRADE_AMOUNT = 50;
@@ -215,6 +227,7 @@ export enum UnitType {
   Factory = "Factory",
   PortGun = "Port Gun",
   Armory = "Armory",
+  NavalMine = "Naval Mine",
 }
 
 export enum TrainType {
@@ -243,6 +256,7 @@ export const EraDisabledUnits = unitTypeGroup([
 export const BuildableAttacks = unitTypeGroup([
   UnitType.Warship,
   UnitType.Marauder,
+  UnitType.NavalMine,
 ] as const);
 
 /** Combat hulls: patrol, shell, capture trade ships. */
@@ -357,6 +371,8 @@ export interface UnitParamsMap {
   [UnitType.PortGun]: Record<string, never>;
 
   [UnitType.Armory]: Record<string, never>;
+
+  [UnitType.NavalMine]: Record<string, never>;
 }
 
 // Type helper to get params type for a specific unit type
@@ -1077,6 +1093,8 @@ export enum MessageType {
   DONATION_RECEIVED,
   CHAT,
   RENEW_ALLIANCE,
+  NAVAL_MINE_STRUCK,
+  NAVAL_MINE_TRIGGERED,
 }
 
 // Message categories used for filtering events in the EventsDisplay
@@ -1112,6 +1130,8 @@ export const MESSAGE_TYPE_CATEGORIES: Record<MessageType, MessageCategory> = {
   [MessageType.DONATION_SENT]: MessageCategory.TRADE,
   [MessageType.DONATION_RECEIVED]: MessageCategory.TRADE,
   [MessageType.CHAT]: MessageCategory.CHAT,
+  [MessageType.NAVAL_MINE_STRUCK]: MessageCategory.ATTACK,
+  [MessageType.NAVAL_MINE_TRIGGERED]: MessageCategory.ATTACK,
 } as const;
 
 /**

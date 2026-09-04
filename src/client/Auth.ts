@@ -3,6 +3,8 @@ import { UserSettings } from "src/core/game/UserSettings";
 import { z } from "zod";
 import { TokenPayload, TokenPayloadSchema } from "../core/ApiSchemas";
 import { base64urlToUuid } from "../core/Base64";
+import { isOpenFrontAccountApiEnabled } from "../core/OpenFrontAccountApi";
+import { fetchAccountApi } from "./accountApiFetch";
 import { getApiBase, getAudience } from "./Api";
 import { crazyGamesSDK } from "./CrazyGamesSDK";
 import type { DesktopSessionState, SessionFailureKind } from "./DesktopShell";
@@ -38,11 +40,13 @@ function setSessionState(state: DesktopSessionState): void {
 }
 
 export function discordLogin() {
+  if (!isOpenFrontAccountApiEnabled()) return;
   const redirectUri = encodeURIComponent(window.location.href);
   window.location.href = `${getApiBase()}/auth/login/discord?redirect_uri=${redirectUri}`;
 }
 
 export function googleLogin() {
+  if (!isOpenFrontAccountApiEnabled()) return;
   const redirectUri = encodeURIComponent(window.location.href);
   window.location.href = `${getApiBase()}/auth/login/google?redirect_uri=${redirectUri}`;
 }
@@ -52,11 +56,12 @@ export function googleLogin() {
 // Bearer token (a top-level navigation can't carry it) and then navigate to it.
 // Returns false if the user isn't logged in or the request fails.
 export async function linkGoogle(): Promise<boolean> {
+  if (!isOpenFrontAccountApiEnabled()) return false;
   const authHeader = await getAuthHeader();
   if (authHeader === "") return false;
   const redirectUri = encodeURIComponent(window.location.href);
   try {
-    const response = await fetch(
+    const response = await fetchAccountApi(
       `${getApiBase()}/auth/link/google?redirect_uri=${redirectUri}`,
       {
         headers: { Authorization: authHeader },
@@ -78,7 +83,8 @@ export async function linkGoogle(): Promise<boolean> {
 }
 
 export async function tempTokenLogin(token: string): Promise<string | null> {
-  const response = await fetch(
+  if (!isOpenFrontAccountApiEnabled()) return null;
+  const response = await fetchAccountApi(
     `${getApiBase()}/auth/login/token?login-token=${token}`,
     {
       credentials: "include",
@@ -102,7 +108,10 @@ export async function getAuthHeader(): Promise<string> {
 
 export async function logOut(allSessions: boolean = false): Promise<boolean> {
   try {
-    const response = await fetch(
+    if (!isOpenFrontAccountApiEnabled()) {
+      return true;
+    }
+    const response = await fetchAccountApi(
       getApiBase() + (allSessions ? "/auth/revoke" : "/auth/logout"),
       {
         method: "POST",
@@ -201,6 +210,9 @@ export function isSessionActive(sub: string): boolean {
 export async function userAuth(
   shouldRefresh: boolean = true,
 ): Promise<UserAuth> {
+  if (!isOpenFrontAccountApiEnabled()) {
+    return false;
+  }
   try {
     const jwt = __jwt;
     if (!jwt) {
@@ -329,7 +341,7 @@ async function doRefreshJwt(): Promise<void> {
   }
   try {
     console.log("Refreshing jwt");
-    const response = await fetch(getApiBase() + "/auth/refresh", {
+    const response = await fetchAccountApi(getApiBase() + "/auth/refresh", {
       method: "POST",
       credentials: "include",
     });
@@ -380,7 +392,7 @@ function ticketReason(
 async function doCrazyGamesLogin(token: string): Promise<void> {
   try {
     console.log("Logging in with CrazyGames");
-    const response = await fetch(getApiBase() + "/auth/crazygames", {
+    const response = await fetchAccountApi(getApiBase() + "/auth/crazygames", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token }),
@@ -413,7 +425,7 @@ async function doSteamLogin(ticket: string): Promise<void> {
     // An abort throws, which the catch below already maps to "network", so
     // this also means the initial sign-in can no longer hang at "unknown".
     // 10s is generous headroom over a healthy web-api round trip (~1.3s).
-    const response = await fetch(getApiBase() + "/auth/steam", {
+    const response = await fetchAccountApi(getApiBase() + "/auth/steam", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ticket }),
@@ -516,9 +528,10 @@ export async function retrySteamSignIn(): Promise<UserAuth> {
 }
 
 export async function sendMagicLink(email: string): Promise<boolean> {
+  if (!isOpenFrontAccountApiEnabled()) return false;
   try {
     const apiBase = getApiBase();
-    const response = await fetch(`${apiBase}/auth/magic-link`, {
+    const response = await fetchAccountApi(`${apiBase}/auth/magic-link`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

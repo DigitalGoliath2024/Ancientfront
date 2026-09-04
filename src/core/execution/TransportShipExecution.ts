@@ -6,6 +6,7 @@ import {
   MessageType,
   Player,
   PlayerType,
+  Structures,
   TerraNullius,
   Unit,
   UnitType,
@@ -360,7 +361,7 @@ export class TransportShipExecution implements Execution {
     const nearby = this.mg.nearbyUnits(
       this.boat.tile(),
       this.mg.config().transportTargettingRange(),
-      [...CombatShips.types, UnitType.TransportShip, UnitType.PortGun],
+      [...CombatShips.types, UnitType.TransportShip, ...Structures.types],
     );
 
     let best: Unit | undefined;
@@ -378,12 +379,15 @@ export class TransportShipExecution implements Execution {
         continue;
       }
 
+      const type = unit.type();
       const priority =
-        unit.type() === UnitType.TransportShip
+        type === UnitType.TransportShip
           ? 0
-          : unit.type() === UnitType.PortGun
+          : type === UnitType.PortGun
             ? 1
-            : 2;
+            : CombatShips.has(type)
+              ? 2
+              : 3;
 
       if (
         best === undefined ||

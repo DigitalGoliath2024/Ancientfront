@@ -32,27 +32,33 @@ async function mount<T extends LitElement>(element: T): Promise<T> {
 afterEach(() => document.body.replaceChildren());
 
 describe("Inventory navigation", () => {
-  it("renders Inventory in desktop and mobile navigation", async () => {
+  it("hides Store, Inventory, Leaderboard, and Clans from homepage chrome", async () => {
     const desktop = await mount(new DesktopNavBar());
     const mobile = await mount(new MobileNavBar());
+    for (const root of [desktop, mobile]) {
+      expect(root.querySelector('[data-page="page-item-store"]')).toBeNull();
+      expect(root.querySelector('[data-page="page-inventory"]')).toBeNull();
+      expect(root.querySelector('[data-page="page-leaderboard"]')).toBeNull();
+      expect(root.querySelector('[data-page="page-clan"]')).toBeNull();
+      expect(root.querySelector('[data-i18n="main.play"]')).toBeNull();
+      expect(root.querySelector("nav-account-menu")).toBeNull();
+    }
+    expect(desktop.querySelector("nav-utility-icons")).toBeTruthy();
+    expect(desktop.querySelector('[data-page="page-guide"]')).toBeTruthy();
     expect(
-      desktop.querySelector(
-        '[data-page="page-inventory"][data-i18n="main.inventory"]',
-      ),
+      desktop.querySelector('[data-page="page-settings"]'),
     ).toBeTruthy();
-    expect(mobile.querySelector('[data-page="page-inventory"]')).toBeTruthy();
-    expect(
-      mobile.querySelector(
-        '[data-page="page-inventory"] [data-i18n="main.inventory"], [data-page="page-inventory"][data-i18n="main.inventory"]',
-      ),
-    ).toBeTruthy();
+    expect(desktop.querySelector('[data-page="page-help"]')).toBeTruthy();
+    expect(desktop.querySelector('[data-page="page-news"]')).toBeTruthy();
+    expect(mobile.querySelector('[data-page="page-guide"]')).toBeTruthy();
+    expect(mobile.querySelector('[data-page="page-help"]')).toBeTruthy();
   });
 
   it("removes cosmetic and flag selectors from the play page", async () => {
     const play = await mount(new PlayPage());
     expect(play.querySelector("cosmetics-input")).toBeNull();
     expect(play.querySelector("flag-input")).toBeNull();
-    expect(play.querySelector("username-input")).toBeTruthy();
+    expect(play.querySelector("game-mode-selector")).toBeTruthy();
   });
 
   it("declares only the routed Inventory page in index.html", () => {
@@ -65,7 +71,7 @@ describe("Inventory navigation", () => {
     expect(source).not.toContain("<flag-input-modal");
   });
 
-  it("routes an actual navigation click with the active tab and restores deep links", async () => {
+  it("still routes inventory via showPage and restores deep links", async () => {
     history.replaceState(null, "", "/");
     const play = document.createElement("div");
     play.id = "page-play";
@@ -93,23 +99,18 @@ describe("Inventory navigation", () => {
       loadFailed: false,
     });
     document.body.appendChild(inventory);
-    const desktop = await mount(new DesktopNavBar());
+    await mount(new DesktopNavBar());
     modalRouter.register("inventory", {
       tag: "inventory-modal",
       pageId: "page-inventory",
     });
     initNavigation();
 
-    desktop.querySelector<HTMLElement>('[data-page="page-inventory"]')!.click();
+    window.showPage?.("page-inventory");
 
     await vi.waitFor(() => {
       expect(window.location.hash).toBe("#modal=inventory&tab=skins");
     });
-    expect(
-      desktop
-        .querySelector<HTMLElement>('[data-page="page-inventory"]')!
-        .classList.contains("active"),
-    ).toBe(true);
 
     inventory.setActiveTab("effects");
     expect(window.location.hash).toBe("#modal=inventory&tab=effects");

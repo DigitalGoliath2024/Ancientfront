@@ -35,6 +35,7 @@ const portIcon = assetUrl("images/PortIcon.svg");
 const samlauncherIcon = assetUrl("images/SamLauncherIconWhite.svg");
 const shieldIcon = assetUrl("images/ShieldIconWhite.svg");
 const troopIconWhite = assetUrl("images/TroopIconWhite.svg");
+const navalMineIcon = assetUrl("images/NavalMineIconWhite.svg");
 
 export interface BuildItemDisplay {
   unitType: PlayerBuildableUnitType;
@@ -102,10 +103,24 @@ export const buildTable: BuildItemDisplay[][] = [
       key: "unit_type.armory",
       countable: true,
     },
+    {
+      unitType: UnitType.NavalMine,
+      icon: navalMineIcon,
+      description: "build_menu.desc.naval_mine",
+      key: "unit_type.naval_mine",
+      countable: true,
+    },
   ],
 ];
 
 export const flattenedBuildTable = buildTable.flat();
+
+/** Ctrl / land structure carousel. Naval mines are ocean-only (ship wheel). */
+export function isLandBuildCarouselItem(
+  unitType: PlayerBuildableUnitType,
+): boolean {
+  return unitType !== UnitType.NavalMine;
+}
 
 @customElement("build-menu")
 export class BuildMenu extends LitElement implements Controller {
@@ -375,14 +390,7 @@ export class BuildMenu extends LitElement implements Controller {
         ),
       );
     } else if (buildableUnit.canBuild) {
-      const rocketDirectionUp =
-        buildableUnit.type === UnitType.AtomBomb ||
-        buildableUnit.type === UnitType.HydrogenBomb
-          ? this.uiState.rocketDirectionUp
-          : undefined;
-      this.eventBus.emit(
-        new BuildUnitIntentEvent(buildableUnit.type, tile, rocketDirectionUp),
-      );
+      this.eventBus.emit(new BuildUnitIntentEvent(buildableUnit.type, tile));
     }
     this.hideMenu();
   }
@@ -482,7 +490,12 @@ export class BuildMenu extends LitElement implements Controller {
 
   private getBuildableUnits(): BuildItemDisplay[][] {
     return buildTable.map((row) =>
-      row.filter((item) => !this.game?.config()?.isUnitDisabled(item.unitType)),
+      row.filter((item) => {
+        if (this.game?.config()?.isUnitDisabled(item.unitType)) {
+          return false;
+        }
+        return isLandBuildCarouselItem(item.unitType);
+      }),
     );
   }
 

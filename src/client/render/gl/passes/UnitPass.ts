@@ -44,6 +44,7 @@ import {
   UT_HYDROGEN_BOMB,
   UT_MIRV,
   UT_MIRV_WARHEAD,
+  UT_NAVAL_MINE,
   UT_SAM_MISSILE,
   UT_SHELL,
   UT_TRADE_SHIP,
@@ -574,6 +575,10 @@ export class UnitPass {
 
       // Train sub-type resolution: "Train" isn't in UNIT_ORDER.
       // Resolve to engine/carriage/loaded carriage based on trainType + loaded fields.
+      if (atlasIdx === undefined && unit.unitType === UT_NAVAL_MINE) {
+        atlasIdx = UNIT_ORDER.indexOf(UT_SHELL);
+      }
+
       if (atlasIdx === undefined && unit.unitType === UT_TRAIN) {
         const tt = unit.trainType;
         if (tt === TrainType.Engine || tt === TrainType.TailEngine) {
