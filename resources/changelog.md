@@ -9,6 +9,7 @@ Brand-new update: **Inland Battery**. Land artillery for this era. No nukes.
 - **What the shells do** — They scorch **enemy** land in a 4-tile blast. Your land and allied land stay safe. Water is a dud: shots can fly over ocean, but they do nothing if they land in it. The gun will not aim close enough to blow itself up.
 - **Spread** — A volley fans out around the battery instead of stacking every crater on one tile.
 - **Capture** — If someone takes the tile, the battery is destroyed, not stolen. Same rule as a defense post.
+- **Guide** — New Inland battery page in the in-game Guide.
 
 ## Era
 

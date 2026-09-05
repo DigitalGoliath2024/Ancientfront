@@ -21,6 +21,7 @@ const SECTION_IDS = [
   "battleship",
   "marauder",
   "port-guns",
+  "inland-battery",
   "mines",
   "buildings",
   "play",
@@ -33,6 +34,7 @@ const TITLE_ICONS: Record<(typeof SECTION_IDS)[number], string> = {
   battleship: "WarshipIconWhite",
   marauder: "MarauderIconWhite",
   "port-guns": "PortGunIconWhite",
+  "inland-battery": "InlandBatteryIconWhite",
   mines: "NavalMineIconWhite",
   buildings: "CityIconWhite",
   play: "PlayIconWhite",
@@ -63,6 +65,7 @@ describe("Guide modal", () => {
     expect(text).toContain("Battleship");
     expect(text).toContain("Marauder");
     expect(text).toContain("Port guns");
+    expect(text).toContain("Inland battery");
     expect(text).toContain("Mines");
     expect(text).toContain("Buildings");
     expect(text).toContain("Play");
@@ -123,6 +126,16 @@ describe("Guide modal", () => {
     expect(modal.textContent).toContain("three shells");
     expect(modal.textContent).toContain("Level 10");
     expect(modal.textContent).toContain("113");
+
+    modal.setActiveTab("inland-battery");
+    await modal.updateComplete;
+    expect(modal.textContent).toContain("land gun");
+    expect(modal.textContent).toContain("$1,500,000");
+    expect(modal.textContent).toContain("30 seconds");
+    expect(modal.textContent).toContain("100 tiles");
+    expect(modal.textContent).toContain("210");
+    expect(modal.textContent).toContain("dud");
+    expect(modal.textContent).toContain("destroyed, not stolen");
 
     modal.setActiveTab("buildings");
     await modal.updateComplete;

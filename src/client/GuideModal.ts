@@ -6,6 +6,7 @@ import { BaseModal } from "./components/BaseModal";
 import { modalHeader } from "./components/ui/ModalHeader";
 import {
   cityIcon,
+  inlandBatteryIcon,
   marauderIcon,
   navalMineIcon,
   navyIcon,
@@ -78,6 +79,22 @@ const SECTIONS: readonly GuideSection[] = [
       "guide_modal.port_guns_l4",
       "guide_modal.port_guns_l7",
       "guide_modal.port_guns_l10",
+    ],
+  },
+  {
+    id: "inland-battery",
+    tabKey: "guide_modal.inland_battery_tab",
+    titleKey: "guide_modal.inland_battery_title",
+    icon: inlandBatteryIcon,
+    bodyKeys: [
+      "guide_modal.inland_battery_what",
+      "guide_modal.inland_battery_place",
+      "guide_modal.inland_battery_cost",
+      "guide_modal.inland_battery_fire",
+      "guide_modal.inland_battery_range",
+      "guide_modal.inland_battery_blast",
+      "guide_modal.inland_battery_water",
+      "guide_modal.inland_battery_capture",
     ],
   },
   {
