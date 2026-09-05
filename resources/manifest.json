@@ -18,8 +18,12 @@
   "display": "standalone",
   "dir": "auto",
   "lang": "en",
-  "name": "OpenFront.io",
-  "short_name": "OpenFront",
+  "name": "Marauder's Sea",
+  "short_name": "Marauder's Sea",
+  "description": "Free browser territorial strategy game. Independently based on OpenFront.io.",
   "start_url": "/",
-  "id": "/"
+  "id": "/",
+  "categories": ["games", "strategy"],
+  "theme_color": "#0c1830",
+  "background_color": "#000000"
 }

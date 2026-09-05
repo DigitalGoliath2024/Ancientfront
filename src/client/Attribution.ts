@@ -8,3 +8,6 @@ export const SOURCE_REPO_URL =
 export const AGPL_LICENSE_URL = `${SOURCE_REPO_URL}/blob/main/LICENSE`;
 
 export const ASSET_CREDITS_URL = `${SOURCE_REPO_URL}/blob/main/CREDITS.md`;
+
+/** Original game this fork is independently based on. */
+export const OPENFRONT_IO_URL = "https://openfront.io/";

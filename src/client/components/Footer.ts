@@ -6,6 +6,7 @@ import {
   AGPL_LICENSE_URL,
   ASSET_CREDITS_URL,
   FLYING_V_STUDIOS_URL,
+  OPENFRONT_IO_URL,
   SOURCE_REPO_URL,
 } from "../Attribution";
 import { composeVersionDisplay, desktopVersion } from "../DesktopShell";
@@ -70,7 +71,13 @@ export class Footer extends LitElement {
               rel="noopener noreferrer"
               class=${linkClass}
             ></a>.
-            <span data-i18n="main.modification_notice"></span>
+            <span data-i18n="main.modification_notice"></span><a
+              href=${OPENFRONT_IO_URL}
+              data-i18n="main.openfront_site"
+              target="_blank"
+              rel="noopener noreferrer"
+              class=${linkClass}
+            ></a>.
             <span data-i18n="main.copyright"></span>.
             <span data-i18n="main.not_affiliated"></span>
           </span>

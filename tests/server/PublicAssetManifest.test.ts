@@ -307,6 +307,7 @@ describe("PublicAssetManifest", () => {
   test("leaves directories outside the allowlist alone", () => {
     expect(shouldKeepRootPublicFile("press/index.html")).toBe(true);
     expect(shouldKeepRootPublicFile("terms-of-service.html")).toBe(true);
+    expect(shouldKeepRootPublicFile("sitemap.xml")).toBe(true);
     expect(shouldKeepRootPublicFile("pressed/index.html")).toBe(false);
     expect(shouldKeepRootPublicFile("maps/world.bin")).toBe(false);
   });

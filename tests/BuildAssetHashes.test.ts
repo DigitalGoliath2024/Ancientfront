@@ -46,6 +46,7 @@ describe("hashDirectory", () => {
       "ads.txt",
       "privacy-policy.html",
       "robots.txt",
+      "sitemap.xml",
       "terms-of-service.html",
       "version.txt",
     ]) {

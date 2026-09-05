@@ -4,6 +4,7 @@ import {
   AGPL_LICENSE_URL,
   ASSET_CREDITS_URL,
   FLYING_V_STUDIOS_URL,
+  OPENFRONT_IO_URL,
   SOURCE_REPO_URL,
 } from "../../../src/client/Attribution";
 import { Footer } from "../../../src/client/components/Footer";
@@ -72,10 +73,12 @@ describe("page-footer version line", () => {
     expect(
       footer.querySelector('[data-i18n="main.modification_notice"]'),
     ).toBeTruthy();
+    expect(footer.querySelector('[data-i18n="main.openfront_site"]')).toBeTruthy();
     expect(footer.querySelector('[data-i18n="main.not_affiliated"]')).toBeTruthy();
 
     const hrefs = [...footer.querySelectorAll("a")].map((a) => a.getAttribute("href"));
     expect(hrefs).toContain(FLYING_V_STUDIOS_URL);
+    expect(hrefs).toContain(OPENFRONT_IO_URL);
     expect(hrefs).toContain(SOURCE_REPO_URL);
     expect(hrefs).toContain(AGPL_LICENSE_URL);
     expect(hrefs).toContain(ASSET_CREDITS_URL);

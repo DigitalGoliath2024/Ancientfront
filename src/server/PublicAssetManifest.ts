@@ -27,6 +27,7 @@ const ROOT_PUBLIC_FILES = new Set([
   "ads.txt",
   "privacy-policy.html",
   "robots.txt",
+  "sitemap.xml",
   "terms-of-service.html",
   "version.txt",
 ]);

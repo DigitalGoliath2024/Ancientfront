@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <title data-i18n="main.title">Marauder's Sea</title>
+    <title data-i18n="main.title">Marauder's Sea — Free Browser Strategy Game</title>
     <link rel="manifest" href="<%- manifestHref %>" />
     <link rel="icon" type="image/svg+xml" href="<%- faviconHref %>" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -103,21 +103,84 @@
     </style>
 
     <!-- SEO -->
-    <link rel="canonical" href="https://github.com/DigitalGoliath2024/Ancientfront" />
+    <link rel="canonical" href="https://maraudersea.com/" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0c1830" />
     <meta
       name="description"
-      content="Marauder's Sea is a 16th–18th century territorial strategy game. Expand your shores, sail, and fight for every island."
+      content="Play Marauder's Sea free in your browser: a 16th–18th century territorial strategy game with real-time navy combat. Independently based on OpenFront.io."
     />
 
     <!-- Open Graph -->
-    <meta property="og:url" content="https://github.com/DigitalGoliath2024/Ancientfront" />
-    <meta property="og:title" content="Marauder's Sea" />
+    <meta property="og:site_name" content="Marauder's Sea" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:url" content="https://maraudersea.com/" />
+    <meta
+      property="og:title"
+      content="Marauder's Sea — Free Browser Strategy Game"
+    />
     <meta
       property="og:description"
-      content="Marauder's Sea is a 16th–18th century territorial strategy game. Expand your shores, sail, and fight for every island."
+      content="Play Marauder's Sea free in your browser: a 16th–18th century territorial strategy game with real-time navy combat. Independently based on OpenFront.io."
     />
     <meta property="og:image" content="<%- gameplayScreenshotUrl %>" />
-    <meta property="og:type" content="game" />
+    <meta property="og:image:alt" content="Marauder's Sea gameplay" />
+    <meta property="og:type" content="website" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Marauder's Sea — Free Browser Strategy Game"
+    />
+    <meta
+      name="twitter:description"
+      content="Play Marauder's Sea free in your browser: a 16th–18th century territorial strategy game with real-time navy combat. Independently based on OpenFront.io."
+    />
+    <meta name="twitter:image" content="<%- gameplayScreenshotUrl %>" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://maraudersea.com/#organization",
+            "name": "Flying V Studios",
+            "url": "https://flyingveestudios.netlify.app/"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://maraudersea.com/#website",
+            "url": "https://maraudersea.com/",
+            "name": "Marauder's Sea",
+            "publisher": { "@id": "https://maraudersea.com/#organization" },
+            "inLanguage": "en"
+          },
+          {
+            "@type": "VideoGame",
+            "@id": "https://maraudersea.com/#game",
+            "name": "Marauder's Sea",
+            "alternateName": "Marauders Sea",
+            "url": "https://maraudersea.com/",
+            "description": "Free browser territorial strategy game set in the age of sail. Expand shores, build a navy, and fight for islands. Independently based on OpenFront.io.",
+            "genre": ["Strategy", "Real-time strategy", "Multiplayer"],
+            "gamePlatform": "Web browser",
+            "playMode": ["MultiPlayer", "SinglePlayer"],
+            "applicationCategory": "GameApplication",
+            "operatingSystem": "Any",
+            "isAccessibleForFree": true,
+            "inLanguage": "en",
+            "image": "<%- gameplayScreenshotUrl %>",
+            "publisher": { "@id": "https://maraudersea.com/#organization" },
+            "isBasedOn": {
+              "@type": "VideoGame",
+              "name": "OpenFront",
+              "url": "https://openfront.io/"
+            }
+          }
+        ]
+      }
+    </script>
 
     <!-- Injected from Server env -->
     <script>
@@ -326,6 +389,23 @@
       </main-layout>
 
       <div class="[.in-game_&]:hidden mt-auto flex flex-col shrink-0">
+        <section
+          class="px-3 py-2 text-[11px] lg:text-xs text-white/55 leading-snug border-t border-white/10"
+          aria-labelledby="about-marauders-sea"
+        >
+          <h1
+            id="about-marauders-sea"
+            class="text-white/80 font-medium text-sm mb-1"
+            data-i18n="main.seo_heading"
+          >
+            Marauder's Sea — free browser strategy game
+          </h1>
+          <p data-i18n="main.seo_blurb">
+            Play free in your browser. Real-time territorial strategy with
+            age-of-sail warships, ports, and island warfare. Independently
+            based on OpenFront.io. Made by Flying V Studios.
+          </p>
+        </section>
         <page-footer></page-footer>
       </div>
 
