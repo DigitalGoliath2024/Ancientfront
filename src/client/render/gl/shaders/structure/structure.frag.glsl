@@ -113,8 +113,29 @@ float sdPolygon(vec2 p, float R, float n, float rot) {
   return length(p) * cos(a) - R * cos(an);
 }
 
+float sdBox(vec2 p, vec2 b) {
+  vec2 d = abs(p) - b;
+  return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
+}
+
+// Old-school headstone: flat base, straight sides, semicircle cap toward
+// screen-top. Local +Y is world/screen down, so the cap is on -Y.
+float sdTombstone(vec2 p, float R) {
+  vec2 q = vec2(p.x, -p.y);
+  float w = R * 0.70;
+  float h = R * 0.98;
+  float capR = w;
+  vec2 capC = vec2(0.0, h - capR);
+  float boxHalfH = (capC.y + h) * 0.5;
+  vec2 boxCenter = vec2(0.0, (capC.y - h) * 0.5);
+  float dBox = sdBox(q - boxCenter, vec2(w, boxHalfH));
+  float dCap = length(q - capC) - capR;
+  return min(dBox, dCap);
+}
+
 // Per-structure-type shape SDF.
-// Atlas indices: 0=City, 1=Port, 2=Factory, 3=DefensePost, 4=SAM, 5=Silo
+// Atlas indices: 0=City, 1=Port, 2=Factory, 3=DefensePost, 4=SAM, 5=Silo,
+// 6=Armory, 7=Port Gun
 float shapeSDF(vec2 p, float R) {
   if (vAtlasIdx < 0.5)
     return length(p) - R;                     // City → circle
@@ -126,7 +147,11 @@ float shapeSDF(vec2 p, float R) {
     return sdPolygon(p, R, 8.0, 0.0);         // Defense Post → octagon (flat top)
   if (vAtlasIdx < 4.5)
     return sdPolygon(p, R, 4.0, 0.0);         // SAM Launcher → square (flat sides)
-  return sdPolygon(p, R, 3.0, PI * 0.5);      // Missile Silo → triangle (vertex up)
+  if (vAtlasIdx < 5.5)
+    return sdPolygon(p, R, 3.0, PI * 0.5);    // Missile Silo → triangle (vertex up)
+  if (vAtlasIdx < 6.5)
+    return sdPolygon(p, R, 6.0, 0.0);         // Armory → hexagon (pointy top)
+  return sdTombstone(p, R);                   // Port Gun → tombstone
 }
 
 void main() {

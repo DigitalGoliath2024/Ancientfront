@@ -153,12 +153,12 @@
         "iconFill": 0.85
       },
       "Armory": {
-        "scale": 1,
-        "iconFill": 0.85
+        "scale": 1.12,
+        "iconFill": 0.82
       },
       "Port Gun": {
-        "scale": 1.08,
-        "iconFill": 0.85
+        "scale": 1.22,
+        "iconFill": 0.74
       }
     },
     "highlightOutlineWidth": 0.04,
