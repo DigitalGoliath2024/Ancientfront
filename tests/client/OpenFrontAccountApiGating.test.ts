@@ -38,7 +38,7 @@ describe("account API gating", () => {
 
     const news = await getNews();
     expect(Array.isArray(news)).toBe(true);
-    expect(news.some((item) => item.id === "marauders-sea-0.1.1")).toBe(true);
+    expect(news.some((item) => item.id === "marauders-sea-0.1.2")).toBe(true);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -48,7 +48,7 @@ describe("account API gating", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const news = await getNews();
-    expect(news[0]?.id).toBe("marauders-sea-0.1.1");
+    expect(news[0]?.id).toBe("marauders-sea-0.1.2");
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

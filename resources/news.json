@@ -1,5 +1,12 @@
 [
   {
+    "id": "marauders-sea-0.1.2",
+    "title": "Marauder's Sea 0.1.2",
+    "descriptionTranslationKey": "news_box.v0_1_2",
+    "url": null,
+    "type": "announcement"
+  },
+  {
     "id": "marauders-sea-0.1.1",
     "title": "Marauder's Sea 0.1.1",
     "descriptionTranslationKey": "news_box.v0_1_1",

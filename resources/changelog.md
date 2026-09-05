@@ -1,3 +1,21 @@
+# Marauder's Sea 0.1.2
+
+Brand-new update: **Inland Battery**. Land artillery for this era. No nukes.
+
+## Inland Battery
+
+- **Build it** — Place on land you own. Costs $1,500,000 to place or upgrade. Caps at level 10. Hotbar key **8**.
+- **How it fires** — Reloads every 30 seconds. Each volley fires one shell per level (one at level 1, ten at level 10). Range starts at 100 tiles and grows to 210 at level 10.
+- **What the shells do** — They scorch **enemy** land in a 4-tile blast. Your land and allied land stay safe. Water is a dud: shots can fly over ocean, but they do nothing if they land in it. The gun will not aim close enough to blow itself up.
+- **Spread** — A volley fans out around the battery instead of stacking every crater on one tile.
+- **Capture** — If someone takes the tile, the battery is destroyed, not stolen. Same rule as a defense post.
+
+## Era
+
+- **No SAMs, silos, or nukes** — Those units stay out of this era. Nations can no longer place SAM sites.
+
+---
+
 # Marauder's Sea 0.1.1
 
 ## Combat and buildings
