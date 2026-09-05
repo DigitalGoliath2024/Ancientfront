@@ -479,6 +479,9 @@ export class SinglePlayerModal extends BaseModal {
                   {
                     labelKey: "game_settings.water_nukes",
                     checked: this.waterNukes,
+                    // Hidden to match host/public: water nukes stay in the
+                    // engine but are not offered in solo settings.
+                    hidden: true,
                   },
                   {
                     labelKey: "game_settings.doomsday_clock",

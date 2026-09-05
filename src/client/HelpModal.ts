@@ -83,7 +83,7 @@ export class HelpModal extends BaseModal {
       >
           <!-- Video Tutorial Section -->
           <div class="flex items-center gap-3 mb-3">
-            <div class="text-blue-400">
+            <div class="text-malibu-blue">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="w-5 h-5"
@@ -98,17 +98,17 @@ export class HelpModal extends BaseModal {
               </svg>
             </div>
             <h3
-              class="text-xl font-bold uppercase tracking-widest text-white/90"
+              class="font-map text-lg lg:text-xl font-bold uppercase tracking-widest text-malibu-blue"
             >
               ${translateText("help_modal.video_tutorial")}
             </h3>
             <div
-              class="flex-1 h-px bg-gradient-to-r from-blue-500/50 to-transparent"
+              class="flex-1 h-px bg-gradient-to-r from-malibu-blue/50 to-transparent"
             ></div>
           </div>
-          <section
-            class="bg-white/5 rounded-xl border border-white/10 overflow-hidden mb-8"
-          >
+            <section
+              class="bg-white/5 rounded-xl border border-malibu-blue/30 overflow-hidden mb-8"
+            >
             <div class="relative w-full h-0 pb-[56.25%]">
               <iframe
                 id="tutorial-video-iframe"
@@ -124,7 +124,7 @@ export class HelpModal extends BaseModal {
 
           <!-- Troubleshooting Section -->
           <div class="flex items-center gap-3 mb-3">
-            <div class="text-blue-400">
+            <div class="text-malibu-blue">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -142,12 +142,12 @@ export class HelpModal extends BaseModal {
               </svg>
             </div>
             <h3
-              class="text-xl font-bold uppercase tracking-widest text-white/90"
+              class="font-map text-lg lg:text-xl font-bold uppercase tracking-widest text-malibu-blue"
             >
               ${translateText("main.troubleshooting")}
             </h3>
             <div
-              class="flex-1 h-px bg-gradient-to-r from-blue-500/50 to-transparent"
+              class="flex-1 h-px bg-gradient-to-r from-malibu-blue/50 to-transparent"
             ></div>
           </div>
           <section>
@@ -171,10 +171,10 @@ export class HelpModal extends BaseModal {
           </section>
           <!-- Hotkeys Section -->
           <div class="flex items-center gap-3 mb-3">
-            <div class="text-blue-400">
+            <div class="text-malibu-blue">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5 text-blue-400"
+                class="w-5 h-5 text-malibu-blue"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -195,12 +195,12 @@ export class HelpModal extends BaseModal {
               </svg>
             </div>
             <h3
-              class="text-xl font-bold uppercase tracking-widest text-white/90"
+              class="font-map text-lg lg:text-xl font-bold uppercase tracking-widest text-malibu-blue"
             >
               ${translateText("help_modal.hotkeys")}
             </h3>
             <div
-              class="flex-1 h-px bg-gradient-to-r from-blue-500/50 to-transparent"
+              class="flex-1 h-px bg-gradient-to-r from-malibu-blue/50 to-transparent"
             ></div>
           </div>
           <section
@@ -466,7 +466,7 @@ export class HelpModal extends BaseModal {
           <!-- UI Interface Section -->
           <section class="mb-8 mt-8">
             <div class="flex items-center gap-3 mb-6">
-              <div class="text-blue-400">
+              <div class="text-malibu-blue">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -484,12 +484,12 @@ export class HelpModal extends BaseModal {
                 </svg>
               </div>
               <h3
-                class="text-xl font-bold uppercase tracking-widest text-white/90"
+                class="font-map text-lg lg:text-xl font-bold uppercase tracking-widest text-malibu-blue"
               >
                 ${translateText("help_modal.ui_section")}
               </h3>
               <div
-                class="flex-1 h-px bg-gradient-to-r from-blue-500/50 to-transparent"
+                class="flex-1 h-px bg-gradient-to-r from-malibu-blue/50 to-transparent"
               ></div>
             </div>
 
@@ -638,7 +638,7 @@ export class HelpModal extends BaseModal {
           <!-- Radial Menu Section -->
           <section class="mb-8">
             <div class="flex items-center gap-3 mb-6">
-              <div class="text-blue-400">
+              <div class="text-malibu-blue">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -655,12 +655,12 @@ export class HelpModal extends BaseModal {
                 </svg>
               </div>
               <h3
-                class="text-xl font-bold uppercase tracking-widest text-white/90"
+                class="font-map text-lg lg:text-xl font-bold uppercase tracking-widest text-malibu-blue"
               >
                 ${translateText("help_modal.radial_title")}
               </h3>
               <div
-                class="flex-1 h-px bg-gradient-to-r from-blue-500/50 to-transparent"
+                class="flex-1 h-px bg-gradient-to-r from-malibu-blue/50 to-transparent"
               ></div>
             </div>
 
@@ -747,7 +747,7 @@ export class HelpModal extends BaseModal {
           <!-- Info/Ally Panels Section -->
           <section class="mb-8">
             <div class="flex items-center gap-3 mb-6">
-              <div class="text-blue-400">
+              <div class="text-malibu-blue">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -765,12 +765,12 @@ export class HelpModal extends BaseModal {
                 </svg>
               </div>
               <h3
-                class="text-xl font-bold uppercase tracking-widest text-white/90"
+                class="font-map text-lg lg:text-xl font-bold uppercase tracking-widest text-malibu-blue"
               >
                 ${translateText("help_modal.info_title")}
               </h3>
               <div
-                class="flex-1 h-px bg-gradient-to-r from-blue-500/50 to-transparent"
+                class="flex-1 h-px bg-gradient-to-r from-malibu-blue/50 to-transparent"
               ></div>
             </div>
 
@@ -889,7 +889,7 @@ export class HelpModal extends BaseModal {
           <!-- Build Menu Section -->
           <section class="mb-8">
             <div class="flex items-center gap-3 mb-6">
-              <div class="text-blue-400">
+              <div class="text-malibu-blue">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -907,12 +907,12 @@ export class HelpModal extends BaseModal {
                 </svg>
               </div>
               <h3
-                class="text-xl font-bold uppercase tracking-widest text-white/90"
+                class="font-map text-lg lg:text-xl font-bold uppercase tracking-widest text-malibu-blue"
               >
                 ${translateText("help_modal.build_menu_title")}
               </h3>
               <div
-                class="flex-1 h-px bg-gradient-to-r from-blue-500/50 to-transparent"
+                class="flex-1 h-px bg-gradient-to-r from-malibu-blue/50 to-transparent"
               ></div>
             </div>
 
@@ -1110,7 +1110,7 @@ export class HelpModal extends BaseModal {
           <!-- Player Icons Section -->
           <section class="mb-4">
             <div class="flex items-center gap-3 mb-6">
-              <div class="text-blue-400">
+              <div class="text-malibu-blue">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -1127,12 +1127,12 @@ export class HelpModal extends BaseModal {
                 </svg>
               </div>
               <h3
-                class="text-xl font-bold uppercase tracking-widest text-white/90"
+                class="font-map text-lg lg:text-xl font-bold uppercase tracking-widest text-malibu-blue"
               >
                 ${translateText("help_modal.player_icons")}
               </h3>
               <div
-                class="flex-1 h-px bg-gradient-to-r from-blue-500/50 to-transparent"
+                class="flex-1 h-px bg-gradient-to-r from-malibu-blue/50 to-transparent"
               ></div>
             </div>
 
