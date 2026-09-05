@@ -16,14 +16,14 @@ import {
   guildIcon,
   portIcon,
   profileIcon,
-  samLauncherIcon,
   soldierIcon,
-  troopIconWhite,
   teamIcon,
   traitorIcon,
   upperLimitIcon,
   marauderIcon,
   warshipIcon,
+  armoryIcon,
+  portGunIcon,
 } from "../../HotbarIcons";
 import { goldRateTracker } from "./GoldRateTracker";
 
@@ -282,13 +282,13 @@ export const COLUMN_DEFS: readonly ColumnDef[] = [
     "armories",
     "leaderboard.armories",
     UnitType.Armory,
-    troopIconWhite,
+    armoryIcon,
   ),
   unitColumn(
     "portGuns",
     "leaderboard.port_guns",
     UnitType.PortGun,
-    samLauncherIcon,
+    portGunIcon,
   ),
   unitColumn("warships", "leaderboard.warships", UnitType.Warship, warshipIcon),
   unitColumn(

@@ -43,6 +43,7 @@ const float FLAG_TRADE_FRIENDLY = 3.0;
 const float FLAG_RETREATING     = 4.0;
 const float FLAG_FLICKER_UNTARGETABLE = 5.0; // nuke out of SAM range — dimmed
 const float FLAG_TRADE_SELF     = 6.0;
+const float FLAG_NAVAL_MINE     = 7.0;
 
 // Flicker hot colors: red → orange → yellow → white
 const vec3 FLICKER_COLORS[4] = vec3[4](
@@ -123,6 +124,13 @@ void main() {
       }
     }
     discard;
+  }
+
+  // Naval mines reuse the 1×1 shell sprite and would otherwise take player
+  // color (or affiliation color in alt-view) and vanish on ocean.
+  if (abs(vFlags - FLAG_NAVAL_MINE) < 0.1) {
+    fragColor = vec4(0.0, 0.0, 0.0, texel.a * alphaMul);
+    return;
   }
 
   float gray = texel.r;

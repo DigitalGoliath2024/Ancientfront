@@ -15,6 +15,11 @@
 
 - **Terrain** — Stronger default land and ocean colors so the map is easier to read at a glance.
 
+## Icons and mines
+
+- **HUD icons** — New silhouettes for navy, battleships, marauders, ports, port guns, factories, armories, cities, defense posts, and naval mines in the Guide, Help, and build menus. The same icons appear on buildings on the map.
+- **Naval mines on the map** — Team mines still show as a single pixel, but they draw black so they do not disappear into blue water.
+
 ---
 
 # Marauder's Sea 0.1.0

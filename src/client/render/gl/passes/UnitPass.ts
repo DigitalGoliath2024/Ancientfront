@@ -116,7 +116,7 @@ const TRAIN_FIRST_COL = UNIT_ORDER.indexOf("TrainEngine");
  * Per-instance data (16 bytes):
  *   float x, y, ownerID   — 12 bytes (3 floats)
  *   uint8 atlasIdx         —  1 byte  (atlas column 0–11)
- *   uint8 flags            —  1 byte  (0 = normal, 1 = flicker, 2 = angry, 3 = trade-friendly, 4 = retreating, 5 = flicker-untargetable)
+ *   uint8 flags            —  1 byte  (0 = normal, 1 = flicker, 2 = angry, 3 = trade-friendly, 4 = retreating, 5 = flicker-untargetable, 6 = trade-self, 7 = naval mine)
  *   uint8 flickerHash      —  1 byte  (per-instance flicker phase offset)
  *   uint8 style            —  1 byte  (bit 0 = marauder; bits 1–4 = 16-way heading)
  */
@@ -131,6 +131,7 @@ const FLAG_TRADE_FRIENDLY = 3;
 const FLAG_RETREATING = 4;
 const FLAG_FLICKER_UNTARGETABLE = 5;
 const FLAG_TRADE_SELF = 6;
+const FLAG_NAVAL_MINE = 7;
 
 /** Packed into the instance style byte. Marauders use their own atlas
  *  column, render smaller, and invert hull color bands. */
@@ -635,6 +636,9 @@ export class UnitPass {
       } else if (isFlicker) {
         // Untargetable nukes render dimmed so players can tell SAMs can't hit them
         flags = unit.targetable ? FLAG_FLICKER : FLAG_FLICKER_UNTARGETABLE;
+      }
+      if (unit.unitType === UT_NAVAL_MINE) {
+        flags = FLAG_NAVAL_MINE;
       }
       const isMissile = MISSILE_TYPES.has(unit.unitType);
 

@@ -1,7 +1,6 @@
 import { css, html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { translateText } from "../../../client/Utils";
-import { assetUrl } from "../../../core/AssetUrls";
 import { EventBus } from "../../../core/EventBus";
 import {
   BuildableUnit,
@@ -26,16 +25,18 @@ import {
 import { UIState } from "../../UIState";
 import { renderNumber } from "../../Utils";
 import { GameView } from "../../view";
-const warshipIcon = assetUrl("images/BattleshipIconWhite.svg");
-const marauderIcon = assetUrl("images/DestroyerIconWhite.svg");
-const cityIcon = assetUrl("images/CityIconWhite.svg");
-const factoryIcon = assetUrl("images/FactoryIconWhite.svg");
-const goldCoinIcon = assetUrl("images/GoldCoinIcon.svg");
-const portIcon = assetUrl("images/PortIcon.svg");
-const samlauncherIcon = assetUrl("images/SamLauncherIconWhite.svg");
-const shieldIcon = assetUrl("images/ShieldIconWhite.svg");
-const troopIconWhite = assetUrl("images/TroopIconWhite.svg");
-const navalMineIcon = assetUrl("images/NavalMineIconWhite.svg");
+import {
+  factoryIcon,
+  marauderIcon,
+  navalMineIcon,
+  portGunIcon,
+  portIcon,
+  armoryIcon,
+  cityIcon,
+  goldCoinIcon,
+  defensePostIcon,
+  warshipIcon,
+} from "../HotbarIcons";
 
 export interface BuildItemDisplay {
   unitType: PlayerBuildableUnitType;
@@ -70,14 +71,14 @@ export const buildTable: BuildItemDisplay[][] = [
     },
     {
       unitType: UnitType.PortGun,
-      icon: samlauncherIcon,
+      icon: portGunIcon,
       description: "build_menu.desc.port_gun",
       key: "unit_type.port_gun",
       countable: true,
     },
     {
       unitType: UnitType.DefensePost,
-      icon: shieldIcon,
+      icon: defensePostIcon,
       description: "build_menu.desc.defense_post",
       key: "unit_type.defense_post",
       countable: true,
@@ -98,7 +99,7 @@ export const buildTable: BuildItemDisplay[][] = [
     },
     {
       unitType: UnitType.Armory,
-      icon: troopIconWhite,
+      icon: armoryIcon,
       description: "build_menu.desc.armory",
       key: "unit_type.armory",
       countable: true,

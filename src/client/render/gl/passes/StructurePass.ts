@@ -3,7 +3,8 @@
  *
  * Renders a filled circle in player color with a white icon overlay,
  * sampled from a pre-built 6-column sprite atlas (generate-sprite-atlases.mjs),
- * plus a runtime seventh column for the Armory soldier glyph.
+ * plus runtime columns for Armory and Port Gun (and overlays for City / Port /
+ * Factory / Defense Post).
  *
  * Two LODs based on zoom:
  *   - zoom > 0.5: full icon with circle background
@@ -40,7 +41,12 @@ import structureFragSrc from "../shaders/structure/structure.frag.glsl?raw";
 import structureVertSrc from "../shaders/structure/structure.vert.glsl?raw";
 
 const iconAtlasUrl = assetUrl("atlases/icon-atlas.png");
-const armoryIconUrl = assetUrl("images/TroopIconWhite.svg");
+const cityIconUrl = assetUrl("images/CityIconWhite.png");
+const portIconUrl = assetUrl("images/PortIconWhite.png");
+const factoryIconUrl = assetUrl("images/FactoryIconWhite.png");
+const defensePostIconUrl = assetUrl("images/DefensePostIconWhite.png");
+const armoryIconUrl = assetUrl("images/ArmoryIconWhite.png");
+const portGunIconUrl = assetUrl("images/PortGunIconWhite.png");
 
 function decodeImage(src: string): Promise<HTMLImageElement> {
   const img = new Image();
@@ -65,7 +71,11 @@ const STRUCTURE_ORDER = [
   UT_SAM_LAUNCHER,
   UT_MISSILE_SILO,
   UT_ARMORY,
+  UT_PORT_GUN,
 ] as const;
+
+/** Columns baked into icon-atlas.png (city through silo). */
+const BAKED_ATLAS_COLS = 6;
 
 const ATLAS_COLS = STRUCTURE_ORDER.length;
 
@@ -160,10 +170,6 @@ export class StructurePass {
       if (col >= 0) {
         this.typeToAtlasCol.set(header.unitTypes[i], col);
       }
-    }
-    const samCol = this.typeToAtlasCol.get(UT_SAM_LAUNCHER);
-    if (samCol !== undefined) {
-      this.typeToAtlasCol.set(UT_PORT_GUN, samCol);
     }
 
     // Compile shaders
@@ -294,12 +300,24 @@ export class StructurePass {
   }
 
   private async loadAtlas(): Promise<void> {
-    const bakedCols = ATLAS_COLS - 1;
-    const [atlasImg, soldierImg] = await Promise.all([
+    const [
+      atlasImg,
+      cityImg,
+      portImg,
+      factoryImg,
+      defensePostImg,
+      armoryImg,
+      portGunImg,
+    ] = await Promise.all([
       decodeImage(iconAtlasUrl),
+      decodeImage(cityIconUrl),
+      decodeImage(portIconUrl),
+      decodeImage(factoryIconUrl),
+      decodeImage(defensePostIconUrl),
       decodeImage(armoryIconUrl),
+      decodeImage(portGunIconUrl),
     ]);
-    const colW = atlasImg.width / bakedCols;
+    const colW = atlasImg.width / BAKED_ATLAS_COLS;
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(colW * ATLAS_COLS);
     canvas.height = atlasImg.height;
@@ -308,15 +326,24 @@ export class StructurePass {
       return;
     }
     ctx.drawImage(atlasImg, 0, 0);
-    const destX = Math.round(colW * bakedCols);
-    const pad = Math.max(1, Math.round(colW * 0.12));
-    ctx.drawImage(
-      soldierImg,
-      destX + pad,
-      pad,
-      Math.round(colW) - pad * 2,
-      atlasImg.height - pad * 2,
-    );
+    const drawOverlay = (img: HTMLImageElement, col: number) => {
+      const destX = Math.round(colW * col);
+      ctx.clearRect(destX, 0, Math.round(colW), atlasImg.height);
+      const pad = Math.max(1, Math.round(colW * 0.12));
+      ctx.drawImage(
+        img,
+        destX + pad,
+        pad,
+        Math.round(colW) - pad * 2,
+        atlasImg.height - pad * 2,
+      );
+    };
+    drawOverlay(cityImg, 0);
+    drawOverlay(portImg, 1);
+    drawOverlay(factoryImg, 2);
+    drawOverlay(defensePostImg, 3);
+    drawOverlay(armoryImg, BAKED_ATLAS_COLS);
+    drawOverlay(portGunImg, BAKED_ATLAS_COLS + 1);
 
     const gl = this.gl;
     gl.activeTexture(gl.TEXTURE1);

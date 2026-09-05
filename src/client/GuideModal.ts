@@ -8,7 +8,8 @@ import {
   cityIcon,
   marauderIcon,
   navalMineIcon,
-  samLauncherIcon,
+  navyIcon,
+  portGunIcon,
   warshipIcon,
 } from "./hud/HotbarIcons";
 
@@ -25,7 +26,7 @@ const SECTIONS: readonly GuideSection[] = [
     id: "navy",
     tabKey: "guide_modal.navy_tab",
     titleKey: "guide_modal.navy_title",
-    icon: assetUrl("images/BoatIconWhite.svg"),
+    icon: navyIcon,
     bodyKeys: [
       "guide_modal.navy_closer",
       "guide_modal.navy_shells",
@@ -67,7 +68,7 @@ const SECTIONS: readonly GuideSection[] = [
     id: "port-guns",
     tabKey: "guide_modal.port_guns_tab",
     titleKey: "guide_modal.port_guns_title",
-    icon: samLauncherIcon,
+    icon: portGunIcon,
     bodyKeys: [
       "guide_modal.port_guns_what",
       "guide_modal.port_guns_armor",

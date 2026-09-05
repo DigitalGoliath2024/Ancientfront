@@ -24,11 +24,11 @@ import {
   factoryIcon,
   goldCoinIcon,
   portIcon,
-  samLauncherIcon,
-  troopIconWhite,
+  portGunIcon,
   marauderIcon,
   navalMineIcon,
   warshipIcon,
+  armoryIcon,
 } from "../HotbarIcons";
 
 @customElement("unit-display")
@@ -149,7 +149,7 @@ export class UnitDisplay extends LitElement implements Controller {
             this.keybinds["buildFactory"]?.key ?? "2",
           )}
           ${this.renderUnitItem(
-            troopIconWhite,
+            armoryIcon,
             this._armory,
             UnitType.Armory,
             "armory",
@@ -170,7 +170,7 @@ export class UnitDisplay extends LitElement implements Controller {
             this.keybinds["buildDefensePost"]?.key ?? "4",
           )}
           ${this.renderUnitItem(
-            samLauncherIcon,
+            portGunIcon,
             this._portGun,
             UnitType.PortGun,
             "port_gun",

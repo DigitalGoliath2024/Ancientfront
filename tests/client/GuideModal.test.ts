@@ -29,10 +29,10 @@ const SECTION_IDS = [
 const FORBIDDEN_MINE_COPY = /search|sweep|blast radius/i;
 
 const TITLE_ICONS: Record<(typeof SECTION_IDS)[number], string> = {
-  navy: "BoatIconWhite",
-  battleship: "BattleshipIconWhite",
-  marauder: "DestroyerIconWhite",
-  "port-guns": "SamLauncherIconWhite",
+  navy: "NavyIconWhite",
+  battleship: "WarshipIconWhite",
+  marauder: "MarauderIconWhite",
+  "port-guns": "PortGunIconWhite",
   mines: "NavalMineIconWhite",
   buildings: "CityIconWhite",
   play: "PlayIconWhite",

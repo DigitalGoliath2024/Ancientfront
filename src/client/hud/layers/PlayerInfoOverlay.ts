@@ -40,15 +40,15 @@ import { SpawnBarVisibleEvent } from "./SpawnTimer";
 const soldierIconAquarius = assetUrl("images/SoldierIconAquarius.svg");
 const allianceIcon = assetUrl("images/AllianceIcon.svg");
 const traitorIcon = assetUrl("images/TraitorIcon.svg");
-const warshipIcon = assetUrl("images/BattleshipIconWhite.svg");
-const marauderIcon = assetUrl("images/DestroyerIconWhite.svg");
-const cityIcon = assetUrl("images/CityIconWhite.svg");
-const factoryIcon = assetUrl("images/FactoryIconWhite.svg");
+const warshipIcon = assetUrl("images/WarshipIconWhite.png");
+const marauderIcon = assetUrl("images/MarauderIconWhite.png");
+const cityIcon = assetUrl("images/CityIconWhite.png");
+const factoryIcon = assetUrl("images/FactoryIconWhite.png");
 const goldCoinIcon = assetUrl("images/GoldCoinIcon.svg");
-const portIcon = assetUrl("images/PortIcon.svg");
-const samLauncherIcon = assetUrl("images/SamLauncherIconWhite.svg");
+const portIcon = assetUrl("images/PortIconWhite.png");
+const portGunIcon = assetUrl("images/PortGunIconWhite.png");
 const soldierIcon = assetUrl("images/SoldierIcon.svg");
-const troopIconWhite = assetUrl("images/TroopIconWhite.svg");
+const armoryIcon = assetUrl("images/ArmoryIconWhite.png");
 
 function euclideanDistWorld(
   coord: { x: number; y: number },
@@ -530,9 +530,9 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
           <div class="flex gap-0.5 lg:gap-1 items-center mt-0.5">
             ${this.displayUnitCount(player, UnitType.City, cityIcon)}
             ${this.displayUnitCount(player, UnitType.Factory, factoryIcon)}
-            ${this.displayUnitCount(player, UnitType.Armory, troopIconWhite)}
+            ${this.displayUnitCount(player, UnitType.Armory, armoryIcon)}
             ${this.displayUnitCount(player, UnitType.Port, portIcon)}
-            ${this.displayUnitCount(player, UnitType.PortGun, samLauncherIcon)}
+            ${this.displayUnitCount(player, UnitType.PortGun, portGunIcon)}
             ${this.displayUnitCount(player, UnitType.Warship, warshipIcon)}
             ${this.displayUnitCount(player, UnitType.Marauder, marauderIcon)}
           </div>
