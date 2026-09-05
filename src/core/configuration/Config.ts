@@ -5,6 +5,7 @@ import { exp, log, pow, pow2 } from "../DetMath";
 import { DoomsdayClockSpeed } from "../game/DoomsdayClock";
 import {
   Difficulty,
+  EraDisabledUnits,
   Game,
   GameMode,
   GameType,
@@ -363,6 +364,9 @@ export class Config {
   }
 
   isUnitDisabled(unitType: UnitType): boolean {
+    if (EraDisabledUnits.has(unitType)) {
+      return true;
+    }
     return this._gameConfig.disabledUnits?.includes(unitType) ?? false;
   }
 
@@ -660,6 +664,15 @@ export class Config {
             }
             return BigInt(active <= 0 ? 250_000 : 500_000);
           },
+        };
+        break;
+      case UnitType.InlandBattery:
+        info = {
+          cost: this.costWrapper(() => 1_500_000, UnitType.InlandBattery),
+          maxHealth: 1000,
+          constructionDuration: this.instantBuild() ? 0 : 8 * 10,
+          upgradable: true,
+          maxLevel: this.inlandBatteryMaxLevel(),
         };
         break;
       case UnitType.Train:
@@ -1386,6 +1399,10 @@ export class Config {
     return 200;
   }
 
+  inlandBatteryHealthPerLevel(): number {
+    return 200;
+  }
+
   /**
    * Hull at this upgrade level. Extra HP per level is about one extra
    * unbuffed shell so stacking upgrades cannot make buildings unkillable.
@@ -1417,6 +1434,8 @@ export class Config {
         return this.armoryMaxHealth() + extra * this.armoryHealthPerLevel();
       case UnitType.PortGun:
         return 1000 + extra * this.portGunHealthPerLevel();
+      case UnitType.InlandBattery:
+        return 1000 + extra * this.inlandBatteryHealthPerLevel();
       default:
         return 0;
     }
@@ -1495,6 +1514,48 @@ export class Config {
       return 2;
     }
     return 1;
+  }
+
+  inlandBatteryMaxLevel(): number {
+    return 10;
+  }
+
+  private inlandBatteryEffectiveLevel(level: number): number {
+    return Math.max(1, Math.min(level, this.inlandBatteryMaxLevel()));
+  }
+
+  inlandBatteryBaseRange(): number {
+    return 100;
+  }
+
+  inlandBatteryMaxRange(): number {
+    return 210;
+  }
+
+  /** Land-battery range in tiles. Grows from 100 to 210 by level 10. */
+  inlandBatteryRange(level: number): number {
+    const extra = this.inlandBatteryEffectiveLevel(level) - 1;
+    const steps = this.inlandBatteryMaxLevel() - 1;
+    const span = this.inlandBatteryMaxRange() - this.inlandBatteryBaseRange();
+    return this.inlandBatteryBaseRange() + (((span * extra) / steps) | 0);
+  }
+
+  inlandBatteryShellCount(level: number): number {
+    return this.inlandBatteryEffectiveLevel(level);
+  }
+
+  /** 30 seconds at 10 ticks/s. */
+  inlandBatteryReloadTicks(): Tick {
+    return 300;
+  }
+
+  inlandBatteryBlastRadius(): number {
+    return 4;
+  }
+
+  /** Do not aim or land shells closer than this, so the blast cannot reach the gun. */
+  inlandBatteryMinFireRange(): number {
+    return this.inlandBatteryBlastRadius() + 1;
   }
 
   /**

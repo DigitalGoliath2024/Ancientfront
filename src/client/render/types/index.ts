@@ -58,4 +58,5 @@ export {
   UT_PORT_GUN,
   UT_ARMORY,
   UT_NAVAL_MINE,
+  UT_INLAND_BATTERY,
 } from "./UnitType";

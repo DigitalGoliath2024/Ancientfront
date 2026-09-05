@@ -33,6 +33,7 @@ export const UT_MISSILE_SILO = "Missile Silo" as const;
 export const UT_PORT_GUN = "Port Gun" as const;
 export const UT_ARMORY = "Armory" as const;
 export const UT_NAVAL_MINE = "Naval Mine" as const;
+export const UT_INLAND_BATTERY = "Inland Battery" as const;
 
 // ---------------------------------------------------------------------------
 // Derived sets
@@ -47,6 +48,7 @@ export const STRUCTURE_TYPES: ReadonlySet<string> = new Set([
   UT_MISSILE_SILO,
   UT_PORT_GUN,
   UT_ARMORY,
+  UT_INLAND_BATTERY,
 ]);
 
 export const NUKE_TYPES: ReadonlySet<string> = new Set([
@@ -99,5 +101,6 @@ export const ALL_UNIT_TYPES = [
   UT_PORT_GUN,
   UT_ARMORY,
   UT_NAVAL_MINE,
+  UT_INLAND_BATTERY,
   UT_TRAIN,
 ] as const;

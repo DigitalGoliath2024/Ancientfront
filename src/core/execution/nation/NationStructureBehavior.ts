@@ -1340,6 +1340,7 @@ export class NationStructureBehavior {
         case UnitType.City:
         case UnitType.Factory:
         case UnitType.Armory:
+        case UnitType.InlandBattery:
         case UnitType.MissileSilo:
         case UnitType.Port:
           protectEntries.push({

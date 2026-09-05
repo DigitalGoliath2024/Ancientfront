@@ -47,6 +47,7 @@ const factoryIcon = assetUrl("images/FactoryIconWhite.png");
 const goldCoinIcon = assetUrl("images/GoldCoinIcon.svg");
 const portIcon = assetUrl("images/PortIconWhite.png");
 const portGunIcon = assetUrl("images/PortGunIconWhite.png");
+const inlandBatteryIcon = assetUrl("images/InlandBatteryIconWhite.png");
 const soldierIcon = assetUrl("images/SoldierIcon.svg");
 const armoryIcon = assetUrl("images/ArmoryIconWhite.png");
 
@@ -533,6 +534,7 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
             ${this.displayUnitCount(player, UnitType.Armory, armoryIcon)}
             ${this.displayUnitCount(player, UnitType.Port, portIcon)}
             ${this.displayUnitCount(player, UnitType.PortGun, portGunIcon)}
+            ${this.displayUnitCount(player, UnitType.InlandBattery, inlandBatteryIcon)}
             ${this.displayUnitCount(player, UnitType.Warship, warshipIcon)}
             ${this.displayUnitCount(player, UnitType.Marauder, marauderIcon)}
           </div>

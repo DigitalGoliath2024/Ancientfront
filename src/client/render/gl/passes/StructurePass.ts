@@ -3,8 +3,8 @@
  *
  * Renders a filled circle in player color with a white icon overlay,
  * sampled from a pre-built 6-column sprite atlas (generate-sprite-atlases.mjs),
- * plus runtime columns for Armory and Port Gun (and overlays for City / Port /
- * Factory / Defense Post).
+ * plus runtime columns for Armory, Port Gun, and Inland Battery (and overlays
+ * for City / Port / Factory / Defense Post).
  *
  * Two LODs based on zoom:
  *   - zoom > 0.5: full icon with circle background
@@ -26,6 +26,7 @@ import {
   UT_SAM_LAUNCHER,
   UT_PORT_GUN,
   UT_ARMORY,
+  UT_INLAND_BATTERY,
 } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
@@ -47,6 +48,7 @@ const factoryIconUrl = assetUrl("images/FactoryIconWhite.png");
 const defensePostIconUrl = assetUrl("images/DefensePostIconWhite.png");
 const armoryIconUrl = assetUrl("images/ArmoryIconWhite.png");
 const portGunIconUrl = assetUrl("images/PortGunIconWhite.png");
+const inlandBatteryIconUrl = assetUrl("images/InlandBatteryIconWhite.png");
 
 function decodeImage(src: string): Promise<HTMLImageElement> {
   const img = new Image();
@@ -72,6 +74,7 @@ const STRUCTURE_ORDER = [
   UT_MISSILE_SILO,
   UT_ARMORY,
   UT_PORT_GUN,
+  UT_INLAND_BATTERY,
 ] as const;
 
 /** Columns baked into icon-atlas.png (city through silo). */
@@ -308,6 +311,7 @@ export class StructurePass {
       defensePostImg,
       armoryImg,
       portGunImg,
+      inlandBatteryImg,
     ] = await Promise.all([
       decodeImage(iconAtlasUrl),
       decodeImage(cityIconUrl),
@@ -316,6 +320,7 @@ export class StructurePass {
       decodeImage(defensePostIconUrl),
       decodeImage(armoryIconUrl),
       decodeImage(portGunIconUrl),
+      decodeImage(inlandBatteryIconUrl),
     ]);
     const colW = atlasImg.width / BAKED_ATLAS_COLS;
     const canvas = document.createElement("canvas");
@@ -344,6 +349,7 @@ export class StructurePass {
     drawOverlay(defensePostImg, 3);
     drawOverlay(armoryImg, BAKED_ATLAS_COLS);
     drawOverlay(portGunImg, BAKED_ATLAS_COLS + 1);
+    drawOverlay(inlandBatteryImg, BAKED_ATLAS_COLS + 2);
 
     const gl = this.gl;
     gl.activeTexture(gl.TEXTURE1);

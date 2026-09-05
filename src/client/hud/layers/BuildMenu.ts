@@ -30,6 +30,7 @@ import {
   marauderIcon,
   navalMineIcon,
   portGunIcon,
+  inlandBatteryIcon,
   portIcon,
   armoryIcon,
   cityIcon,
@@ -74,6 +75,13 @@ export const buildTable: BuildItemDisplay[][] = [
       icon: portGunIcon,
       description: "build_menu.desc.port_gun",
       key: "unit_type.port_gun",
+      countable: true,
+    },
+    {
+      unitType: UnitType.InlandBattery,
+      icon: inlandBatteryIcon,
+      description: "build_menu.desc.inland_battery",
+      key: "unit_type.inland_battery",
       countable: true,
     },
     {

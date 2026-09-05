@@ -347,6 +347,11 @@ export class BuildPreviewController implements Controller {
         rangeRadius = this.game.config().portGunRange(level);
         break;
       }
+      case UnitType.InlandBattery: {
+        const level = this.resolveGhostRangeLevel(u) ?? 1;
+        rangeRadius = this.game.config().inlandBatteryRange(level);
+        break;
+      }
       case UnitType.NavalMine: {
         rangeRadius = this.game.config().navalMineRange();
         const shore = nearestOwnedLandTileView(
@@ -543,7 +548,8 @@ export class BuildPreviewController implements Controller {
   ): number | undefined {
     if (
       (buildableUnit.type as UnitType) !== UnitType.SAMLauncher &&
-      buildableUnit.type !== UnitType.PortGun
+      buildableUnit.type !== UnitType.PortGun &&
+      buildableUnit.type !== UnitType.InlandBattery
     ) {
       return undefined;
     }

@@ -124,6 +124,9 @@ export class SoundEffectController implements Controller {
       case UnitType.PortGun:
         if (unit.owner() === myPlayer) this.emit("build-defense-post");
         break;
+      case UnitType.InlandBattery:
+        if (unit.owner() === myPlayer) this.emit("build-defense-post");
+        break;
       case UnitType.Armory:
         if (unit.owner() === myPlayer) this.emit("build-city");
         break;

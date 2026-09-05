@@ -19,9 +19,10 @@ const BUILDING_ORDER = {
   fact: 3,
   defp: 4,
   pgun: 5,
-  armr: 6,
-  silo: 7,
-  saml: 8,
+  ibat: 6,
+  armr: 7,
+  silo: 8,
+  saml: 9,
 } as const satisfies Record<
   Exclude<(typeof otherUnits)[number], "wshp" | "mrdr" | "nmine">,
   number
@@ -46,6 +47,7 @@ const UNIT_LABEL_KEYS = {
   wshp: "unit_type.warship",
   mrdr: "unit_type.marauder",
   pgun: "unit_type.port_gun",
+  ibat: "unit_type.inland_battery",
   armr: "unit_type.armory",
   nmine: "unit_type.naval_mine",
   abomb: "unit_type.atom_bomb",

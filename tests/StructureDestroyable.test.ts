@@ -39,6 +39,7 @@ describe("Upgraded buildings take extra HP instead of demoting", () => {
     [UnitType.City, 5, 10],
     [UnitType.Factory, 4, 10],
     [UnitType.PortGun, 7, 10],
+    [UnitType.InlandBattery, 5, 10],
     [UnitType.Armory, 5, 12],
     [UnitType.Port, 7, 12],
   ] as const)("%s L3 keeps its level and chips HP from one hull of damage", (type, x, y) => {
@@ -55,6 +56,7 @@ describe("Upgraded buildings take extra HP instead of demoting", () => {
     [UnitType.City, 5, 10],
     [UnitType.Factory, 4, 10],
     [UnitType.PortGun, 7, 10],
+    [UnitType.InlandBattery, 5, 10],
     [UnitType.Armory, 5, 12],
     [UnitType.Port, 7, 12],
   ] as const)("%s is destroyed when its scaled hull hits 0", (type, x, y) => {

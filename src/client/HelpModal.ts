@@ -974,6 +974,11 @@ export class HelpModal extends BaseModal {
                     "help_modal.build_port_gun_desc",
                   )}
                   ${this.renderBuildRow(
+                    "unit_type.inland_battery",
+                    "images/InlandBatteryIconWhite.png",
+                    "help_modal.build_inland_battery_desc",
+                  )}
+                  ${this.renderBuildRow(
                     "unit_type.defense_post",
                     "images/DefensePostIconWhite.png",
                     "help_modal.build_defense_desc",

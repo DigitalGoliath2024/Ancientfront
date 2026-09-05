@@ -35,6 +35,8 @@ export class TerritoryPass {
   private uStaleNukeVariation: WebGLUniformLocation;
   private uStaleNukeAlpha: WebGLUniformLocation;
   private uStaleNukeColor: WebGLUniformLocation;
+  private uTime: WebGLUniformLocation;
+  private readonly startTime = performance.now();
   private uHighlightOwner: WebGLUniformLocation;
   private uHighlightBrighten: WebGLUniformLocation;
   private uShowPatterns: WebGLUniformLocation;
@@ -163,6 +165,7 @@ export class TerritoryPass {
       this.program,
       "uStaleNukeColor",
     )!;
+    this.uTime = gl.getUniformLocation(this.program, "uTime")!;
     this.uHighlightOwner = gl.getUniformLocation(
       this.program,
       "uHighlightOwner",
@@ -441,6 +444,7 @@ export class TerritoryPass {
       mo.staleNukeG,
       mo.staleNukeB,
     );
+    gl.uniform1f(this.uTime, (performance.now() - this.startTime) / 1000);
     gl.uniform1ui(this.uHighlightOwner, this.highlightOwner);
     gl.uniform1f(this.uHighlightBrighten, mo.highlightFillBrighten);
     gl.uniform1i(

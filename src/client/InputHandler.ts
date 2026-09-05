@@ -371,6 +371,7 @@ export class InputHandler {
       "buildPort",
       "buildDefensePost",
       "buildPortGun",
+      "buildInlandBattery",
       "buildWarship",
       "buildArmory",
     ];
@@ -1132,6 +1133,7 @@ export class InputHandler {
       { key: "buildPort", type: UnitType.Port },
       { key: "buildDefensePost", type: UnitType.DefensePost },
       { key: "buildPortGun", type: UnitType.PortGun },
+      { key: "buildInlandBattery", type: UnitType.InlandBattery },
       { key: "buildWarship", type: UnitType.Warship },
       { key: "buildArmory", type: UnitType.Armory },
     ];

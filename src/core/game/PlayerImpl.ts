@@ -1361,7 +1361,11 @@ export class PlayerImpl implements Player {
     if (unit.owner() === this) {
       throw new Error(`Cannot capture unit, ${this} already owns ${unit}`);
     }
-    if (this.mg.config().unitInfo(unit.type()).unique) {
+    if (
+      this.mg.config().unitInfo(unit.type()).unique ||
+      unit.type() === UnitType.DefensePost ||
+      unit.type() === UnitType.InlandBattery
+    ) {
       unit.delete(true, this);
       return;
     }
@@ -1632,6 +1636,7 @@ export class PlayerImpl implements Player {
       case UnitType.City:
       case UnitType.Factory:
       case UnitType.Armory:
+      case UnitType.InlandBattery:
         return this.landBasedStructureSpawn(targetTile, validTiles);
       case UnitType.NavalMine:
         return canPlaceNavalMine(this.mg, this, targetTile)

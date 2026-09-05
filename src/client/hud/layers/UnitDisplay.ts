@@ -25,6 +25,7 @@ import {
   goldCoinIcon,
   portIcon,
   portGunIcon,
+  inlandBatteryIcon,
   marauderIcon,
   navalMineIcon,
   warshipIcon,
@@ -47,6 +48,7 @@ export class UnitDisplay extends LitElement implements Controller {
   private _port = 0;
   private _defensePost = 0;
   private _portGun = 0;
+  private _inlandBattery = 0;
   private allDisabled = false;
   private _hoveredUnit: PlayerBuildableUnitType | null = null;
 
@@ -107,6 +109,7 @@ export class UnitDisplay extends LitElement implements Controller {
     this._port = player.totalUnitLevels(UnitType.Port);
     this._defensePost = player.totalUnitLevels(UnitType.DefensePost);
     this._portGun = player.totalUnitLevels(UnitType.PortGun);
+    this._inlandBattery = player.totalUnitLevels(UnitType.InlandBattery);
     this._factories = player.totalUnitLevels(UnitType.Factory);
     this._armory = player.totalUnitLevels(UnitType.Armory);
     this._warships = player.totalUnitLevels(UnitType.Warship);
@@ -175,6 +178,13 @@ export class UnitDisplay extends LitElement implements Controller {
             UnitType.PortGun,
             "port_gun",
             this.keybinds["buildPortGun"]?.key ?? "5",
+          )}
+          ${this.renderUnitItem(
+            inlandBatteryIcon,
+            this._inlandBattery,
+            UnitType.InlandBattery,
+            "inland_battery",
+            this.keybinds["buildInlandBattery"]?.key ?? "8",
           )}
           ${this.renderUnitItem(
             warshipIcon,

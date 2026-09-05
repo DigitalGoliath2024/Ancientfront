@@ -505,6 +505,16 @@ export class UserSettingModal extends BaseModal {
       ></setting-keybind>
 
       <setting-keybind
+        action="buildInlandBattery"
+        label=${translateText("user_setting.build_inland_battery")}
+        description=${translateText("user_setting.build_inland_battery_desc")}
+        defaultKey=${this.defaultKeybinds.buildInlandBattery}
+        .value=${this.getKeyValue("buildInlandBattery")}
+        .display=${this.getKeyChar("buildInlandBattery")}
+        @change=${this.handleKeybindChange}
+      ></setting-keybind>
+
+      <setting-keybind
         action="buildWarship"
         label=${translateText("user_setting.build_warship")}
         description=${translateText("user_setting.build_warship_desc")}

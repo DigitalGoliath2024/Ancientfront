@@ -9,6 +9,7 @@ import { MissileSiloExecution } from "./MissileSiloExecution";
 import { NukeExecution } from "./NukeExecution";
 import { PortExecution } from "./PortExecution";
 import { PortGunExecution } from "./PortGunExecution";
+import { InlandBatteryExecution } from "./InlandBatteryExecution";
 import { SAMLauncherExecution } from "./SAMLauncherExecution";
 import { NavalMineExecution } from "./NavalMineExecution";
 import { WarshipExecution } from "./WarshipExecution";
@@ -162,6 +163,9 @@ export class ConstructionExecution implements Execution {
       case UnitType.PortGun:
         this.mg.addExecution(new PortGunExecution(this.structure!));
         break;
+      case UnitType.InlandBattery:
+        this.mg.addExecution(new InlandBatteryExecution(this.structure!));
+        break;
       case UnitType.Armory:
         this.mg.addExecution(new ArmoryExecution(this.structure!));
         break;
@@ -233,6 +237,7 @@ export class ConstructionExecution implements Execution {
       case UnitType.Factory:
       case UnitType.PortGun:
       case UnitType.Armory:
+      case UnitType.InlandBattery:
         return true;
       default:
         return false;

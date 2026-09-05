@@ -61,6 +61,7 @@ export class PlayerExecution implements Execution {
       const captor = this.mg!.player(owner.id());
       if (
         u.type() === UnitType.DefensePost ||
+        u.type() === UnitType.InlandBattery ||
         this.config.unitInfo(u.type()).unique
       ) {
         u.delete(true, captor);

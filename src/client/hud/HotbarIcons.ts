@@ -11,6 +11,7 @@ export const hydrogenBombIcon = assetUrl("images/MushroomCloudIconWhite.svg");
 export const atomBombIcon = assetUrl("images/NukeIconWhite.svg");
 export const portIcon = assetUrl("images/PortIconWhite.png");
 export const portGunIcon = assetUrl("images/PortGunIconWhite.png");
+export const inlandBatteryIcon = assetUrl("images/InlandBatteryIconWhite.png");
 export const armoryIcon = assetUrl("images/ArmoryIconWhite.png");
 export const samLauncherIcon = assetUrl("images/SamLauncherIconWhite.svg");
 export const defensePostIcon = assetUrl("images/DefensePostIconWhite.png");

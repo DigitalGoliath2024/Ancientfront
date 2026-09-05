@@ -12,6 +12,12 @@ export class TestConfig extends Config {
   private _spawnImmunityDuration: number = 0;
   private _nationSpawnImmunityDuration: number = 0;
 
+  // Live games always treat EraDisabledUnits as off. Tests still need silos,
+  // SAMs, and nukes, so honor only the explicit disabledUnits list here.
+  isUnitDisabled(unitType: UnitType): boolean {
+    return this.gameConfig().disabledUnits?.includes(unitType) ?? false;
+  }
+
   disableNavMesh(): boolean {
     return this.gameConfig().disableNavMesh ?? true;
   }

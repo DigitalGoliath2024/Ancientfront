@@ -20,6 +20,7 @@ uniform float uStaleNukeBase;
 uniform float uStaleNukeVariation;
 uniform float uStaleNukeAlpha;
 uniform vec3 uStaleNukeColor;
+uniform float uTime;              // seconds — fire flicker on scorched tiles
 uniform uint uHighlightOwner;      // 0 = no highlight; otherwise smallID of hovered owner
 uniform float uHighlightBrighten;  // hover contrast boost strength; 0 = disabled
 uniform sampler2D uDefenseCoverageTex; // R8 — 1.0 = tile defended by same-owner post
@@ -49,8 +50,16 @@ void main() {
   // through dim/transparent spots in the fallout bloom above.
   if (fallout) {
     float h = fract(sin(float(tc.x) * 12.9898 + float(tc.y) * 78.233) * 43758.5453);
-    float noise = uStaleNukeBase + h * uStaleNukeVariation;
-    fragColor = vec4(uStaleNukeColor + vec3(noise), uStaleNukeAlpha);
+    float h2 = fract(sin(float(tc.x) * 63.7 + float(tc.y) * 157.3) * 23421.631);
+    vec3 ember = uStaleNukeColor;
+    vec3 orange = vec3(1.0, 0.42, 0.05);
+    vec3 yellow = vec3(1.0, 0.84, 0.22);
+    vec3 white = vec3(1.0, 0.96, 0.82);
+    float rate = 4.0 + h * 6.0;
+    float flick = 0.5 + 0.5 * sin(uTime * rate + h2 * 6.28318);
+    flick = flick * flick;
+    vec3 spark = mix(orange, mix(yellow, white, step(0.72, h)), h2);
+    fragColor = vec4(mix(ember, spark, flick), uStaleNukeAlpha);
     return;
   }
 
