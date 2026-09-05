@@ -59,6 +59,25 @@ export class HelpModal extends BaseModal {
     >`;
   }
 
+  private renderBuildRow(nameKey: string, icon: string, descKey: string) {
+    return html`
+      <tr class="bg-white/5 hover:bg-white/10 transition-colors">
+        <td class="py-3 pl-4 border-b border-white/5 font-medium">
+          ${translateText(nameKey)}
+        </td>
+        <td class="py-3 border-b border-white/5">
+          <img
+            src=${assetUrl(icon)}
+            class="w-8 h-8 scale-75 origin-left"
+          />
+        </td>
+        <td class="py-3 border-b border-white/5 text-white/60 text-sm">
+          ${translateText(descKey)}
+        </td>
+      </tr>
+    `;
+  }
+
   protected renderHeaderSlot() {
     return modalHeader({
       title: translateText("main.help"),
@@ -251,14 +270,6 @@ export class HelpModal extends BaseModal {
                     </td>
                     <td class="py-3 border-b border-white/5 text-white/70">
                       ${translateText("help_modal.action_coordinate_grid")}
-                    </td>
-                  </tr>
-                  <tr class="hover:bg-white/5 transition-colors">
-                    <td class="py-3 pl-4 border-b border-white/5">
-                      ${this.renderKey(keybinds.swapDirection)}
-                    </td>
-                    <td class="py-3 border-b border-white/5 text-white/70">
-                      ${translateText("help_modal.bomb_direction")}
                     </td>
                   </tr>
                   <tr class="hover:bg-white/5 transition-colors">
@@ -925,183 +936,68 @@ export class HelpModal extends BaseModal {
                 <thead class="bg-white/10">
                   <tr>
                     <th
-                      class="py-3 pl-4 text-left text-xs font-bold uppercase tracking-wider text-blue-300 w-[20%]"
+                      class="py-3 pl-4 text-left text-xs font-bold uppercase tracking-wider text-malibu-blue w-[20%]"
                     >
                       ${translateText("help_modal.build_name")}
                     </th>
                     <th
-                      class="py-3 text-left text-xs font-bold uppercase tracking-wider text-blue-300 w-[8%]"
+                      class="py-3 text-left text-xs font-bold uppercase tracking-wider text-malibu-blue w-[8%]"
                     >
                       ${translateText("help_modal.build_icon")}
                     </th>
                     <th
-                      class="py-3 text-left text-xs font-bold uppercase tracking-wider text-blue-300"
+                      class="py-3 text-left text-xs font-bold uppercase tracking-wider text-malibu-blue"
                     >
                       ${translateText("help_modal.build_desc")}
                     </th>
                   </tr>
                 </thead>
                 <tbody class="text-white/80">
-                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
-                    <td class="py-3 pl-4 border-b border-white/5 font-medium">
-                      ${translateText("unit_type.city")}
-                    </td>
-                    <td class="py-3 border-b border-white/5">
-                      <img
-                        src=${assetUrl("images/CityIconWhite.png")}
-                        class="w-8 h-8 scale-75 origin-left"
-                      />
-                    </td>
-                    <td
-                      class="py-3 border-b border-white/5 text-white/60 text-sm"
-                    >
-                      ${translateText("help_modal.build_city_desc")}
-                    </td>
-                  </tr>
-                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
-                    <td class="py-3 pl-4 border-b border-white/5 font-medium">
-                      ${translateText("unit_type.defense_post")}
-                    </td>
-                    <td class="py-3 border-b border-white/5">
-                      <img
-                        src=${assetUrl("images/DefensePostIconWhite.png")}
-                        class="w-8 h-8 scale-75 origin-left"
-                      />
-                    </td>
-                    <td
-                      class="py-3 border-b border-white/5 text-white/60 text-sm"
-                    >
-                      ${translateText("help_modal.build_defense_desc")}
-                    </td>
-                  </tr>
-                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
-                    <td class="py-3 pl-4 border-b border-white/5 font-medium">
-                      ${translateText("unit_type.port")}
-                    </td>
-                    <td class="py-3 border-b border-white/5">
-                      <img
-                        src=${assetUrl("images/PortIconWhite.png")}
-                        class="w-8 h-8 scale-75 origin-left"
-                      />
-                    </td>
-                    <td
-                      class="py-3 border-b border-white/5 text-white/60 text-sm"
-                    >
-                      ${translateText("help_modal.build_port_desc")}
-                    </td>
-                  </tr>
-                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
-                    <td class="py-3 pl-4 border-b border-white/5 font-medium">
-                      ${translateText("unit_type.factory")}
-                    </td>
-                    <td class="py-3 border-b border-white/5">
-                      <img
-                        src=${assetUrl("images/FactoryIconWhite.png")}
-                        class="w-8 h-8 scale-75 origin-left"
-                      />
-                    </td>
-                    <td
-                      class="py-3 border-b border-white/5 text-white/60 text-sm"
-                    >
-                      ${translateText("help_modal.build_factory_desc")}
-                    </td>
-                  </tr>
-                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
-                    <td class="py-3 pl-4 border-b border-white/5 font-medium">
-                      ${translateText("unit_type.warship")}
-                    </td>
-                    <td class="py-3 border-b border-white/5">
-                      <img
-                        src=${assetUrl("images/WarshipIconWhite.png")}
-                        class="w-8 h-8 scale-75 origin-left"
-                      />
-                    </td>
-                    <td
-                      class="py-3 border-b border-white/5 text-white/60 text-sm"
-                    >
-                      ${translateText("help_modal.build_warship_desc")}
-                    </td>
-                  </tr>
-                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
-                    <td class="py-3 pl-4 border-b border-white/5 font-medium">
-                      ${translateText("unit_type.missile_silo")}
-                    </td>
-                    <td class="py-3 border-b border-white/5">
-                      <img
-                        src=${assetUrl("images/MissileSiloIconWhite.svg")}
-                        class="w-8 h-8 scale-75 origin-left"
-                      />
-                    </td>
-                    <td
-                      class="py-3 border-b border-white/5 text-white/60 text-sm"
-                    >
-                      ${translateText("help_modal.build_silo_desc")}
-                    </td>
-                  </tr>
-                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
-                    <td class="py-3 pl-4 border-b border-white/5 font-medium">
-                      ${translateText("unit_type.sam_launcher")}
-                    </td>
-                    <td class="py-3 border-b border-white/5">
-                      <img
-                        src=${assetUrl("images/SamLauncherIconWhite.svg")}
-                        class="w-8 h-8 scale-75 origin-left"
-                      />
-                    </td>
-                    <td
-                      class="py-3 border-b border-white/5 text-white/60 text-sm"
-                    >
-                      ${translateText("help_modal.build_sam_desc")}
-                    </td>
-                  </tr>
-                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
-                    <td class="py-3 pl-4 border-b border-white/5 font-medium">
-                      ${translateText("unit_type.atom_bomb")}
-                    </td>
-                    <td class="py-3 border-b border-white/5">
-                      <img
-                        src=${assetUrl("images/NukeIconWhite.svg")}
-                        class="w-8 h-8 scale-75 origin-left"
-                      />
-                    </td>
-                    <td
-                      class="py-3 border-b border-white/5 text-white/60 text-sm"
-                    >
-                      ${translateText("help_modal.build_atom_desc")}
-                    </td>
-                  </tr>
-                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
-                    <td class="py-3 pl-4 border-b border-white/5 font-medium">
-                      ${translateText("unit_type.hydrogen_bomb")}
-                    </td>
-                    <td class="py-3 border-b border-white/5">
-                      <img
-                        src=${assetUrl("images/MushroomCloudIconWhite.svg")}
-                        class="w-8 h-8 scale-75 origin-left"
-                      />
-                    </td>
-                    <td
-                      class="py-3 border-b border-white/5 text-white/60 text-sm"
-                    >
-                      ${translateText("help_modal.build_hydrogen_desc")}
-                    </td>
-                  </tr>
-                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
-                    <td class="py-3 pl-4 border-b border-white/5 font-medium">
-                      ${translateText("unit_type.mirv")}
-                    </td>
-                    <td class="py-3 border-b border-white/5">
-                      <img
-                        src=${assetUrl("images/MIRVIcon.svg")}
-                        class="w-8 h-8 scale-75 origin-left"
-                      />
-                    </td>
-                    <td
-                      class="py-3 border-b border-white/5 text-white/60 text-sm"
-                    >
-                      ${translateText("help_modal.build_mirv_desc")}
-                    </td>
-                  </tr>
+                  ${this.renderBuildRow(
+                    "unit_type.warship",
+                    "images/WarshipIconWhite.png",
+                    "help_modal.build_warship_desc",
+                  )}
+                  ${this.renderBuildRow(
+                    "unit_type.marauder",
+                    "images/MarauderIconWhite.png",
+                    "help_modal.build_marauder_desc",
+                  )}
+                  ${this.renderBuildRow(
+                    "unit_type.port",
+                    "images/PortIconWhite.png",
+                    "help_modal.build_port_desc",
+                  )}
+                  ${this.renderBuildRow(
+                    "unit_type.port_gun",
+                    "images/PortGunIconWhite.png",
+                    "help_modal.build_port_gun_desc",
+                  )}
+                  ${this.renderBuildRow(
+                    "unit_type.defense_post",
+                    "images/DefensePostIconWhite.png",
+                    "help_modal.build_defense_desc",
+                  )}
+                  ${this.renderBuildRow(
+                    "unit_type.city",
+                    "images/CityIconWhite.png",
+                    "help_modal.build_city_desc",
+                  )}
+                  ${this.renderBuildRow(
+                    "unit_type.factory",
+                    "images/FactoryIconWhite.png",
+                    "help_modal.build_factory_desc",
+                  )}
+                  ${this.renderBuildRow(
+                    "unit_type.armory",
+                    "images/ArmoryIconWhite.png",
+                    "help_modal.build_armory_desc",
+                  )}
+                  ${this.renderBuildRow(
+                    "unit_type.naval_mine",
+                    "images/NavalMineIconWhite.png",
+                    "help_modal.build_naval_mine_desc",
+                  )}
                 </tbody>
               </table>
             </div>
