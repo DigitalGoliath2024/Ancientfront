@@ -66,6 +66,8 @@ function unitStateFromUpdate(u: UnitUpdate): UnitState {
     targetTile: u.targetTile ?? null,
     troops: u.troops,
     missileTimerQueue: u.missileTimerQueue,
+    autoFire: u.autoFire ?? true,
+    lastVolleyTick: u.lastVolleyTick ?? 0,
     level: u.level,
     veterancy: u.warshipState?.veterancy ?? 0,
     hasTrainStation: u.hasTrainStation,
@@ -100,6 +102,8 @@ function applyUpdateInPlace(target: UnitState, u: UnitUpdate): void {
   target.targetTile = u.targetTile ?? null;
   target.troops = u.troops;
   target.missileTimerQueue = u.missileTimerQueue;
+  target.autoFire = u.autoFire ?? true;
+  target.lastVolleyTick = u.lastVolleyTick ?? 0;
   target.level = u.level;
   target.veterancy = u.warshipState?.veterancy ?? 0;
   target.hasTrainStation = u.hasTrainStation;
@@ -324,5 +328,11 @@ export class UnitView {
   }
   missileTimerQueue(): number[] {
     return this.state.missileTimerQueue;
+  }
+  autoFire(): boolean {
+    return this.state.autoFire;
+  }
+  lastVolleyTick(): number {
+    return this.state.lastVolleyTick;
   }
 }

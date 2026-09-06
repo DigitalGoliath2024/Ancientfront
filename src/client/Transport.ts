@@ -151,6 +151,20 @@ export class SendDeleteUnitIntentEvent implements GameEvent {
   constructor(public readonly unitId: number) {}
 }
 
+export class SendInlandBatteryAutoIntentEvent implements GameEvent {
+  constructor(
+    public readonly unitId: number,
+    public readonly autoFire: boolean,
+  ) {}
+}
+
+export class FireInlandBatteryIntentEvent implements GameEvent {
+  constructor(
+    public readonly unitId: number,
+    public readonly tile: number,
+  ) {}
+}
+
 export class CancelAttackIntentEvent implements GameEvent {
   constructor(public readonly attackID: string) {}
 }
@@ -305,6 +319,14 @@ export class Transport {
 
     this.eventBus.on(SendDeleteUnitIntentEvent, (e) =>
       this.onSendDeleteUnitIntent(e),
+    );
+
+    this.eventBus.on(SendInlandBatteryAutoIntentEvent, (e) =>
+      this.onSendInlandBatteryAutoIntent(e),
+    );
+
+    this.eventBus.on(FireInlandBatteryIntentEvent, (e) =>
+      this.onFireInlandBatteryIntent(e),
     );
 
     this.eventBus.on(SendKickPlayerIntentEvent, (e) =>
@@ -728,6 +750,24 @@ export class Transport {
     this.sendIntent({
       type: "delete_unit",
       unitId: event.unitId,
+    });
+  }
+
+  private onSendInlandBatteryAutoIntent(
+    event: SendInlandBatteryAutoIntentEvent,
+  ) {
+    this.sendIntent({
+      type: "inland_battery_auto",
+      unitId: event.unitId,
+      autoFire: event.autoFire,
+    });
+  }
+
+  private onFireInlandBatteryIntent(event: FireInlandBatteryIntentEvent) {
+    this.sendIntent({
+      type: "fire_inland_battery",
+      unitId: event.unitId,
+      tile: event.tile,
     });
   }
 

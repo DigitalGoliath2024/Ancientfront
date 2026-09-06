@@ -613,6 +613,12 @@ export interface Unit {
   missileTimerQueue(): number[];
   samLauncherState(): SamLauncherState | undefined;
 
+  /** Inland battery: true = auto-aim volleys. Humans start true; nations always auto. */
+  autoFire(): boolean;
+  setAutoFire(autoFire: boolean): void;
+  lastVolleyTick(): Tick;
+  setLastVolleyTick(tick: Tick): void;
+
   // Trade Ships
   setSafeFromPirates(): void; // Only for trade ships
   isSafeFromPirates(): boolean; // Only for trade ships

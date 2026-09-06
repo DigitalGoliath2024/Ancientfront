@@ -8,6 +8,7 @@ import {
   DonateGoldIntentSchema,
   DonateTroopIntentSchema,
   MoveWarshipIntentSchema,
+  FireInlandBatteryIntentSchema,
   SpawnIntentSchema,
   UpgradeStructureIntentSchema,
 } from "../../src/core/Schemas";
@@ -37,6 +38,15 @@ const tileRefCases = [
     name: "move_warship",
     schema: MoveWarshipIntentSchema,
     build: (tile: number) => ({ type: "move_warship", unitIds: [1], tile }),
+  },
+  {
+    name: "fire_inland_battery",
+    schema: FireInlandBatteryIntentSchema,
+    build: (tile: number) => ({
+      type: "fire_inland_battery",
+      unitId: 1,
+      tile,
+    }),
   },
 ];
 

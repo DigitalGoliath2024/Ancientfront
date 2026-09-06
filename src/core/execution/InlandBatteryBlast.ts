@@ -1,4 +1,4 @@
-import { atan2 } from "../DetMath";
+import { atan2, cos, sin } from "../DetMath";
 import { Game, Player, Structures, Unit, UnitType } from "../game/Game";
 import { TileRef } from "../game/GameMap";
 
@@ -17,6 +17,8 @@ function isqrt(n: number): number {
 
 const PI = atan2(0, -1);
 const TWO_PI = PI + PI;
+/** ~137.5° step so scatter fills the disk instead of tracing a ring. */
+const GOLDEN_STEP = (1375 * TWO_PI) / 3600;
 
 function isEnemyLand(
   mg: Game,
@@ -33,95 +35,80 @@ function isEnemyLand(
   return tileOwner !== owner && !tileOwner.isFriendly(owner);
 }
 
-function sectorOf(
-  dx: number,
-  dy: number,
-  salvo: number,
-): number {
-  let a = atan2(dy, dx) + PI;
-  if (a < 0) {
-    a = 0;
-  }
-  if (a >= TWO_PI) {
-    a = TWO_PI - 1 / 1024;
-  }
-  let s = ((a * salvo) / TWO_PI) | 0;
-  if (s < 0) {
-    s = 0;
-  }
-  if (s >= salvo) {
-    s = salvo - 1;
-  }
-  return s;
+function isProtectedOwner(owner: Player, destroyer: Player): boolean {
+  return owner === destroyer || owner.isFriendly(destroyer);
 }
 
-/**
- * Wide U-fan: consecutive shells land about 8 tiles apart (touching 4-tile
- * burns). Offset is in tiles, not scaled down when the target is close.
- */
-export function inlandBatteryShotDest(
-  mg: Game,
-  from: TileRef,
-  aim: TileRef,
-  shotIndex: number,
-  shotCount: number,
-  range: number,
-): TileRef {
-  const fx = mg.x(from);
-  const fy = mg.y(from);
-  const ax = mg.x(aim);
-  const ay = mg.y(aim);
-  const dx = ax - fx;
-  const dy = ay - fy;
-  const dist = isqrt(dx * dx + dy * dy);
-  const travel = dist < range ? dist : range;
-  if (dist === 0) {
-    return aim;
-  }
-  let cx = fx + (((dx * travel) / dist) | 0);
-  let cy = fy + (((dy * travel) / dist) | 0);
-  if (shotCount > 1) {
-    const off = shotIndex * 2 - (shotCount - 1);
-    const spread = 4;
-    cx += (((-dy * off * spread) / dist) | 0);
-    cy += (((dx * off * spread) / dist) | 0);
-  }
-  if (!mg.isValidCoord(cx, cy)) {
-    cx = Math.max(0, Math.min(mg.width() - 1, cx));
-    cy = Math.max(0, Math.min(mg.height() - 1, cy));
-  }
+function clampCoord(mg: Game, x: number, y: number): TileRef {
+  const cx = Math.max(0, Math.min(mg.width() - 1, x));
+  const cy = Math.max(0, Math.min(mg.height() - 1, y));
   return mg.ref(cx, cy);
 }
 
+function inGunRange(
+  mg: Game,
+  from: TileRef,
+  dest: TileRef,
+  minFire2: number,
+  range2: number,
+): boolean {
+  const d2 = mg.euclideanDistSquared(from, dest);
+  return d2 >= minFire2 && d2 <= range2;
+}
+
+/** At most one shell per building in the disk. Leftover rounds hit ground. */
+export function inlandBatteryBuildingShots(
+  salvo: number,
+  buildings: number,
+): number {
+  if (salvo <= 0 || buildings <= 0) {
+    return 0;
+  }
+  return salvo < buildings ? salvo : buildings;
+}
+
 /**
- * One dest per shell: cover every direction that has enemy land, punch a
- * little past the nearest contact, and spend leftover shells on the original
- * wide U-fan so a single neighbor still gets a spread salvo.
+ * One shell inside the bombardment disk. Radii grow with a sunflower
+ * layout so a 10-shell volley fills the circle instead of drawing an O.
  */
-export function pickInlandBatteryDests(
+export function inlandBatteryScatterDest(
+  mg: Game,
+  aim: TileRef,
+  shotIndex: number,
+  shotCount: number,
+  diskRadius: number,
+): TileRef {
+  const ax = mg.x(aim);
+  const ay = mg.y(aim);
+  if (shotCount <= 1 || diskRadius <= 0) {
+    return aim;
+  }
+  const r = isqrt(
+    (diskRadius * diskRadius * (2 * shotIndex + 1)) / (2 * shotCount),
+  );
+  const ang = shotIndex * GOLDEN_STEP;
+  const x = ax + ((r * cos(ang)) | 0);
+  const y = ay + ((r * sin(ang)) | 0);
+  return clampCoord(mg, x, y);
+}
+
+function nearestEnemyLand(
   mg: Game,
   from: TileRef,
   owner: Player,
-  salvo: number,
   range: number,
   minFire: number,
-): TileRef[] {
+): TileRef | null {
   const range2 = range * range;
   const minFire2 = minFire * minFire;
-  const blast = mg.config().inlandBatteryBlastRadius();
-  const punch = 2 * blast;
   const bx = mg.x(from);
   const by = mg.y(from);
   const x0 = Math.max(0, bx - range);
   const x1 = Math.min(mg.width() - 1, bx + range);
   const y0 = Math.max(0, by - range);
   const y1 = Math.min(mg.height() - 1, by + range);
-
-  const nearest: (TileRef | null)[] = new Array(salvo).fill(null);
-  const nearestD2: number[] = new Array(salvo).fill(range2 + 1);
-  let bestOverall: TileRef | null = null;
-  let bestOverallD2 = range2 + 1;
-
+  let best: TileRef | null = null;
+  let bestD2 = range2 + 1;
   for (let x = x0; x <= x1; x++) {
     for (let y = y0; y <= y1; y++) {
       const tile = mg.ref(x, y);
@@ -132,27 +119,27 @@ export function pickInlandBatteryDests(
       if (!isEnemyLand(mg, tile, owner)) {
         continue;
       }
-      const s = sectorOf(x - bx, y - by, salvo);
-      if (d2 < nearestD2[s]) {
-        nearestD2[s] = d2;
-        nearest[s] = tile;
-      }
-      if (d2 < bestOverallD2) {
-        bestOverallD2 = d2;
-        bestOverall = tile;
+      if (d2 < bestD2) {
+        bestD2 = d2;
+        best = tile;
       }
     }
   }
+  return best;
+}
 
-  if (bestOverall === null) {
-    return [];
-  }
-
-  const structPick: (TileRef | null)[] = new Array(salvo).fill(null);
-  const structD2: number[] = new Array(salvo).fill(range2 + 1);
+function enemyBuildingsInRange(
+  mg: Game,
+  from: TileRef,
+  owner: Player,
+  minFire2: number,
+  range2: number,
+  searchRange: number,
+): Unit[] {
+  const found: Unit[] = [];
   for (const { unit, distSquared } of mg.nearbyUnits(
     from,
-    range,
+    searchRange,
     Structures.types,
     undefined,
     true,
@@ -170,93 +157,134 @@ export function pickInlandBatteryDests(
     if (!mg.isLand(tile) || mg.isImpassable(tile)) {
       continue;
     }
-    const s = sectorOf(mg.x(tile) - bx, mg.y(tile) - by, salvo);
-    if (distSquared < structD2[s]) {
-      structD2[s] = distSquared;
-      structPick[s] = tile;
+    found.push(unit);
+  }
+  return found;
+}
+
+function snapGroundDest(
+  mg: Game,
+  from: TileRef,
+  owner: Player,
+  dest: TileRef,
+  minFire2: number,
+  range2: number,
+): TileRef | null {
+  if (
+    inGunRange(mg, from, dest, minFire2, range2) &&
+    isEnemyLand(mg, dest, owner)
+  ) {
+    return dest;
+  }
+  const dx = mg.x(dest);
+  const dy = mg.y(dest);
+  for (let r = 1; r <= 4; r++) {
+    for (let ox = -r; ox <= r; ox++) {
+      for (let oy = -r; oy <= r; oy++) {
+        if (ox !== r && ox !== -r && oy !== r && oy !== -r) {
+          continue;
+        }
+        if (!mg.isValidCoord(dx + ox, dy + oy)) {
+          continue;
+        }
+        const t = mg.ref(dx + ox, dy + oy);
+        if (
+          inGunRange(mg, from, t, minFire2, range2) &&
+          isEnemyLand(mg, t, owner)
+        ) {
+          return t;
+        }
+      }
     }
+  }
+  return null;
+}
+
+/**
+ * Salvo dests scattered inside the aim disk. Buildings inside that disk
+ * are auto-located with at most one shell each. Extra rounds crater enemy
+ * ground in the disk.
+ * `aim` is the click tile for manual fire, or null to pick automatically.
+ */
+export function pickInlandBatteryDests(
+  mg: Game,
+  from: TileRef,
+  owner: Player,
+  salvo: number,
+  range: number,
+  minFire: number,
+  diskRadius: number,
+  aim: TileRef | null = null,
+): TileRef[] {
+  if (salvo <= 0) {
+    return [];
+  }
+  const range2 = range * range;
+  const minFire2 = minFire * minFire;
+  const allBuildings = enemyBuildingsInRange(
+    mg,
+    from,
+    owner,
+    minFire2,
+    range2,
+    range,
+  );
+
+  let center = aim;
+  if (center !== null) {
+    if (!inGunRange(mg, from, center, minFire2, range2)) {
+      return [];
+    }
+  } else if (allBuildings.length > 0) {
+    allBuildings.sort(
+      (a, b) =>
+        mg.euclideanDistSquared(from, a.tile()) -
+        mg.euclideanDistSquared(from, b.tile()),
+    );
+    center = allBuildings[0].tile();
+  } else {
+    center = nearestEnemyLand(mg, from, owner, range, minFire);
+  }
+  if (center === null) {
+    return [];
   }
 
-  const desiredD2: number[] = new Array(salvo);
-  const pick: (TileRef | null)[] = nearest.slice();
-  const pickErr: number[] = new Array(salvo);
-  for (let s = 0; s < salvo; s++) {
-    if (nearest[s] === null) {
-      desiredD2[s] = 0;
-      pickErr[s] = 0;
-      continue;
-    }
-    const nearDist = isqrt(nearestD2[s]);
-    const want = nearDist + punch;
-    const wantClamped = want > range ? range : want;
-    desiredD2[s] = wantClamped * wantClamped;
-    pickErr[s] = nearestD2[s] > desiredD2[s] ? nearestD2[s] - desiredD2[s] : desiredD2[s] - nearestD2[s];
-  }
-
-  for (let x = x0; x <= x1; x++) {
-    for (let y = y0; y <= y1; y++) {
-      const tile = mg.ref(x, y);
-      const d2 = mg.euclideanDistSquared(from, tile);
-      if (d2 < minFire2 || d2 > range2) {
-        continue;
-      }
-      if (!isEnemyLand(mg, tile, owner)) {
-        continue;
-      }
-      const s = sectorOf(x - bx, y - by, salvo);
-      if (nearest[s] === null) {
-        continue;
-      }
-      const err = d2 > desiredD2[s] ? d2 - desiredD2[s] : desiredD2[s] - d2;
-      if (err < pickErr[s]) {
-        pickErr[s] = err;
-        pick[s] = tile;
-      }
-    }
-  }
+  const disk2 = diskRadius * diskRadius;
+  const buildings = allBuildings.filter(
+    (unit) => mg.euclideanDistSquared(center, unit.tile()) <= disk2,
+  );
+  buildings.sort(
+    (a, b) =>
+      mg.euclideanDistSquared(center, a.tile()) -
+      mg.euclideanDistSquared(center, b.tile()),
+  );
 
   const dests: TileRef[] = [];
   const used = new Set<TileRef>();
-  for (let s = 0; s < salvo; s++) {
-    const tile = structPick[s] ?? pick[s];
-    if (tile === null || used.has(tile)) {
-      continue;
-    }
-    used.add(tile);
+  const buildingShots = inlandBatteryBuildingShots(salvo, buildings.length);
+  for (let i = 0; i < buildingShots; i++) {
+    const tile = buildings[i].tile();
     dests.push(tile);
+    used.add(tile);
   }
 
-  for (let i = 0; i < salvo * 3 && dests.length < salvo; i++) {
-    const dest = inlandBatteryShotDest(
+  for (let i = 0; dests.length < salvo && i < salvo * 8; i++) {
+    const scatter = inlandBatteryScatterDest(
       mg,
-      from,
-      bestOverall,
-      i % salvo,
+      center,
+      i,
       salvo,
-      range,
+      diskRadius,
     );
-    if (mg.euclideanDistSquared(from, dest) < minFire2) {
+    const snapped = snapGroundDest(mg, from, owner, scatter, minFire2, range2);
+    if (snapped === null || used.has(snapped)) {
       continue;
     }
-    if (used.has(dest)) {
-      continue;
-    }
-    const destOwner = mg.owner(dest);
-    if (
-      destOwner.isPlayer() &&
-      (destOwner === owner || destOwner.isFriendly(owner))
-    ) {
-      continue;
-    }
-    used.add(dest);
-    dests.push(dest);
+    used.add(snapped);
+    dests.push(snapped);
   }
 
   return dests;
-}
-
-function isProtectedOwner(owner: Player, destroyer: Player): boolean {
-  return owner === destroyer || owner.isFriendly(destroyer);
 }
 
 /**

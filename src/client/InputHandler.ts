@@ -604,6 +604,10 @@ export class InputHandler {
           this.setGhostStructure(null);
           closedUI = true;
         }
+        if (this.uiState.inlandBatteryAimUnitId != null) {
+          this.uiState.inlandBatteryAimUnitId = null;
+          closedUI = true;
+        }
 
         if (this.selectionBoxActive) {
           this.selectionBoxActive = false;
@@ -623,7 +627,8 @@ export class InputHandler {
 
       if (
         (e.code === "Enter" || e.code === "NumpadEnter") &&
-        this.uiState.ghostStructure !== null
+        (this.uiState.ghostStructure !== null ||
+          this.uiState.inlandBatteryAimUnitId != null)
       ) {
         e.preventDefault();
         this.eventBus.emit(new ConfirmGhostStructureEvent());
@@ -871,7 +876,8 @@ export class InputHandler {
         !this.userSettings.leftClickOpensMenu() ||
         event.shiftKey ||
         this.gameView.inSpawnPhase() || // No Radial Menu during spawn phase, only spawn point selection
-        this.uiState.ghostStructure !== null // Block radial menu on left click if building
+        this.uiState.ghostStructure !== null || // Block radial menu on left click if building
+        this.uiState.inlandBatteryAimUnitId != null
       ) {
         this.eventBus.emit(new MouseUpEvent(event.x, event.y));
       } else {
@@ -1016,6 +1022,10 @@ export class InputHandler {
     }
     if (this.uiState.ghostStructure !== null) {
       this.setGhostStructure(null);
+      return;
+    }
+    if (this.uiState.inlandBatteryAimUnitId != null) {
+      this.uiState.inlandBatteryAimUnitId = null;
       return;
     }
     // If a warship/boat is selected, right-click cancels the selection rather

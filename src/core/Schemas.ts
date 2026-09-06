@@ -54,7 +54,9 @@ export type Intent =
   | KickPlayerIntent
   | TogglePauseIntent
   | UpdateGameConfigIntent
-  | ToggleGameStartTimer;
+  | ToggleGameStartTimer
+  | InlandBatteryAutoIntent
+  | FireInlandBatteryIntent;
 
 export type AttackIntent = z.infer<typeof AttackIntentSchema>;
 export type CancelAttackIntent = z.infer<typeof CancelAttackIntentSchema>;
@@ -90,6 +92,12 @@ export type UpdateGameConfigIntent = z.infer<
 >;
 export type ToggleGameStartTimer = z.infer<
   typeof ToggleGameStartTimerIntentSchema
+>;
+export type InlandBatteryAutoIntent = z.infer<
+  typeof InlandBatteryAutoIntentSchema
+>;
+export type FireInlandBatteryIntent = z.infer<
+  typeof FireInlandBatteryIntentSchema
 >;
 
 export type Turn = z.infer<typeof TurnSchema>;
@@ -737,6 +745,18 @@ export const ToggleGameStartTimerIntentSchema = z.object({
   type: z.literal("toggle_game_start_timer"),
 });
 
+export const InlandBatteryAutoIntentSchema = z.object({
+  type: z.literal("inland_battery_auto"),
+  unitId: zb.uint(),
+  autoFire: z.boolean(),
+});
+
+export const FireInlandBatteryIntentSchema = z.object({
+  type: z.literal("fire_inland_battery"),
+  unitId: zb.uint(),
+  tile: zb.uint(),
+});
+
 export const IntentSchema = z.discriminatedUnion("type", [
   AttackIntentSchema,
   CancelAttackIntentSchema,
@@ -763,6 +783,8 @@ export const IntentSchema = z.discriminatedUnion("type", [
   TogglePauseIntentSchema,
   UpdateGameConfigIntentSchema,
   ToggleGameStartTimerIntentSchema,
+  InlandBatteryAutoIntentSchema,
+  FireInlandBatteryIntentSchema,
 ]);
 
 // StampedIntent = Intent with server-stamped clientID (used in turns and execution)

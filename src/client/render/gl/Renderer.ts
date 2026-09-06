@@ -93,6 +93,9 @@ const SAM_RADIUS_GHOST_TYPES = new Set([
   "City",
   "Atom Bomb",
   "Hydrogen Bomb",
+  "Port Gun",
+  "Inland Battery",
+  "Inland Battery Aim",
 ]);
 
 /** Subset for build-button hover — excludes City/Silo (SAM radii irrelevant). */
@@ -100,7 +103,26 @@ const SAM_RADIUS_HIGHLIGHT_TYPES = new Set([
   "SAM Launcher",
   "Atom Bomb",
   "Hydrogen Bomb",
+  "Port Gun",
+  "Inland Battery",
 ]);
+
+function radiusOverlayTypesFor(unitType: string): string[] {
+  if (unitType === "Port Gun") return ["Port Gun"];
+  if (unitType === "Inland Battery" || unitType === "Inland Battery Aim") {
+    return ["Inland Battery"];
+  }
+  if (
+    unitType === "SAM Launcher" ||
+    unitType === "Missile Silo" ||
+    unitType === "City" ||
+    unitType === "Atom Bomb" ||
+    unitType === "Hydrogen Bomb"
+  ) {
+    return ["SAM Launcher"];
+  }
+  return [];
+}
 
 const GRID_VIEW_KEY = "renderer:grid_view_enabled";
 
@@ -204,6 +226,8 @@ export class GPURenderer {
   // SAM radius visibility tracking (show if either source is true)
   private samGhostVisible = false;
   private samHighlightVisible = false;
+  private ghostRadiusTypes: string[] = [];
+  private highlightRadiusTypes: string[] = [];
 
   // Warship selection — supports any number of selections.
   private selectedUnitIds: number[] = [];
@@ -556,7 +580,7 @@ export class GPURenderer {
     this.rangeCirclePass = new RangeCirclePass(gl);
 
     // --- SAM radius overlay (dashed green circles during build mode) ---
-    this.samRadiusPass = new SAMRadiusPass(gl, mapW, this.settings);
+    this.samRadiusPass = new SAMRadiusPass(gl, mapW, this.settings, config);
     this.samRadiusPass.setPaletteData(paletteData);
 
     // --- Crosshair (warship placement) ---
@@ -1063,6 +1087,29 @@ export class GPURenderer {
     );
     this.samGhostVisible =
       data !== null && SAM_RADIUS_GHOST_TYPES.has(data.ghostType);
+    const nextGhostTypes =
+      data !== null ? radiusOverlayTypesFor(data.ghostType) : [];
+    const typesChanged =
+      nextGhostTypes.length !== this.ghostRadiusTypes.length ||
+      nextGhostTypes.some((t, i) => t !== this.ghostRadiusTypes[i]);
+    this.ghostRadiusTypes = nextGhostTypes;
+    if (typesChanged) {
+      this.syncSamRadiusOverlay();
+    } else {
+      this.samRadiusPass.setVisible(
+        this.samGhostVisible || this.samHighlightVisible,
+      );
+    }
+  }
+
+  private syncSamRadiusOverlay(): void {
+    const types = new Set<string>([
+      ...this.ghostRadiusTypes,
+      ...this.highlightRadiusTypes,
+    ]);
+    this.samRadiusPass.setRadiusTypes(
+      types.size > 0 ? types : new Set(["SAM Launcher"]),
+    );
     this.samRadiusPass.setVisible(
       this.samGhostVisible || this.samHighlightVisible,
     );
@@ -1106,9 +1153,17 @@ export class GPURenderer {
     this.samHighlightVisible =
       unitTypes !== null &&
       unitTypes.some((t) => SAM_RADIUS_HIGHLIGHT_TYPES.has(t));
-    this.samRadiusPass.setVisible(
-      this.samGhostVisible || this.samHighlightVisible,
-    );
+    this.highlightRadiusTypes = [];
+    if (unitTypes !== null) {
+      for (const t of unitTypes) {
+        if (SAM_RADIUS_HIGHLIGHT_TYPES.has(t)) {
+          for (const mapped of radiusOverlayTypesFor(t)) {
+            this.highlightRadiusTypes.push(mapped);
+          }
+        }
+      }
+    }
+    this.syncSamRadiusOverlay();
   }
 
   setLocalPlayerID(id: number): void {

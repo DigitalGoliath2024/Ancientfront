@@ -18,6 +18,7 @@ import { describe, expect, it } from "vitest";
 import { SAMRadiusPass } from "../../../src/client/render/gl/passes/SamRadiusPass";
 import { createRenderSettings } from "../../../src/client/render/gl/RenderSettings";
 import { UnitState } from "../../../src/client/render/types/Renderer";
+import type { Config } from "../../../src/core/configuration/Config";
 import { UnitType } from "../../../src/core/game/Game";
 import { GcTracker, summarizeGcEvents } from "../fullgame/GcProfiler";
 import { TickStats } from "../fullgame/Profiler";
@@ -140,6 +141,8 @@ function createMockSAMStructures(
       targetTile: null,
       troops: 0,
       missileTimerQueue: [],
+      autoFire: true,
+      lastVolleyTick: 0,
       level,
       veterancy: 0,
       hasTrainStation: false,
@@ -167,7 +170,10 @@ describe("SAMRadiusPass WebGL Performance", () => {
 
     const gl = createWebGL2Stub();
     const settings = createRenderSettings();
-    const pass = new SAMRadiusPass(gl, MAP_WIDTH, settings);
+    const pass = new SAMRadiusPass(gl, MAP_WIDTH, settings, {
+      portGunRange: () => 50,
+      inlandBatteryRange: () => 100,
+    } as unknown as Config);
 
     pass.setLocalPlayer(1);
     pass.setAllies(new Set([1]));

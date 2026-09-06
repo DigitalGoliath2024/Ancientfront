@@ -60,6 +60,7 @@ export function createRenderer(
     ghostStructure: null,
     rocketDirectionUp: true,
     upgradeMultiplier: 1,
+    inlandBatteryAimUnitId: null,
   };
 
   //hide when the game renders

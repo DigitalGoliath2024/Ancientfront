@@ -802,6 +802,8 @@ function createBaseUnitState(
     targetTile: null,
     troops: 10,
     missileTimerQueue: [],
+    autoFire: true,
+    lastVolleyTick: 0,
     level: 1,
     veterancy: 0,
     hasTrainStation: false,

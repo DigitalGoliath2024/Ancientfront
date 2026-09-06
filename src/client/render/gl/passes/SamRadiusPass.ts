@@ -13,8 +13,9 @@
  *   enemy → red    (1, 0, 0)
  */
 
+import type { Config } from "../../../../core/configuration/Config";
 import type { UnitState } from "../../types";
-import { UT_SAM_LAUNCHER } from "../../types";
+import { UT_INLAND_BATTERY, UT_PORT_GUN, UT_SAM_LAUNCHER } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
 import { createProgram } from "../utils/GlUtils";
@@ -183,11 +184,13 @@ export class SAMRadiusPass {
   private colorMode: "perspective" | "owner" = "perspective";
   private allianceClusters: Map<number, number> = new Map();
   private lastStructures: Map<number, UnitState> | null = null;
+  private radiusTypes = new Set<string>([UT_SAM_LAUNCHER]);
 
   constructor(
     gl: WebGL2RenderingContext,
     mapW: number,
     settings: RenderSettings,
+    private config: Config,
   ) {
     this.gl = gl;
     this.mapW = mapW;
@@ -256,7 +259,21 @@ export class SAMRadiusPass {
     gl.bindVertexArray(null);
   }
 
-  /** Set the local player's ID (from ghost preview ownerID). */
+  /** Which structure types get dashed range rings while the overlay is visible. */
+  setRadiusTypes(types: ReadonlySet<string>): void {
+    if (this.radiusTypes.size === types.size) {
+      let same = true;
+      for (const t of types) {
+        if (!this.radiusTypes.has(t)) {
+          same = false;
+          break;
+        }
+      }
+      if (same) return;
+    }
+    this.radiusTypes = new Set(types);
+    this.rebuild();
+  }
   setLocalPlayer(id: number): void {
     if (id === this.localPlayerID) return;
     this.localPlayerID = id;
@@ -356,13 +373,14 @@ export class SAMRadiusPass {
     this.dirtyGroups.clear();
 
     for (const u of structures.values()) {
-      if (u.unitType !== UT_SAM_LAUNCHER || !u.isActive) continue;
+      if (!this.radiusTypes.has(u.unitType) || !u.isActive) continue;
       const isFriendly =
         u.ownerID === this.localPlayerID || this.allies.has(u.ownerID);
       const bg = this.getSAMBaseGroup(u, isFriendly);
       const startTick = u.samUpgradeStartTick;
       const duration = u.samUpgradeDuration ?? 0;
       if (
+        u.unitType === UT_SAM_LAUNCHER &&
         startTick !== null &&
         continuousTick >= startTick &&
         continuousTick - startTick < duration
@@ -373,7 +391,7 @@ export class SAMRadiusPass {
     this.hasUpgradingSAM = this.dirtyGroups.size > 0;
 
     for (const u of structures.values()) {
-      if (u.unitType !== UT_SAM_LAUNCHER || !u.isActive) continue;
+      if (!this.radiusTypes.has(u.unitType) || !u.isActive) continue;
       const isFriendly =
         u.ownerID === this.localPlayerID || this.allies.has(u.ownerID);
       const bg = this.getSAMBaseGroup(u, isFriendly);
@@ -412,6 +430,7 @@ export class SAMRadiusPass {
     const previewGroup = baseGroup * 2 + 1;
 
     if (
+      u.unitType === UT_SAM_LAUNCHER &&
       startTick !== null &&
       continuousTick >= startTick &&
       continuousTick - startTick < duration
@@ -451,7 +470,7 @@ export class SAMRadiusPass {
       circles.push({
         x,
         y,
-        radius: samRange(u.level),
+        radius: this.radiusFor(u),
         r: color[0],
         g: color[1],
         b: color[2],
@@ -460,11 +479,11 @@ export class SAMRadiusPass {
         spin: 1.0,
       });
       // Layer 1: Connected static SAM preview network
-      if (isGroupUpgrading) {
+      if (isGroupUpgrading && u.unitType === UT_SAM_LAUNCHER) {
         circles.push({
           x,
           y,
-          radius: samRange(u.level),
+          radius: this.radiusFor(u),
           r: color[0],
           g: color[1],
           b: color[2],
@@ -474,6 +493,16 @@ export class SAMRadiusPass {
         });
       }
     }
+  }
+
+  private radiusFor(u: UnitState): number {
+    if (u.unitType === UT_PORT_GUN) {
+      return this.config.portGunRange(u.level);
+    }
+    if (u.unitType === UT_INLAND_BATTERY) {
+      return this.config.inlandBatteryRange(u.level);
+    }
+    return samRange(u.level);
   }
 
   private uploadInstances(circles: SAMCircle[]): void {

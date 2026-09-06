@@ -114,6 +114,8 @@ export interface UnitState {
   targetTile: number | null;
   troops: number;
   missileTimerQueue: number[];
+  autoFire: boolean;
+  lastVolleyTick: number;
   level: number;
   veterancy: number;
   hasTrainStation: boolean;
@@ -246,6 +248,8 @@ export interface GhostPreviewData {
   rangeRadius: number;
   /** True if placing here would carry a penalty (e.g. nuking an ally → traitor). */
   rangeWarning: boolean;
+  /** Inland-battery aim: green when the click is in range, red when not. */
+  rangeTint?: "default" | "valid" | "invalid";
 }
 
 /** Nuke trajectory preview data — Bezier control points + color thresholds. */

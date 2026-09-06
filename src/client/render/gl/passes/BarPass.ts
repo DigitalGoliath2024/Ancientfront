@@ -18,6 +18,7 @@ import { portHasVisibleHealthBar } from "../../../../core/game/PortDamage";
 import { maxHealthWithVeterancy } from "../../../../core/game/Veterancy";
 import type { RendererConfig, UnitState } from "../../types";
 import {
+  UT_INLAND_BATTERY,
   UT_MARAUDER,
   UT_MISSILE_SILO,
   UT_SAM_LAUNCHER,
@@ -345,6 +346,13 @@ export class BarPass {
     ) {
       const readiness = this.missileReadiness(unit, gameTick);
       if (readiness < 1) return readiness;
+    }
+
+    if (unit.unitType === UT_INLAND_BATTERY && !unit.underConstruction) {
+      const last = unit.lastVolleyTick;
+      if (last <= 0) return 1;
+      const reload = this.config.inlandBatteryReloadTicks();
+      return Math.max(0, Math.min(1, (gameTick - last) / reload));
     }
 
     return null;

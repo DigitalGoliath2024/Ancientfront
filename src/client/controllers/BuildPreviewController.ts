@@ -29,6 +29,7 @@ import type { GhostPreviewData } from "../render/types";
 import { TransformHandler } from "../TransformHandler";
 import {
   BuildUnitIntentEvent,
+  FireInlandBatteryIntentEvent,
   SendUpgradeStructureIntentEvent,
 } from "../Transport";
 import { UIState } from "../UIState";
@@ -117,6 +118,12 @@ export class BuildPreviewController implements Controller {
     // integer tile coord centers on that tile), so we subtract 0.5 here to
     // place the icon exactly under the cursor.
     const cursorLoop = () => {
+      if (this.uiState.inlandBatteryAimUnitId != null) {
+        this.emitInlandBatteryAimPreview();
+      } else if (this.lastGhostData?.ghostType === "Inland Battery Aim") {
+        this.lastGhostData = null;
+        this.view.updateGhostPreview(null);
+      }
       const ghost = this.lastGhostData;
       const traj = this.nukeTrajectoryStatic;
       if (ghost !== null || traj !== null) {
@@ -174,6 +181,13 @@ export class BuildPreviewController implements Controller {
   }
 
   tick() {
+    if (this.uiState.inlandBatteryAimUnitId != null) {
+      if (this.ghostUnit !== null || this.uiState.ghostStructure !== null) {
+        this.removeGhostStructure();
+      }
+      this.emitInlandBatteryAimPreview();
+      return;
+    }
     // Re-query buildables periodically (world state can change — tiles may
     // become buildable as troops/territory move).
     this.syncGhostState();
@@ -400,6 +414,106 @@ export class BuildPreviewController implements Controller {
     };
   }
 
+  private tryFireInlandBatteryAim(e: MouseUpEvent): boolean {
+    const unitId = this.uiState.inlandBatteryAimUnitId;
+    if (unitId == null) {
+      return false;
+    }
+    const gun = this.game.unit(unitId);
+    if (
+      gun === undefined ||
+      !gun.isActive() ||
+      gun.type() !== UnitType.InlandBattery
+    ) {
+      this.uiState.inlandBatteryAimUnitId = null;
+      this.lastGhostData = null;
+      this.view.updateGhostPreview(null);
+      return true;
+    }
+    const tile = this.transformHandler.screenToWorldCoordinates(e.x, e.y);
+    if (!this.game.isValidCoord(tile.x, tile.y)) {
+      return true;
+    }
+    const aim = this.game.ref(tile.x, tile.y);
+    if (!this.inlandBatteryAimInRange(gun, aim)) {
+      return true;
+    }
+    this.eventBus.emit(new FireInlandBatteryIntentEvent(unitId, aim));
+    // Leave aim mode set until after this click is fully dispatched so
+    // ClientGameRunner does not also send a troop attack on the same tile.
+    queueMicrotask(() => {
+      if (this.uiState.inlandBatteryAimUnitId === unitId) {
+        this.uiState.inlandBatteryAimUnitId = null;
+        this.lastGhostData = null;
+        this.view.updateGhostPreview(null);
+      }
+    });
+    return true;
+  }
+
+  private inlandBatteryAimInRange(
+    gun: { tile(): number; level(): number },
+    aim: TileRef,
+  ): boolean {
+    const cfg = this.game.config();
+    const range = cfg.inlandBatteryRange(gun.level());
+    const minFire = cfg.inlandBatteryMinFireRange();
+    const d2 = this.game.euclideanDistSquared(gun.tile(), aim);
+    return d2 >= minFire * minFire && d2 <= range * range;
+  }
+
+  private emitInlandBatteryAimPreview(): void {
+    const unitId = this.uiState.inlandBatteryAimUnitId;
+    const myPlayer = this.game.myPlayer();
+    if (unitId == null || myPlayer === null) {
+      this.lastGhostData = null;
+      this.view.updateGhostPreview(null);
+      return;
+    }
+    const gun = this.game.unit(unitId);
+    if (
+      gun === undefined ||
+      !gun.isActive() ||
+      gun.type() !== UnitType.InlandBattery
+    ) {
+      this.uiState.inlandBatteryAimUnitId = null;
+      this.lastGhostData = null;
+      this.view.updateGhostPreview(null);
+      return;
+    }
+    const tile = this.transformHandler.screenToWorldCoordinates(
+      this.mousePos.x,
+      this.mousePos.y,
+    );
+    if (!this.game.isValidCoord(tile.x, tile.y)) {
+      this.lastGhostData = null;
+      this.view.updateGhostPreview(null);
+      return;
+    }
+    const aim = this.game.ref(tile.x, tile.y);
+    const inRange = this.inlandBatteryAimInRange(gun, aim);
+    const spread = this.game.config().inlandBatterySpreadRadius(gun.level());
+    this.lastGhostData = {
+      ghostType: "Inland Battery Aim",
+      tileX: this.game.x(aim),
+      tileY: this.game.y(aim),
+      radiusTileX: this.game.x(aim),
+      radiusTileY: this.game.y(aim),
+      canBuild: false,
+      canUpgrade: false,
+      cost: 0,
+      showCost: false,
+      canAfford: true,
+      ghostRailPaths: [],
+      overlappingRailroads: [],
+      ownerID: myPlayer.smallID(),
+      upgradeTargetTile: null,
+      rangeRadius: spread,
+      rangeWarning: !inRange,
+      rangeTint: inRange ? "valid" : "invalid",
+    };
+  }
+
   private isGhostReadyForConfirm(): boolean {
     if (!this.ghostUnit) return false;
     const bu = this.ghostUnit.buildableUnit;
@@ -407,6 +521,9 @@ export class BuildPreviewController implements Controller {
   }
 
   private requestConfirmStructure(e: MouseUpEvent): void {
+    if (this.tryFireInlandBatteryAim(e)) {
+      return;
+    }
     if (!this.ghostUnit && !this.uiState.ghostStructure) return;
     if (this.isGhostReadyForConfirm()) {
       this.createStructure(e);

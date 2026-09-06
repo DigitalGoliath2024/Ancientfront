@@ -27,6 +27,10 @@ import { TargetPlayerExecution } from "./TargetPlayerExecution";
 import { TransportShipExecution } from "./TransportShipExecution";
 import { TribeSpawner } from "./TribeSpawner";
 import { UpgradeStructureExecution } from "./UpgradeStructureExecution";
+import {
+  FireInlandBatteryExecution,
+  SetInlandBatteryAutoExecution,
+} from "./FireInlandBatteryExecution";
 import { PlayerSpawner } from "./utils/PlayerSpawner";
 
 export class Executor {
@@ -135,6 +139,18 @@ export class Executor {
         return new MarkDisconnectedExecution(player, intent.isDisconnected);
       case "toggle_pause":
         return new PauseExecution(player, intent.paused);
+      case "inland_battery_auto":
+        return new SetInlandBatteryAutoExecution(
+          player,
+          intent.unitId,
+          intent.autoFire,
+        );
+      case "fire_inland_battery":
+        return new FireInlandBatteryExecution(
+          player,
+          intent.unitId,
+          intent.tile,
+        );
       default:
         throw new Error(`intent type ${intent} not found`);
     }

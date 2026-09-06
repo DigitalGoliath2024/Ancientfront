@@ -131,10 +131,12 @@ describe("Guide modal", () => {
     await modal.updateComplete;
     expect(modal.textContent).toContain("land gun");
     expect(modal.textContent).toContain("$1,500,000");
-    expect(modal.textContent).toContain("30 seconds");
+    expect(modal.textContent).toContain("15 seconds");
     expect(modal.textContent).toContain("100 tiles");
     expect(modal.textContent).toContain("210");
     expect(modal.textContent).toContain("dud");
+    expect(modal.textContent).toContain("scatter");
+    expect(modal.textContent).toContain("Auto or Manual");
     expect(modal.textContent).toContain("destroyed, not stolen");
 
     modal.setActiveTab("buildings");

@@ -1,10 +1,15 @@
 import {
   applyInlandBatteryBlast,
-  inlandBatteryShotDest,
+  inlandBatteryBuildingShots,
+  inlandBatteryScatterDest,
   pickInlandBatteryDests,
 } from "../src/core/execution/InlandBatteryBlast";
 import { PlayerExecution } from "../src/core/execution/PlayerExecution";
 import { InlandBatteryExecution } from "../src/core/execution/InlandBatteryExecution";
+import {
+  FireInlandBatteryExecution,
+  SetInlandBatteryAutoExecution,
+} from "../src/core/execution/FireInlandBatteryExecution";
 import { NationStructureBehavior } from "../src/core/execution/nation/NationStructureBehavior";
 import { InlandBatteryShellExecution } from "../src/core/execution/InlandBatteryShellExecution";
 import {
@@ -168,7 +173,15 @@ describe("Inland Battery", () => {
       }
     }
     player2.buildUnit(UnitType.City, cityTile, {});
-    const dests = pickInlandBatteryDests(game, from, player1, 1, 100, 5);
+    const dests = pickInlandBatteryDests(
+      game,
+      from,
+      player1,
+      1,
+      100,
+      5,
+      game.config().inlandBatterySpreadRadius(1),
+    );
     expect(dests.length).toBeGreaterThan(0);
     const blast2 = game.config().inlandBatteryBlastRadius() ** 2;
     expect(
@@ -190,14 +203,105 @@ describe("Inland Battery", () => {
     expect(battery.isActive()).toBe(true);
   });
 
-  test("level 10 salvo fans into an arc instead of one tile", () => {
-    const from = game.ref(1, 8);
+  test("spread disk grows from 12 to 28 and scatters shells inside, not on a ring", () => {
+    expect(game.config().inlandBatterySpreadRadius(1)).toBe(12);
+    expect(game.config().inlandBatterySpreadRadius(10)).toBe(28);
+    expect(game.config().inlandBatteryReloadTicks()).toBe(150);
+    expect(inlandBatteryBuildingShots(1, 1)).toBe(1);
+    expect(inlandBatteryBuildingShots(10, 3)).toBe(3);
+    expect(inlandBatteryBuildingShots(10, 5)).toBe(5);
+    expect(inlandBatteryBuildingShots(10, 0)).toBe(0);
     const aim = game.ref(6, 8);
     const dests = new Set<number>();
+    const dist2: number[] = [];
     for (let i = 0; i < 10; i++) {
-      dests.add(inlandBatteryShotDest(game, from, aim, i, 10, 100));
+      const dest = inlandBatteryScatterDest(game, aim, i, 10, 28);
+      dests.add(dest);
+      dist2.push(game.euclideanDistSquared(aim, dest));
     }
     expect(dests.size).toBeGreaterThan(3);
+    const minD = Math.min(...dist2);
+    const maxD = Math.max(...dist2);
+    expect(maxD).toBeGreaterThan(minD);
+    expect(maxD).toBeLessThanOrEqual(28 * 28);
+  });
+
+  test("spreads building shots across every structure inside the disk", () => {
+    const from = game.ref(1, 10);
+    const aim = game.ref(7, 10);
+    player1.conquer(from);
+    const cityTiles = [
+      game.ref(6, 10),
+      game.ref(7, 10),
+      game.ref(8, 10),
+      game.ref(6, 9),
+      game.ref(7, 9),
+    ];
+    for (const tile of cityTiles) {
+      if (game.isLand(tile)) {
+        player2.conquer(tile);
+      }
+    }
+    for (const tile of cityTiles) {
+      if (game.isLand(tile) && game.owner(tile) === player2) {
+        player2.buildUnit(UnitType.City, tile, {});
+      }
+    }
+    const dests = pickInlandBatteryDests(
+      game,
+      from,
+      player1,
+      10,
+      100,
+      5,
+      12,
+      aim,
+    );
+    const cities = player2.units(UnitType.City);
+    expect(cities.length).toBeGreaterThan(1);
+    const citySet = new Set(cities.map((c) => c.tile()));
+    const hitCities = new Set(dests.filter((d) => citySet.has(d)));
+    expect(hitCities.size).toBe(citySet.size);
+    const buildingHits = dests.filter((d) => citySet.has(d)).length;
+    expect(buildingHits).toBe(citySet.size);
+  });
+
+  test("starts on auto-fire and waits in manual until an aimed volley", () => {
+    const gunTile = game.ref(1, 10);
+    const enemyTile = game.ref(6, 10);
+    player1.conquer(gunTile);
+    player2.conquer(enemyTile);
+    const battery = player1.buildUnit(UnitType.InlandBattery, gunTile, {});
+    expect(battery.autoFire()).toBe(true);
+    game.addExecution(new SetInlandBatteryAutoExecution(player1, battery.id(), false));
+    executeTicks(game, 1);
+    expect(battery.autoFire()).toBe(false);
+    game.addExecution(new InlandBatteryExecution(battery));
+    executeTicks(game, 40);
+    expect(player1.units(UnitType.Shell).filter((u) => u.isActive())).toHaveLength(
+      0,
+    );
+    expect(game.numTilesWithFallout()).toBe(0);
+    game.addExecution(
+      new FireInlandBatteryExecution(player1, battery.id(), enemyTile),
+    );
+    executeTicks(game, 40);
+    const shells = player1.units(UnitType.Shell).filter((u) => u.isActive());
+    expect(shells.length + game.numTilesWithFallout()).toBeGreaterThan(0);
+  });
+
+  test("aimed fire outside range does not start the reload", () => {
+    const gunTile = game.ref(1, 10);
+    player1.conquer(gunTile);
+    const battery = player1.buildUnit(UnitType.InlandBattery, gunTile, {});
+    battery.setAutoFire(false);
+    const far = game.ref(1, 10);
+    // Same tile as the gun — inside min-fire.
+    game.addExecution(
+      new FireInlandBatteryExecution(player1, battery.id(), far),
+    );
+    executeTicks(game, 2);
+    expect(battery.lastVolleyTick()).toBe(0);
   });
 
   test("is destroyed when the tile is captured, not transferred", () => {

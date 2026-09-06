@@ -1544,9 +1544,18 @@ export class Config {
     return this.inlandBatteryEffectiveLevel(level);
   }
 
-  /** 30 seconds at 10 ticks/s. */
+  /**
+   * Landing-ring radius around the aim point. L1 is 3× blast (12). Ease-out
+   * to ~28 at L10 so the ring grows without covering the whole gun range.
+   */
+  inlandBatterySpreadRadius(level: number): number {
+    const extra = this.inlandBatteryEffectiveLevel(level) - 1;
+    return 12 + (((16 * extra * extra) / 81) | 0);
+  }
+
+  /** 15 seconds at 10 ticks/s. */
   inlandBatteryReloadTicks(): Tick {
-    return 300;
+    return 150;
   }
 
   inlandBatteryBlastRadius(): number {

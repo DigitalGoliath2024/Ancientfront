@@ -12,6 +12,7 @@ import {
   SendDonateTroopsIntentEvent,
   SendEmbargoIntentEvent,
   SendEmojiIntentEvent,
+  SendInlandBatteryAutoIntentEvent,
   SendSpawnIntentEvent,
   SendTargetPlayerIntentEvent,
 } from "../../Transport";
@@ -96,5 +97,14 @@ export class PlayerActionHandler {
 
   handleDeleteUnit(unitId: number) {
     this.eventBus.emit(new SendDeleteUnitIntentEvent(unitId));
+  }
+
+  handleInlandBatteryAuto(unitId: number, autoFire: boolean) {
+    this.eventBus.emit(new SendInlandBatteryAutoIntentEvent(unitId, autoFire));
+  }
+
+  startInlandBatteryAim(unitId: number) {
+    this.uiState.ghostStructure = null;
+    this.uiState.inlandBatteryAimUnitId = unitId;
   }
 }

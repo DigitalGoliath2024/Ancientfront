@@ -198,6 +198,8 @@ export interface UnitUpdate {
   health?: number;
   underConstruction?: boolean;
   missileTimerQueue: number[];
+  autoFire: boolean;
+  lastVolleyTick: number;
   level: number;
   hasTrainStation: boolean;
   trainType?: TrainType; // Only for trains

@@ -27,6 +27,7 @@ export class RangeCirclePass {
   private centerY = 0;
   private radius = 0;
   private warning = false;
+  private rangeTint: "default" | "valid" | "invalid" = "default";
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
@@ -58,9 +59,11 @@ export class RangeCirclePass {
       this.centerY = data.radiusTileY;
       this.radius = data.rangeRadius;
       this.warning = data.rangeWarning;
+      this.rangeTint = data.rangeTint ?? "default";
     } else {
       this.radius = 0;
       this.warning = false;
+      this.rangeTint = "default";
     }
   }
 
@@ -74,8 +77,10 @@ export class RangeCirclePass {
 
     gl.uniform2f(this.uCenter, this.centerX, this.centerY);
     gl.uniform1f(this.uRadius, this.radius);
-    if (this.warning) {
+    if (this.warning || this.rangeTint === "invalid") {
       gl.uniform3f(this.uColor, 1.0, 0.2, 0.2);
+    } else if (this.rangeTint === "valid") {
+      gl.uniform3f(this.uColor, 0.2, 0.95, 0.35);
     } else {
       gl.uniform3f(this.uColor, 1.0, 1.0, 1.0);
     }

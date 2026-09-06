@@ -49,6 +49,8 @@ export class UnitImpl implements Unit {
   // Nuke only
   private _deletionAt: number | null = null;
   private _samLauncherState: SamLauncherState | undefined;
+  private _autoFire = true;
+  private _lastVolleyTick = 0;
 
   constructor(
     private _type: UnitType,
@@ -181,6 +183,8 @@ export class UnitImpl implements Unit {
       targetUnitId: this._targetUnit?.id() ?? undefined,
       targetTile: this.targetTile() ?? undefined,
       missileTimerQueue: this._missileTimerQueue,
+      autoFire: this._autoFire,
+      lastVolleyTick: this._lastVolleyTick,
       level: this.level(),
       hasTrainStation: this._hasTrainStation,
       trainType: this._trainType,
@@ -563,6 +567,27 @@ export class UnitImpl implements Unit {
 
   missileTimerQueue(): number[] {
     return this._missileTimerQueue;
+  }
+
+  autoFire(): boolean {
+    return this._autoFire;
+  }
+
+  setAutoFire(autoFire: boolean): void {
+    if (this._autoFire === autoFire) {
+      return;
+    }
+    this._autoFire = autoFire;
+    this.mg.addUpdate(this.toUpdate());
+  }
+
+  lastVolleyTick(): Tick {
+    return this._lastVolleyTick;
+  }
+
+  setLastVolleyTick(tick: Tick): void {
+    this._lastVolleyTick = tick;
+    this.mg.addUpdate(this.toUpdate());
   }
 
   samLauncherState(): SamLauncherState | undefined {

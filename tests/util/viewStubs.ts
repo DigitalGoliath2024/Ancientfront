@@ -171,6 +171,8 @@ export function makeUnitUpdate(
     targetable: true,
     markedForDeletion: false,
     missileTimerQueue: [],
+    autoFire: true,
+    lastVolleyTick: 0,
     level: 1,
     hasTrainStation: false,
     ...overrides,

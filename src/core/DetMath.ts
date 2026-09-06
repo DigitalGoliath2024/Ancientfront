@@ -120,6 +120,27 @@ function atanUnit(z: number): number {
   return base + z * series;
 }
 
+const TWO_PI = PI + PI;
+
+/** sin(x) via range reduction + Taylor. Matches across engines. */
+export function sin(x: number): number {
+  let n = Math.floor((x + PI) / TWO_PI);
+  x = x - n * TWO_PI;
+  const z = x * x;
+  return (
+    x *
+    (1 -
+      z *
+        (1 / 6 -
+          z * (1 / 120 - z * (1 / 5040 - z * (1 / 362880 - z / 39916800)))))
+  );
+}
+
+/** cos(x) = sin(x + pi/2). */
+export function cos(x: number): number {
+  return sin(x + PI_2);
+}
+
 /** Angle of (x, y) in (-pi, pi], like Math.atan2 (ignoring signed zeros). */
 export function atan2(y: number, x: number): number {
   if (y === 0) return x >= 0 ? 0 : PI;

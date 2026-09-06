@@ -34,6 +34,7 @@ import {
   BuildUnitIntentEvent,
   SendUpgradeStructureIntentEvent,
 } from "../../Transport";
+const inlandBatteryIcon = assetUrl("images/InlandBatteryIconWhite.png");
 const allianceIcon = assetUrl("images/AllianceIconWhite.svg");
 const boatIcon = assetUrl("images/BoatIconWhite.svg");
 const buildIcon = assetUrl("images/BuildIconWhite.svg");
@@ -656,6 +657,115 @@ const donateGoldRadialElement: MenuElement = {
   },
 };
 
+const BATTERY_SELECT_RADIUS = 8;
+
+function closestOwnInlandBattery(params: MenuElementParams) {
+  const tileOwner = params.game.owner(params.tile);
+  if (!tileOwner.isPlayer() || tileOwner.id() !== params.myPlayer.id()) {
+    return null;
+  }
+  const myUnits = params.myPlayer.units().filter(
+    (unit) =>
+      unit.type() === UnitType.InlandBattery &&
+      !unit.isUnderConstruction() &&
+      unit.markedForDeletion() === false &&
+      params.game.manhattanDist(unit.tile(), params.tile) <=
+        BATTERY_SELECT_RADIUS,
+  );
+  return findClosestBy(myUnits, (unit) =>
+    params.game.manhattanDist(unit.tile(), params.tile),
+  );
+}
+
+function inlandBatteryVolleyReady(
+  params: MenuElementParams,
+  unit: { lastVolleyTick(): number },
+): boolean {
+  const last = unit.lastVolleyTick();
+  if (last <= 0) {
+    return true;
+  }
+  return (
+    params.game.ticks() - last >=
+    params.game.config().inlandBatteryReloadTicks()
+  );
+}
+
+export const inlandBatteryElement: MenuElement = {
+  id: "inland_battery",
+  name: "inland_battery",
+  disabled: (params: MenuElementParams) =>
+    closestOwnInlandBattery(params) === null,
+  icon: inlandBatteryIcon,
+  color: COLORS.building,
+  tooltipKeys: [
+    {
+      key: "radial_menu.inland_battery_title",
+      className: "title",
+    },
+    {
+      key: "radial_menu.inland_battery_description",
+      className: "description",
+    },
+  ],
+  subMenu: (params: MenuElementParams) => {
+    const battery = closestOwnInlandBattery(params);
+    if (battery === null) {
+      return [];
+    }
+    const auto = battery.autoFire();
+    const ready = inlandBatteryVolleyReady(params, battery);
+    return [
+      {
+        id: "inland_battery_auto",
+        name: "inland_battery_auto",
+        disabled: () => false,
+        icon: inlandBatteryIcon,
+        color: auto ? COLORS.ally : COLORS.disabled,
+        tooltipKeys: [
+          {
+            key: auto
+              ? "radial_menu.inland_battery_set_manual"
+              : "radial_menu.inland_battery_set_auto",
+            className: "title",
+          },
+        ],
+        action: (p: MenuElementParams) => {
+          p.playerActionHandler.handleInlandBatteryAuto(
+            battery.id(),
+            !auto,
+          );
+          p.closeMenu();
+        },
+      },
+      {
+        id: "inland_battery_fire",
+        name: "inland_battery_fire",
+        disabled: () => auto || !ready,
+        icon: swordIcon,
+        color: auto || !ready ? COLORS.disabled : COLORS.attack,
+        tooltipKeys: [
+          {
+            key: "radial_menu.inland_battery_fire_title",
+            className: "title",
+          },
+          {
+            key: "radial_menu.inland_battery_fire_description",
+            className: "description",
+          },
+        ],
+        action: (p: MenuElementParams) => {
+          if (auto || !ready) {
+            return;
+          }
+          p.playerActionHandler.startInlandBatteryAim(battery.id());
+          p.closeMenu();
+        },
+      },
+    ];
+  },
+};
+
 export const deleteUnitElement: MenuElement = {
   id: Slot.Delete,
   name: "delete",
@@ -839,7 +949,14 @@ export const rootMenuElement: MenuElement = {
     const menuItems: (MenuElement | null)[] = [
       infoMenuElement,
       ...(isOwnTerritory
-        ? [deleteUnitElement, allyRequestElement, buildMenuElement]
+        ? [
+            deleteUnitElement,
+            ...(closestOwnInlandBattery(params)
+              ? [inlandBatteryElement]
+              : []),
+            allyRequestElement,
+            buildMenuElement,
+          ]
         : [
             isAllied && !isDisconnected ? allyBreakElement : boatMenuElement,
             inExtensionWindow ? allyExtendElement : allyRequestElement,
