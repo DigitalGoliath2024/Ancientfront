@@ -89,6 +89,7 @@ describe("NationStructureBehavior.samplesCoastalStructureSites", () => {
     expect(samplesCoastalStructureSites(UnitType.City)).toBe(false);
     expect(samplesCoastalStructureSites(UnitType.Factory)).toBe(false);
     expect(samplesCoastalStructureSites(UnitType.DefensePost)).toBe(false);
+    expect(samplesCoastalStructureSites(UnitType.InlandBattery)).toBe(false);
   });
 });
 

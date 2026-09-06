@@ -4,6 +4,7 @@ import {
 } from "../src/core/execution/InlandBatteryBlast";
 import { PlayerExecution } from "../src/core/execution/PlayerExecution";
 import { InlandBatteryExecution } from "../src/core/execution/InlandBatteryExecution";
+import { NationStructureBehavior } from "../src/core/execution/nation/NationStructureBehavior";
 import { InlandBatteryShellExecution } from "../src/core/execution/InlandBatteryShellExecution";
 import {
   Game,
@@ -12,6 +13,7 @@ import {
   PlayerType,
   UnitType,
 } from "../src/core/game/Game";
+import { PseudoRandom } from "../src/core/PseudoRandom";
 import { setup } from "./util/Setup";
 import { executeTicks } from "./util/utils";
 
@@ -160,5 +162,40 @@ describe("Inland Battery", () => {
     executeTicks(game, 2);
     expect(battery.isActive()).toBe(false);
     expect(player2.units(UnitType.InlandBattery)).toHaveLength(0);
+  });
+});
+
+describe("Nation inland batteries", () => {
+  test("nations place an inland battery once they have a city and gold", async () => {
+    const game = await setup(
+      "big_plains",
+      {
+        instantBuild: true,
+        disabledUnits: [UnitType.Armory],
+      },
+      [new PlayerInfo("nation", PlayerType.Nation, null, "nation_id")],
+    );
+    const nation = game.player("nation_id");
+    for (let x = 10; x <= 50; x++) {
+      for (let y = 10; y <= 50; y++) {
+        nation.conquer(game.ref(x, y));
+      }
+    }
+    nation.buildUnit(UnitType.City, game.ref(20, 20), {});
+    nation.addGold(20_000_000n);
+
+    const behavior = new NationStructureBehavior(
+      new PseudoRandom(1),
+      game,
+      nation,
+    );
+    for (let i = 0; i < 16; i++) {
+      behavior.handleStructures();
+      executeTicks(game, 4);
+      if (nation.units(UnitType.InlandBattery).length > 0) {
+        break;
+      }
+    }
+    expect(nation.units(UnitType.InlandBattery).length).toBeGreaterThan(0);
   });
 });

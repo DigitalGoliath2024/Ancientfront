@@ -56,6 +56,10 @@ function getStructureRatios(
       ratioPerCity: 0.35,
       perceivedCostIncreasePerOwned: 0.3,
     },
+    [UnitType.InlandBattery]: {
+      ratioPerCity: 0.35,
+      perceivedCostIncreasePerOwned: 0.3,
+    },
   };
 }
 
@@ -487,6 +491,7 @@ export class NationStructureBehavior {
       UnitType.Factory,
       UnitType.Armory,
       UnitType.PortGun,
+      UnitType.InlandBattery,
     ];
 
     const nukesEnabled =
@@ -603,6 +608,11 @@ export class NationStructureBehavior {
     }
 
     const owned = this.player.unitsOwned(type);
+
+    // First land battery as soon as the nation has a city (or city equivalent).
+    if (type === UnitType.InlandBattery && owned === 0) {
+      return cityCount >= 1;
+    }
 
     // Hard cap on missile silos
     if (type === UnitType.MissileSilo && owned >= MAX_MISSILE_SILOS) {
@@ -935,6 +945,8 @@ export class NationStructureBehavior {
         return this.portValue();
       case UnitType.PortGun:
         return this.portGunValue();
+      case UnitType.InlandBattery:
+        return this.inlandBatteryValue();
       case UnitType.SAMLauncher:
         return this.samLauncherValue();
       default:
@@ -1027,6 +1039,41 @@ export class NationStructureBehavior {
           w += Math.max(0, 40 - nearestPort);
         }
       }
+
+      return w;
+    };
+  }
+
+  /**
+   * Value function for inland batteries.
+   * Prefers a ring behind the border so capture does not instantly delete the
+   * gun, plus spacing from other batteries.
+   */
+  private inlandBatteryValue(): (tile: TileRef) => number {
+    const game = this.game;
+    const borderTiles = this.player.borderTiles();
+    const otherUnits = this.player.units(UnitType.InlandBattery);
+    const { borderSpacing, structureSpacing } = this.spacingConstants();
+    const preferredBorderDist = Math.min(12, borderSpacing);
+
+    return (tile) => {
+      let w = 0;
+
+      w += game.magnitude(tile);
+
+      const borderDist = nearestTileDistCapped(
+        game,
+        borderTiles,
+        tile,
+        borderSpacing,
+      );
+      const delta = borderDist - preferredBorderDist;
+      w += borderSpacing - (delta < 0 ? -delta : delta);
+
+      const otherTiles: Set<TileRef> = new Set(otherUnits.map((u) => u.tile()));
+      otherTiles.delete(tile);
+      const d = nearestTileDist(game, otherTiles, tile);
+      if (d !== Infinity) w += Math.min(d, structureSpacing);
 
       return w;
     };
