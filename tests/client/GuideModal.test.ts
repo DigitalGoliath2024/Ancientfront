@@ -135,7 +135,8 @@ describe("Guide modal", () => {
     expect(modal.textContent).toContain("100 tiles");
     expect(modal.textContent).toContain("210");
     expect(modal.textContent).toContain("dud");
-    expect(modal.textContent).toContain("scatter");
+    expect(modal.textContent).toContain("80%");
+    expect(modal.textContent).toContain("20%");
     expect(modal.textContent).toContain("Auto or Manual");
     expect(modal.textContent).toContain("destroyed, not stolen");
 
