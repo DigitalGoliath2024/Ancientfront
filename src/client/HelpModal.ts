@@ -1,6 +1,10 @@
 import { html } from "lit";
 import { customElement, query, state } from "lit/decorators.js";
-import { translateText, TUTORIAL_VIDEO_URL } from "../client/Utils";
+import {
+  INLAND_BATTERY_TUTORIAL_VIDEO_URL,
+  translateText,
+  TUTORIAL_VIDEO_URL,
+} from "../client/Utils";
 import { assetUrl } from "../core/AssetUrls";
 import { UserSettings } from "../core/game/UserSettings";
 import { BaseModal } from "./components/BaseModal";
@@ -15,6 +19,8 @@ export class HelpModal extends BaseModal {
 
   @state() private keybinds: Record<string, string> = this.getKeybinds();
   @query("#tutorial-video-iframe") private videoIframe?: HTMLIFrameElement;
+  @query("#inland-battery-tutorial-iframe")
+  private inlandBatteryVideoIframe?: HTMLIFrameElement;
 
   private getKeybinds(): Record<string, string> {
     return new UserSettings().keybinds(Platform.isMac);
@@ -119,27 +125,28 @@ export class HelpModal extends BaseModal {
             <h3
               class="font-map text-lg lg:text-xl font-bold uppercase tracking-widest text-malibu-blue"
             >
-              ${translateText("help_modal.video_tutorial")}
+              ${translateText("help_modal.video_tutorials")}
             </h3>
             <div
               class="flex-1 h-px bg-gradient-to-r from-malibu-blue/50 to-transparent"
             ></div>
           </div>
-            <section
-              class="bg-white/5 rounded-xl border border-malibu-blue/30 overflow-hidden mb-8"
-            >
-            <div class="relative w-full h-0 pb-[56.25%]">
-              <iframe
-                id="tutorial-video-iframe"
-                class="absolute top-0 left-0 w-full h-full"
-                src="${this.isModalOpen ? TUTORIAL_VIDEO_URL : ""}"
-                title="${translateText("help_modal.video_tutorial_title")}"
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen
-              ></iframe>
-            </div>
-          </section>
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"
+          >
+            ${this.renderTutorialCard({
+              iframeId: "tutorial-video-iframe",
+              headingKey: "help_modal.video_tutorial",
+              titleKey: "help_modal.video_tutorial_title",
+              src: this.isModalOpen ? TUTORIAL_VIDEO_URL : "",
+            })}
+            ${this.renderTutorialCard({
+              iframeId: "inland-battery-tutorial-iframe",
+              headingKey: "help_modal.inland_battery_tutorial",
+              titleKey: "help_modal.inland_battery_tutorial_title",
+              src: this.isModalOpen ? INLAND_BATTERY_TUTORIAL_VIDEO_URL : "",
+            })}
+          </div>
 
           <!-- Troubleshooting Section -->
           <div class="flex items-center gap-3 mb-3">
@@ -1147,18 +1154,52 @@ export class HelpModal extends BaseModal {
     troubleshootingModal.open();
   }
 
+  private renderTutorialCard(opts: {
+    iframeId: string;
+    headingKey: string;
+    titleKey: string;
+    src: string;
+  }) {
+    return html`
+      <section
+        class="bg-white/5 rounded-xl border border-malibu-blue/30 overflow-hidden"
+      >
+        <h4
+          class="font-map text-sm lg:text-base font-bold uppercase tracking-widest text-malibu-blue px-4 pt-3 pb-2"
+        >
+          ${translateText(opts.headingKey)}
+        </h4>
+        <div class="relative w-full h-0 pb-[56.25%]">
+          <iframe
+            id="${opts.iframeId}"
+            class="absolute top-0 left-0 w-full h-full"
+            src="${opts.src}"
+            title="${translateText(opts.titleKey)}"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </section>
+    `;
+  }
+
   protected onOpen(): void {
     this.keybinds = this.getKeybinds();
-    // Restore the video src when modal opens
     if (this.videoIframe) {
       this.videoIframe.src = TUTORIAL_VIDEO_URL;
+    }
+    if (this.inlandBatteryVideoIframe) {
+      this.inlandBatteryVideoIframe.src = INLAND_BATTERY_TUTORIAL_VIDEO_URL;
     }
   }
 
   protected onClose(): void {
-    // Clear the iframe src to stop video playback
     if (this.videoIframe) {
       this.videoIframe.src = "";
+    }
+    if (this.inlandBatteryVideoIframe) {
+      this.inlandBatteryVideoIframe.src = "";
     }
   }
 }

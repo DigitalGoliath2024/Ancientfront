@@ -17,6 +17,8 @@ import type { LangSelector } from "./LangSelector";
 import { Platform } from "./Platform";
 
 export const TUTORIAL_VIDEO_URL = "https://www.youtube.com/embed/xZZZuNWhr10";
+export const INLAND_BATTERY_TUTORIAL_VIDEO_URL =
+  "https://www.youtube.com/embed/ezCMTJOc4WE";
 
 export function normaliseMapKey(mapName: string): string {
   // Asset dirs / translation keys are the map id lowercased. For most maps

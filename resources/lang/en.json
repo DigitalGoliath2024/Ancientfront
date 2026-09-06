@@ -1043,7 +1043,10 @@
     "ui_wilderness": "Wilderness",
     "ui_your_team": "Your team:",
     "video_tutorial": "Official Tutorial",
-    "video_tutorial_title": "Marauder's Sea official tutorial"
+    "video_tutorial_title": "Marauder's Sea official tutorial",
+    "video_tutorials": "Tutorials",
+    "inland_battery_tutorial": "Inland Battery Tutorial Update",
+    "inland_battery_tutorial_title": "Inland Battery tutorial update"
   },
   "host_modal": {
     "anonymous_players": "Anonymous players",
