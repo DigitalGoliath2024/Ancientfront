@@ -1,5 +1,5 @@
 import { atan2 } from "../DetMath";
-import { Game, Player, Unit, UnitType } from "../game/Game";
+import { Game, Player, Structures, Unit, UnitType } from "../game/Game";
 import { TileRef } from "../game/GameMap";
 
 function isqrt(n: number): number {
@@ -148,6 +148,35 @@ export function pickInlandBatteryDests(
     return [];
   }
 
+  const structPick: (TileRef | null)[] = new Array(salvo).fill(null);
+  const structD2: number[] = new Array(salvo).fill(range2 + 1);
+  for (const { unit, distSquared } of mg.nearbyUnits(
+    from,
+    range,
+    Structures.types,
+    undefined,
+    true,
+  )) {
+    if (!unit.isActive()) {
+      continue;
+    }
+    if (isProtectedOwner(unit.owner(), owner)) {
+      continue;
+    }
+    if (distSquared < minFire2 || distSquared > range2) {
+      continue;
+    }
+    const tile = unit.tile();
+    if (!mg.isLand(tile) || mg.isImpassable(tile)) {
+      continue;
+    }
+    const s = sectorOf(mg.x(tile) - bx, mg.y(tile) - by, salvo);
+    if (distSquared < structD2[s]) {
+      structD2[s] = distSquared;
+      structPick[s] = tile;
+    }
+  }
+
   const desiredD2: number[] = new Array(salvo);
   const pick: (TileRef | null)[] = nearest.slice();
   const pickErr: number[] = new Array(salvo);
@@ -189,7 +218,7 @@ export function pickInlandBatteryDests(
   const dests: TileRef[] = [];
   const used = new Set<TileRef>();
   for (let s = 0; s < salvo; s++) {
-    const tile = pick[s];
+    const tile = structPick[s] ?? pick[s];
     if (tile === null || used.has(tile)) {
       continue;
     }
@@ -231,8 +260,9 @@ function isProtectedOwner(owner: Player, destroyer: Player): boolean {
 }
 
 /**
- * Relinquish enemy land in radius, scorch it, and kill enemy troops/units.
- * Never scorches the shooter's land or deletes the firing battery.
+ * Relinquish enemy land in radius, scorch it, and instantly destroy enemy
+ * buildings and other land units in the same circle. Never scorches the
+ * shooter's land or deletes the firing battery.
  */
 export function applyInlandBatteryBlast(
   mg: Game,
@@ -281,6 +311,7 @@ export function applyInlandBatteryBlast(
     }
   }
 
+  const doomed: Unit[] = [];
   for (const unit of mg.units()) {
     if (!unit.isActive()) {
       continue;
@@ -299,7 +330,7 @@ export function applyInlandBatteryBlast(
     ) {
       continue;
     }
-    if (mg.euclideanDistSquared(dst, unit.tile()) >= radius2) {
+    if (mg.euclideanDistSquared(dst, unit.tile()) > radius2) {
       continue;
     }
     if (!mg.isLand(unit.tile())) {
@@ -308,6 +339,11 @@ export function applyInlandBatteryBlast(
     if (isProtectedOwner(unit.owner(), destroyer)) {
       continue;
     }
-    unit.delete(true, destroyer);
+    doomed.push(unit);
+  }
+  for (const unit of doomed) {
+    if (unit.isActive()) {
+      unit.delete(true, destroyer);
+    }
   }
 }

@@ -1,6 +1,7 @@
 import {
   applyInlandBatteryBlast,
   inlandBatteryShotDest,
+  pickInlandBatteryDests,
 } from "../src/core/execution/InlandBatteryBlast";
 import { PlayerExecution } from "../src/core/execution/PlayerExecution";
 import { InlandBatteryExecution } from "../src/core/execution/InlandBatteryExecution";
@@ -126,6 +127,53 @@ describe("Inland Battery", () => {
     expect(game.hasFallout(center)).toBe(true);
     expect(game.owner(far)).toBe(player2);
     expect(game.hasFallout(far)).toBe(false);
+  });
+
+  test("destroys an enemy city in the impact circle immediately", () => {
+    const center = game.ref(5, 10);
+    player2.conquer(center);
+    for (let x = 4; x <= 6; x++) {
+      for (let y = 9; y <= 11; y++) {
+        const tile = game.ref(x, y);
+        if (game.isLand(tile)) {
+          player2.conquer(tile);
+        }
+      }
+    }
+    const city = player2.buildUnit(UnitType.City, center, {});
+    expect(city.isActive()).toBe(true);
+    applyInlandBatteryBlast(game, center, player1, null);
+    expect(city.isActive()).toBe(false);
+    expect(player2.units(UnitType.City)).toHaveLength(0);
+  });
+
+  test("destroys an enemy city on the rim of the impact circle", () => {
+    const center = game.ref(5, 10);
+    const rim = game.ref(5, 14);
+    player2.conquer(center);
+    player2.conquer(rim);
+    const city = player2.buildUnit(UnitType.City, rim, {});
+    applyInlandBatteryBlast(game, center, player1, null);
+    expect(city.isActive()).toBe(false);
+  });
+
+  test("aims shells at enemy buildings so the blast can reach them", () => {
+    const from = game.ref(1, 10);
+    const cityTile = game.ref(6, 10);
+    player1.conquer(from);
+    for (let x = 2; x <= 8; x++) {
+      const tile = game.ref(x, 10);
+      if (game.isLand(tile)) {
+        player2.conquer(tile);
+      }
+    }
+    player2.buildUnit(UnitType.City, cityTile, {});
+    const dests = pickInlandBatteryDests(game, from, player1, 1, 100, 5);
+    expect(dests.length).toBeGreaterThan(0);
+    const blast2 = game.config().inlandBatteryBlastRadius() ** 2;
+    expect(
+      dests.some((dest) => game.euclideanDistSquared(dest, cityTile) <= blast2),
+    ).toBe(true);
   });
 
   test("fires a shell at nearby enemy land", () => {
