@@ -313,11 +313,8 @@ describe("AiAttackBehavior - nuked territory early-out", () => {
     });
   });
 
-  describe("MissileSilo disabled disables the `nuked` strategy", () => {
-    test("isUnitDisabled(MissileSilo) short-circuits isBorderingNukedTerritory", async () => {
-      // `isBorderingNukedTerritory` returns false when MissileSilo is
-      // disabled, so even with nuked TN on the border the `nuked` strategy
-      // does NOT fire and no attack is created.
+  describe("scorched land is still absorbed when silos are disabled", () => {
+    test("inland-battery fallout is reclaimed even with MissileSilo off", async () => {
       const { game, nation, attackBehavior } = await setupBehavior(
         Difficulty.Impossible,
         {
@@ -331,7 +328,10 @@ describe("AiAttackBehavior - nuked territory early-out", () => {
       executeTicks(game, 1);
 
       const attacks = newAttacks(nation, before);
-      expect(attacks).toHaveLength(0);
+      expect(attacks.length).toBeGreaterThan(0);
+      for (const attack of attacks) {
+        expect(attack.target().isPlayer()).toBe(false);
+      }
     });
   });
 });

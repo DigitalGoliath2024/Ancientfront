@@ -368,10 +368,10 @@ export class AiAttackBehavior {
         return [bots, nuked, retaliate, assist, betray, hated, afk, traitor, weakest, island, donate];
       case Difficulty.Hard:
         // prettier-ignore
-        return [bots, retaliate, assist, betray, nuked, traitor, afk, hated, veryWeak, victim, weakest, island, donate];
+        return [bots, retaliate, nuked, assist, betray, traitor, afk, hated, veryWeak, victim, weakest, island, donate];
       case Difficulty.Impossible:
         // prettier-ignore
-        return [retaliate, bots, veryWeak, assist, traitor, afk, betray, victim, nuked, hated, weakest, island, donate];
+        return [retaliate, bots, nuked, veryWeak, assist, traitor, afk, betray, victim, hated, weakest, island, donate];
       default:
         assertNever(difficulty);
     }
@@ -550,10 +550,6 @@ export class AiAttackBehavior {
   }
 
   private isBorderingNukedTerritory(): boolean {
-    if (this.game.config().isUnitDisabled(UnitType.MissileSilo)) {
-      return false;
-    }
-
     // Boolean result, so neighbor order doesn't matter; a reused scratch
     // buffer keeps this allocation-free and allows early exit.
     const nbuf = NEIGHBOR_SCRATCH;
