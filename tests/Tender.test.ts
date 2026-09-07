@@ -72,6 +72,21 @@ describe("Tender", () => {
     expect(player1.units(UnitType.Tender)).toHaveLength(1);
   });
 
+  test("parks on its patrol tile instead of wandering", () => {
+    const start = game.ref(coastX + 1, 10);
+    const park = game.ref(coastX + 1, 14);
+    expect(game.isWater(start)).toBe(true);
+    expect(game.isWater(park)).toBe(true);
+    const tender = player1.buildUnit(UnitType.Tender, start, {
+      patrolTile: park,
+    });
+    game.addExecution(new WarshipExecution(tender));
+    executeTicks(game, 8);
+    expect(tender.tile()).toBe(park);
+    executeTicks(game, 40);
+    expect(tender.tile()).toBe(park);
+  });
+
   test("does not fire shells at an enemy warship", () => {
     const tenderTile = game.ref(coastX + 1, 10);
     const enemyTile = game.ref(coastX + 1, 12);

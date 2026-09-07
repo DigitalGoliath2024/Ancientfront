@@ -11,6 +11,7 @@ import {
   navalMineIcon,
   navyIcon,
   portGunIcon,
+  tenderIcon,
   warshipIcon,
 } from "./hud/HotbarIcons";
 
@@ -63,6 +64,24 @@ const SECTIONS: readonly GuideSection[] = [
       "guide_modal.marauder_cheap",
       "guide_modal.marauder_shot",
       "guide_modal.marauder_range",
+    ],
+  },
+  {
+    id: "tender",
+    tabKey: "guide_modal.tender_tab",
+    titleKey: "guide_modal.tender_title",
+    icon: tenderIcon,
+    bodyKeys: [
+      "guide_modal.tender_what",
+      "guide_modal.tender_place",
+      "guide_modal.tender_cost",
+      "guide_modal.tender_hp",
+      "guide_modal.tender_speed",
+      "guide_modal.tender_heal",
+      "guide_modal.tender_port",
+      "guide_modal.tender_circle",
+      "guide_modal.tender_wounded",
+      "guide_modal.tender_threats",
     ],
   },
   {

@@ -1011,6 +1011,10 @@ export class WarshipExecution implements Execution {
   }
 
   private patrol() {
+    if (this.warship.type() === UnitType.Tender) {
+      this.holdTenderStation();
+      return;
+    }
     for (let i = 0; i < this.patrolSteps(); i++) {
       if (this.warship.targetTile() === undefined) {
         this.warship.setTargetTile(this.randomTile());
@@ -1036,6 +1040,39 @@ export class WarshipExecution implements Execution {
           this.warship.setTargetTile(undefined);
           break;
         }
+      }
+    }
+  }
+
+  /** Tenders park on the assigned water tile instead of wandering the warship box. */
+  private holdTenderStation(): void {
+    const dest = this.warship.warshipState().patrolTile;
+    if (dest === undefined || !this.mg.isValidRef(dest) || !this.mg.isWater(dest)) {
+      this.warship.setTargetTile(undefined);
+      return;
+    }
+    if (this.warship.tile() === dest) {
+      this.warship.setTargetTile(undefined);
+      return;
+    }
+    this.warship.setTargetTile(dest);
+    for (let i = 0; i < this.patrolSteps(); i++) {
+      if (this.warship.tile() === dest) {
+        this.warship.setTargetTile(undefined);
+        return;
+      }
+      const result = this.pathfinder.next(this.warship.tile(), dest);
+      switch (result.status) {
+        case PathStatus.COMPLETE:
+          this.warship.setTargetTile(undefined);
+          this.warship.move(result.node);
+          break;
+        case PathStatus.NEXT:
+          this.warship.move(result.node);
+          break;
+        case PathStatus.NOT_FOUND:
+          this.warship.setTargetTile(undefined);
+          return;
       }
     }
   }

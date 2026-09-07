@@ -20,6 +20,7 @@ const SECTION_IDS = [
   "navy",
   "battleship",
   "marauder",
+  "tender",
   "port-guns",
   "inland-battery",
   "mines",
@@ -33,6 +34,7 @@ const TITLE_ICONS: Record<(typeof SECTION_IDS)[number], string> = {
   navy: "NavyIconWhite",
   battleship: "WarshipIconWhite",
   marauder: "MarauderIconWhite",
+  tender: "TenderIconWhite",
   "port-guns": "PortGunIconWhite",
   "inland-battery": "InlandBatteryIconWhite",
   mines: "NavalMineIconWhite",
@@ -64,6 +66,7 @@ describe("Guide modal", () => {
     expect(text).toContain("Navy");
     expect(text).toContain("Battleship");
     expect(text).toContain("Marauder");
+    expect(text).toContain("Tender");
     expect(text).toContain("Port guns");
     expect(text).toContain("Inland battery");
     expect(text).toContain("Mines");
@@ -112,6 +115,18 @@ describe("Guide modal", () => {
     await modal.updateComplete;
     expect(modal.textContent).toContain("weaker hull");
     expect(modal.textContent).toContain("one shot");
+
+    modal.setActiveTab("tender");
+    await modal.updateComplete;
+    expect(modal.textContent).toContain("unarmed repair");
+    expect(modal.textContent).toContain("Parks on the water tile");
+    expect(modal.textContent).toContain("$1,000,000");
+    expect(modal.textContent).toContain("1,200");
+    expect(modal.textContent).toContain("30-tile");
+    expect(modal.textContent).toContain("Port wins");
+    expect(modal.textContent).toContain("mint heal circle");
+    expect(modal.textContent).toContain("steam to her");
+    expect(modal.textContent).toContain("70%");
 
     modal.setActiveTab("port-guns");
     await modal.updateComplete;
@@ -179,7 +194,7 @@ describe("Guide modal", () => {
     expect(text).toContain("3");
     expect(text).toContain("Enemies cannot see them");
     expect(text).toContain("hurt badly");
-    expect(text).toContain("sink");
+    expect(text).toContain("tenders sink");
     expect(text).toContain("Trade ships ignore");
     expect(text).not.toMatch(FORBIDDEN_MINE_COPY);
 
