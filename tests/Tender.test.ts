@@ -119,6 +119,37 @@ describe("Tender", () => {
     expect(warship.health()).toBe(maxHealth - 9);
   });
 
+  test("another tender heals a tender slowly, not 1 HP per tick", () => {
+    const hurt = player1.buildUnit(UnitType.Tender, game.ref(coastX + 1, 10), {
+      patrolTile: game.ref(coastX + 1, 10),
+    });
+    player1.buildUnit(UnitType.Tender, game.ref(coastX + 1, 11), {
+      patrolTile: game.ref(coastX + 1, 11),
+    });
+    game.addExecution(new WarshipExecution(hurt));
+    game.executeNextTick();
+    hurt.modifyHealth(-10);
+    const damaged = hurt.health();
+    game.executeNextTick();
+    expect(hurt.health()).toBe(damaged);
+    executeTicks(game, 6);
+    expect(hurt.health()).toBe(damaged + 1);
+  });
+
+  test("a lone tender does not patch its own hull", () => {
+    const tender = player1.buildUnit(
+      UnitType.Tender,
+      game.ref(coastX + 1, 10),
+      { patrolTile: game.ref(coastX + 1, 10) },
+    );
+    game.addExecution(new WarshipExecution(tender));
+    game.executeNextTick();
+    tender.modifyHealth(-10);
+    const damaged = tender.health();
+    executeTicks(game, 20);
+    expect(tender.health()).toBe(damaged);
+  });
+
   test("does not stack heal with port proximity heal", () => {
     const portTile = game.ref(coastX, 10);
     const shipTile = game.ref(coastX + 1, 10);

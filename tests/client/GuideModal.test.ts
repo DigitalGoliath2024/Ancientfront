@@ -123,6 +123,8 @@ describe("Guide modal", () => {
     expect(modal.textContent).toContain("$1,000,000");
     expect(modal.textContent).toContain("1,200");
     expect(modal.textContent).toContain("30-tile");
+    expect(modal.textContent).toContain("15%");
+    expect(modal.textContent).toContain("does not patch her own hull");
     expect(modal.textContent).toContain("Port wins");
     expect(modal.textContent).toContain("mint heal circle");
     expect(modal.textContent).toContain("steam to her");

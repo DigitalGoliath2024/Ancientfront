@@ -1,5 +1,6 @@
 import {
   AllPlayers,
+  CombatShips,
   Difficulty,
   Game,
   Gold,
@@ -63,6 +64,269 @@ export class NationWarshipBehavior {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Nation Tender hints:
+   * - Forward dock: park one off the enemy coast. Ships hit the beach, then
+   *   duck back out to her 30-tile bubble instead of steaming all the way home.
+   *   (WarshipExecution already retreats to a closer Tender than Port.)
+   * - Follow the fleet: extra Tenders sit with hulls that are already out.
+   * Port heal still wins inside Port range; do not stack.
+   */
+  maybeSpawnTender(): boolean {
+    if (this.game.config().isUnitDisabled(UnitType.Tender)) {
+      return false;
+    }
+    if (!this.random.chance(20)) {
+      return false;
+    }
+    if (this.player.units(UnitType.Port).length === 0) {
+      return false;
+    }
+    const hulls = this.combatHulls();
+    if (hulls.length === 0) {
+      return false;
+    }
+    const desired = Math.min(3, 1 + Math.floor(hulls.length / 3));
+    if (this.player.units(UnitType.Tender).length >= desired) {
+      return false;
+    }
+    if (this.player.gold() <= this.cost(UnitType.Tender)) {
+      return false;
+    }
+
+    const existing = this.player.units(UnitType.Tender).length;
+    const targetTile =
+      existing === 0
+        ? this.forwardStationTile(hulls)
+        : this.fleetFollowTile(hulls);
+    if (targetTile === null) {
+      return false;
+    }
+    if (this.player.canBuild(UnitType.Tender, targetTile) === false) {
+      return false;
+    }
+    this.game.addExecution(
+      new ConstructionExecution(this.player, UnitType.Tender, targetTile),
+    );
+    return true;
+  }
+
+  /** Keep the first Tender off the enemy coast; extras ride with the fleet. */
+  maybeStationTenders(): void {
+    if (this.game.config().isUnitDisabled(UnitType.Tender)) {
+      return;
+    }
+    const tenders = this.player.units(UnitType.Tender);
+    const hulls = this.combatHulls();
+    if (tenders.length === 0 || hulls.length === 0) {
+      return;
+    }
+
+    const range = this.game.config().tenderHealRange();
+    const forward = this.enemyCoastStationTile(hulls);
+    if (tenders.length === 1) {
+      if (forward !== null) {
+        this.parkTenderIfFar(tenders[0], forward, range);
+      } else {
+        this.sendTenderToward(tenders[0], this.farthestHullFromPort(hulls)!, range);
+      }
+      return;
+    }
+
+    const dock = this.closestTenderToPort(tenders);
+    if (dock !== undefined && forward !== null) {
+      this.parkTenderIfFar(dock, forward, range);
+    }
+    const followers = tenders.filter((t) => t !== dock);
+    const farHulls = [...hulls].sort(
+      (a, b) =>
+        this.distToNearestPort(b.tile()) - this.distToNearestPort(a.tile()),
+    );
+    for (let i = 0; i < followers.length && i < farHulls.length; i++) {
+      this.sendTenderToward(followers[i], farHulls[i], range);
+    }
+  }
+
+  private combatHulls(): Unit[] {
+    const hulls: Unit[] = [];
+    for (const type of CombatShips.types) {
+      hulls.push(...this.player.units(type));
+    }
+    return hulls;
+  }
+
+  private forwardStationTile(hulls: Unit[]): TileRef | null {
+    return (
+      this.enemyCoastStationTile(hulls) ??
+      this.fleetFollowTile(hulls) ??
+      this.coastalStationTile()
+    );
+  }
+
+  private hostilePlayers(): Player[] {
+    return this.game.players().filter((p) => {
+      if (p.id() === this.player.id() || !p.isAlive()) {
+        return false;
+      }
+      return !this.player.isFriendly(p);
+    });
+  }
+
+  private attackTargetEnemies(): Player[] {
+    const seen = new Set<string>();
+    const out: Player[] = [];
+    for (const attack of this.player.outgoingAttacks()) {
+      const target = attack.target();
+      if (!target.isPlayer() || this.player.isFriendly(target)) {
+        continue;
+      }
+      if (seen.has(target.id())) {
+        continue;
+      }
+      seen.add(target.id());
+      out.push(target);
+    }
+    return out;
+  }
+
+  /** Water just off a hostile shore so attacking hulls can duck out and heal. */
+  private enemyCoastStationTile(hulls: Unit[]): TileRef | null {
+    const enemies = [...this.attackTargetEnemies(), ...this.hostilePlayers()];
+    const seen = new Set<string>();
+    for (const enemy of enemies) {
+      if (seen.has(enemy.id())) {
+        continue;
+      }
+      seen.add(enemy.id());
+      const tile = this.waterOffCoast(enemy);
+      if (tile !== null) {
+        return tile;
+      }
+    }
+    void hulls;
+    return null;
+  }
+
+  private waterOffCoast(enemy: Player): TileRef | null {
+    const shores: TileRef[] = [];
+    enemy.borderTiles().forEach((tile) => {
+      if (this.game.isShore(tile)) {
+        shores.push(tile);
+      }
+    });
+    if (shores.length === 0) {
+      return null;
+    }
+    const start = this.random.nextInt(0, shores.length);
+    for (let i = 0; i < shores.length; i++) {
+      const shore = shores[(start + i) % shores.length];
+      let water: TileRef | undefined;
+      this.game.forEachNeighbor(shore, (neighbor) => {
+        if (water !== undefined) {
+          return;
+        }
+        if (
+          this.game.isWater(neighbor) &&
+          this.player.canBuild(UnitType.Tender, neighbor) !== false
+        ) {
+          water = neighbor;
+        }
+      });
+      if (water === undefined) {
+        continue;
+      }
+      return this.warshipSpawnTile(water, 12) ?? water;
+    }
+    return null;
+  }
+
+  private coastalStationTile(): TileRef | null {
+    const ports = this.player.units(UnitType.Port);
+    if (ports.length === 0) {
+      return null;
+    }
+    const port = this.random.randElement(ports);
+    return (
+      this.warshipSpawnTile(port.tile(), 15) ??
+      this.warshipSpawnTile(port.tile(), 40)
+    );
+  }
+
+  private fleetFollowTile(hulls: Unit[]): TileRef | null {
+    const hull = this.farthestHullFromPort(hulls);
+    if (hull === undefined) {
+      return null;
+    }
+    const center = hull.warshipState().patrolTile ?? hull.tile();
+    return this.warshipSpawnTile(center, this.game.config().tenderHealRange());
+  }
+
+  private farthestHullFromPort(hulls: Unit[]): Unit | undefined {
+    if (hulls.length === 0) {
+      return undefined;
+    }
+    let best = hulls[0];
+    let bestDist = this.distToNearestPort(best.tile());
+    for (let i = 1; i < hulls.length; i++) {
+      const dist = this.distToNearestPort(hulls[i].tile());
+      if (dist > bestDist) {
+        best = hulls[i];
+        bestDist = dist;
+      }
+    }
+    return best;
+  }
+
+  private closestTenderToPort(tenders: Unit[]): Unit | undefined {
+    if (tenders.length === 0) {
+      return undefined;
+    }
+    let best = tenders[0];
+    let bestDist = this.distToNearestPort(best.tile());
+    for (let i = 1; i < tenders.length; i++) {
+      const dist = this.distToNearestPort(tenders[i].tile());
+      if (dist < bestDist) {
+        best = tenders[i];
+        bestDist = dist;
+      }
+    }
+    return best;
+  }
+
+  private distToNearestPort(tile: TileRef): number {
+    const ports = this.player.units(UnitType.Port);
+    if (ports.length === 0) {
+      return Number.MAX_SAFE_INTEGER;
+    }
+    let best = this.game.manhattanDist(tile, ports[0].tile());
+    for (let i = 1; i < ports.length; i++) {
+      const dist = this.game.manhattanDist(tile, ports[i].tile());
+      if (dist < best) {
+        best = dist;
+      }
+    }
+    return best;
+  }
+
+  private sendTenderToward(tender: Unit, hull: Unit, range: number): void {
+    const dest = hull.warshipState().patrolTile ?? hull.tile();
+    const station = this.game.isWater(dest)
+      ? dest
+      : this.warshipSpawnTile(hull.tile(), range);
+    if (station === null) {
+      return;
+    }
+    this.parkTenderIfFar(tender, station, range);
+  }
+
+  private parkTenderIfFar(tender: Unit, dest: TileRef, range: number): void {
+    const here = tender.warshipState().patrolTile ?? tender.tile();
+    if (this.game.manhattanDist(here, dest) <= range) {
+      return;
+    }
+    tender.updateWarshipState({ patrolTile: dest });
   }
 
   private warshipSpawnTile(portTile: TileRef, radius: number): TileRef | null {

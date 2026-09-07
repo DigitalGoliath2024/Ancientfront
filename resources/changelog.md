@@ -6,9 +6,9 @@ Brand-new update: the **Tender**. An unarmed repair hull so a fleet can stay on 
 
 - **Build it** — $1,000,000 each, unlimited. Spawns from the nearest Port. Place from water like a Warship or Marauder. She parks on that tile instead of wandering a warship box — click to move her if you want a new station.
 - **Hull** — 1,200 hit points. Two black sails, two pixels skinnier and two pixels longer than a Warship. No guns, no captures, no shore bombardment.
-- **Heal** — Friendly Warships and Marauders in a 30-tile bubble gain 1 HP per tick. Does not stack with Port heal; if you are in range of a Port, the Port wins.
+- **Heal** — Friendly Warships and Marauders in a 30-tile bubble gain 1 HP per tick. Another Tender in that bubble only heals at 15% of that rate. She does not patch her own hull. Does not stack with Port heal; if you are in range of a Port, the Port wins.
 - **Circle** — Click a Tender (same select as a Warship) to see the mint heal circle. It follows the hull. Box-select several Tenders to see every bubble.
-- **Wounded navy** — Ships already in the bubble stay and fight instead of running to Port. If they are hurt and a Tender on the same water is closer than the Port, they steam to her, hold in the circle until full, then return to their patrol. No Tender in reach, or already in Port heal range: they still dock at Port as before.
+- **Wounded navy** — Ships already in the bubble stay and fight instead of running to Port. If they are hurt and a Tender on the same water is closer than the Port, they steam to her, hold in the circle until full, then return to their patrol. No Tender in reach, or already in Port heal range: they still dock at Port as before. Hurt Tenders still run to Port, not to another Tender.
 - **Threats** — Mines, Port Guns, and enemy ships can sink a Tender. A mine chips 70% of max HP, same as a Warship — it does not one-shot her.
 
 ## Guide

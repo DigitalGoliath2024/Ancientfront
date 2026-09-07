@@ -78,6 +78,7 @@ const SECTIONS: readonly GuideSection[] = [
       "guide_modal.tender_hp",
       "guide_modal.tender_speed",
       "guide_modal.tender_heal",
+      "guide_modal.tender_tender",
       "guide_modal.tender_port",
       "guide_modal.tender_circle",
       "guide_modal.tender_wounded",

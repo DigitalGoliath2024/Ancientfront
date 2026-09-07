@@ -203,6 +203,8 @@ export class NationExecution implements Execution {
     this.mirvBehavior.considerMIRV();
     this.structureBehavior.handleStructures();
     this.warshipBehavior.maybeSpawnWarship();
+    this.warshipBehavior.maybeSpawnTender();
+    this.warshipBehavior.maybeStationTenders();
     this.handleEmbargoesToHostileNations();
     this.attackBehavior.maybeAttack();
     this.warshipBehavior.counterWarshipInfestation();

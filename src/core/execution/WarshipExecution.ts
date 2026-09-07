@@ -31,6 +31,7 @@ export class WarshipExecution implements Execution {
   private lastManualMoveTickRetreatDisabled = 0;
   private lastObservedPatrolTile: TileRef | undefined;
   private activeHealingRemainder = 0;
+  private tenderOnTenderRemainder = 0;
   private lastEmittedCombat = false;
   private currentTick = 0;
   /** Set while steaming to / holding on a Tender instead of a Port. */
@@ -143,7 +144,7 @@ export class WarshipExecution implements Execution {
 
     if (this.isNearPortHeal()) {
       this.warship.modifyHealth(passiveHealing);
-    } else if (this.warship.type() !== UnitType.Tender) {
+    } else {
       this.applyTenderHeal();
     }
 
@@ -154,24 +155,32 @@ export class WarshipExecution implements Execution {
     this.applyMaxRankHullRepair();
   }
 
-  /** Unarmed Tender: 1 HP/tick in a 30-tile bubble, not stacked with Port heal. */
+  /** Unarmed Tender: 1 HP/tick in a 30-tile bubble, not stacked with Port heal.
+   *  Another Tender only gets 15% of that (accumulated, integer HP). */
   private applyTenderHeal(): void {
-    const amount = this.mg.config().tenderHealAmount();
+    if (this.friendlyTenderInRange() === undefined) {
+      return;
+    }
+    const amount = this.tenderHealHpThisTick();
     if (amount <= 0) {
       return;
     }
-    const nearby = this.mg.nearbyUnits(
-      this.warship.tile(),
-      this.mg.config().tenderHealRange(),
-      UnitType.Tender,
-    );
-    for (const { unit } of nearby) {
-      if (!this.isFriendlyTender(unit)) {
-        continue;
-      }
-      this.warship.modifyHealth(amount);
-      return;
+    this.warship.modifyHealth(amount);
+  }
+
+  private tenderHealHpThisTick(): number {
+    const amount = this.mg.config().tenderHealAmount();
+    if (amount <= 0) {
+      return 0;
     }
+    if (this.warship.type() !== UnitType.Tender) {
+      return amount;
+    }
+    const percent = this.mg.config().tenderHealTenderPercent();
+    this.tenderOnTenderRemainder += amount * percent;
+    const hp = Math.floor(this.tenderOnTenderRemainder / 100);
+    this.tenderOnTenderRemainder -= hp * 100;
+    return hp;
   }
 
   /**
@@ -262,6 +271,7 @@ export class WarshipExecution implements Execution {
 
   private isFriendlyTender(unit: Unit): boolean {
     if (
+      unit === this.warship ||
       unit.type() !== UnitType.Tender ||
       !unit.isActive() ||
       unit.isUnderConstruction()

@@ -1252,6 +1252,11 @@ export class Config {
     return this.warshipPassiveHealing();
   }
 
+  /** Tenders patch other Tenders at this percent of tenderHealAmount (integer). */
+  tenderHealTenderPercent(): number {
+    return 15;
+  }
+
   /** Heal bubble matches a Defense Post so the checkers size is already known. */
   tenderHealRange(): number {
     return this.defensePostRange();
