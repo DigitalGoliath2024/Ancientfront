@@ -17,6 +17,7 @@ const MIRV_HIT_SOUND_INTERVAL_TICKS = 5;
 const DESTROY_ANNOUNCER: Partial<Record<UnitType, AnnouncerLine>> = {
   [UnitType.Warship]: "warship-destroyed",
   [UnitType.Marauder]: "marauder-destroyed",
+  [UnitType.Tender]: "warship-destroyed",
   [UnitType.City]: "city-destroyed",
   [UnitType.Port]: "port-destroyed",
   [UnitType.PortGun]: "port-gun-destroyed",
@@ -110,6 +111,7 @@ export class SoundEffectController implements Controller {
         break;
       case UnitType.Warship:
       case UnitType.Marauder:
+      case UnitType.Tender:
         if (unit.owner() === myPlayer) this.emit("build-warship");
         break;
       case UnitType.City:

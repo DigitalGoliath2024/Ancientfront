@@ -1,4 +1,4 @@
-import { CombatShips, Execution, Game, Player } from "../game/Game";
+import { Execution, Game, PatrolShips, Player } from "../game/Game";
 import { TileRef } from "../game/GameMap";
 
 export class MoveWarshipExecution implements Execution {
@@ -17,7 +17,7 @@ export class MoveWarshipExecution implements Execution {
     const newPatrolTileWaterComponent = mg.getWaterComponent(this.position);
     // Cache warship list and build a lookup map — avoids repeated iteration
     const warshipMap = new Map(
-      this.owner.units(CombatShips.types).map((u) => [u.id(), u]),
+      this.owner.units(PatrolShips.types).map((u) => [u.id(), u]),
     );
     // Deduplicate ids so each warship is only moved once
     for (const unitId of new Set(this.unitIds)) {

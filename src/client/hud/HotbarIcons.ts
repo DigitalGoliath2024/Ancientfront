@@ -2,6 +2,7 @@ import { assetUrl } from "../../core/AssetUrls";
 
 export const warshipIcon = assetUrl("images/WarshipIconWhite.png");
 export const marauderIcon = assetUrl("images/MarauderIconWhite.png");
+export const tenderIcon = assetUrl("images/TenderIconWhite.png");
 export const cityIcon = assetUrl("images/CityIconWhite.png");
 export const factoryIcon = assetUrl("images/FactoryIconWhite.png");
 export const goldCoinIcon = assetUrl("images/GoldCoinIcon.svg");

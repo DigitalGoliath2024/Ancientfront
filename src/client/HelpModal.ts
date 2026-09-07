@@ -971,6 +971,11 @@ export class HelpModal extends BaseModal {
                     "help_modal.build_marauder_desc",
                   )}
                   ${this.renderBuildRow(
+                    "unit_type.tender",
+                    "images/TenderIconWhite.png",
+                    "help_modal.build_tender_desc",
+                  )}
+                  ${this.renderBuildRow(
                     "unit_type.port",
                     "images/PortIconWhite.png",
                     "help_modal.build_port_desc",

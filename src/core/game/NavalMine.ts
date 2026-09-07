@@ -14,6 +14,7 @@ export const NAVAL_MINE_UNLOCK_ARMORY_LEVEL = 4;
 const MINE_BLOCKING_SHIPS: readonly UnitType[] = [
   UnitType.Warship,
   UnitType.Marauder,
+  UnitType.Tender,
   UnitType.TransportShip,
   UnitType.TradeShip,
 ];
@@ -21,6 +22,7 @@ const MINE_BLOCKING_SHIPS: readonly UnitType[] = [
 const MINE_TRIGGER_SHIPS: readonly UnitType[] = [
   UnitType.Warship,
   UnitType.Marauder,
+  UnitType.Tender,
   UnitType.TransportShip,
 ];
 
@@ -234,7 +236,7 @@ export function triggeringShipOnTile(
 
 export function applyNavalMineDamage(mg: Game, ship: Unit): void {
   const type = ship.type();
-  if (type === UnitType.Warship) {
+  if (type === UnitType.Warship || type === UnitType.Tender) {
     const damage = Math.floor(
       (ship.maxHealth() * NAVAL_MINE_WARSHIP_DAMAGE_PERCENT) / 100,
     );

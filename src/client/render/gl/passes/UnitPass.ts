@@ -52,6 +52,7 @@ import {
   UT_TRANSPORT,
   UT_WARSHIP,
   UT_MARAUDER,
+  UT_TENDER,
 } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
@@ -142,6 +143,7 @@ const SEA_HULL_TYPES: ReadonlySet<string> = new Set([
   UT_TRADE_SHIP,
   UT_WARSHIP,
   UT_MARAUDER,
+  UT_TENDER,
 ]);
 
 /** Render-only heading steps (east, then clockwise). Finer than 8-way so
@@ -390,6 +392,7 @@ export class UnitPass {
       }
     }
     this.typeToAtlasCol.set(UT_MARAUDER, MARAUDER_COL);
+    this.typeToAtlasCol.set(UT_TENDER, WARSHIP_COL);
 
     // Compile shaders
     this.program = createProgram(
@@ -595,7 +598,8 @@ export class UnitPass {
 
       const isCombatHull =
         unit.unitType === UT_WARSHIP || unit.unitType === UT_MARAUDER;
-      const isRetreatingWarship = isCombatHull && unit.retreating;
+      const isPatrolHull = isCombatHull || unit.unitType === UT_TENDER;
+      const isRetreatingWarship = isPatrolHull && unit.retreating;
       const isAngryWarship = isCombatHull && unit.targetUnitId !== null;
       const isFlicker = FLICKER_TYPES.has(unit.unitType);
 

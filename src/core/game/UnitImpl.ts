@@ -107,6 +107,7 @@ export class UnitImpl implements Unit {
     switch (this._type) {
       case UnitType.Warship:
       case UnitType.Marauder:
+      case UnitType.Tender:
       case UnitType.Port:
       case UnitType.MissileSilo:
       case UnitType.DefensePost:
@@ -243,6 +244,7 @@ export class UnitImpl implements Unit {
     switch (this._type) {
       case UnitType.Warship:
       case UnitType.Marauder:
+      case UnitType.Tender:
       case UnitType.Port:
       case UnitType.MissileSilo:
       case UnitType.DefensePost:
@@ -383,6 +385,7 @@ export class UnitImpl implements Unit {
         case UnitType.SAMLauncher:
         case UnitType.Warship:
         case UnitType.Marauder:
+        case UnitType.Tender:
         case UnitType.Factory:
         case UnitType.PortGun:
         case UnitType.Armory:
@@ -401,6 +404,7 @@ export class UnitImpl implements Unit {
     if (
       this._type !== UnitType.Warship &&
       this._type !== UnitType.Marauder &&
+      this._type !== UnitType.Tender &&
       this._type !== UnitType.TransportShip
     ) {
       return;

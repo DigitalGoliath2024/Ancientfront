@@ -21,6 +21,7 @@ import {
   traitorIcon,
   upperLimitIcon,
   marauderIcon,
+  tenderIcon,
   warshipIcon,
   armoryIcon,
   portGunIcon,
@@ -297,6 +298,7 @@ export const COLUMN_DEFS: readonly ColumnDef[] = [
     UnitType.Marauder,
     marauderIcon,
   ),
+  unitColumn("tenders", "leaderboard.tenders", UnitType.Tender, tenderIcon),
   defineColumn({
     id: "allies",
     labelKey: "leaderboard.allies",

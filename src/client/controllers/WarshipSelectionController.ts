@@ -1,6 +1,6 @@
 import { Cell } from "src/core/game/Game";
 import { EventBus } from "../../core/EventBus";
-import { CombatShips } from "../../core/game/Game";
+import { PatrolShips } from "../../core/game/Game";
 import { TileRef } from "../../core/game/GameMap";
 import { Controller } from "../Controller";
 import {
@@ -144,7 +144,7 @@ export class WarshipSelectionController implements Controller {
     const myPlayer = this.game.myPlayer();
     if (!myPlayer) return [];
     return this.game
-      .units(...CombatShips.types)
+      .units(...PatrolShips.types)
       .filter(
         (unit) =>
           unit.isActive() &&
@@ -258,7 +258,7 @@ export class WarshipSelectionController implements Controller {
     const myPlayer = this.game.myPlayer();
     if (!myPlayer) return;
 
-    const selected = this.game.units(...CombatShips.types).filter((unit) => {
+    const selected = this.game.units(...PatrolShips.types).filter((unit) => {
       if (!unit.isActive() || unit.owner() !== myPlayer) return false;
       const screen = this.transformHandler.worldToScreenCoordinates(
         new Cell(this.game.x(unit.tile()), this.game.y(unit.tile())),
@@ -279,7 +279,7 @@ export class WarshipSelectionController implements Controller {
     const myPlayer = this.game.myPlayer();
     if (!myPlayer) return [];
     return this.game
-      .units(...CombatShips.types)
+      .units(...PatrolShips.types)
       .filter((u) => u.isActive() && u.owner() === myPlayer);
   }
 

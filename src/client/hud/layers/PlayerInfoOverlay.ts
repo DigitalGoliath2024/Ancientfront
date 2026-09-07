@@ -42,6 +42,7 @@ const allianceIcon = assetUrl("images/AllianceIcon.svg");
 const traitorIcon = assetUrl("images/TraitorIcon.svg");
 const warshipIcon = assetUrl("images/WarshipIconWhite.png");
 const marauderIcon = assetUrl("images/MarauderIconWhite.png");
+const tenderIcon = assetUrl("images/TenderIconWhite.png");
 const cityIcon = assetUrl("images/CityIconWhite.png");
 const factoryIcon = assetUrl("images/FactoryIconWhite.png");
 const goldCoinIcon = assetUrl("images/GoldCoinIcon.svg");
@@ -163,6 +164,7 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
         .units(
           UnitType.Warship,
           UnitType.Marauder,
+          UnitType.Tender,
           UnitType.TradeShip,
           UnitType.TransportShip,
           UnitType.NavalMine,
@@ -537,6 +539,7 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
             ${this.displayUnitCount(player, UnitType.InlandBattery, inlandBatteryIcon)}
             ${this.displayUnitCount(player, UnitType.Warship, warshipIcon)}
             ${this.displayUnitCount(player, UnitType.Marauder, marauderIcon)}
+            ${this.displayUnitCount(player, UnitType.Tender, tenderIcon)}
           </div>
         </div>
       </div>

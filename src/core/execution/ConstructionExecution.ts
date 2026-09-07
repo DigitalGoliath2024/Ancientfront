@@ -138,6 +138,7 @@ export class ConstructionExecution implements Execution {
         break;
       case UnitType.Warship:
       case UnitType.Marauder:
+      case UnitType.Tender:
         this.spawnCombatShip();
         break;
       case UnitType.Port:
@@ -181,19 +182,25 @@ export class ConstructionExecution implements Execution {
   }
 
   private isCombatShip(type: UnitType): boolean {
-    return type === UnitType.Warship || type === UnitType.Marauder;
+    return (
+      type === UnitType.Warship ||
+      type === UnitType.Marauder ||
+      type === UnitType.Tender
+    );
   }
 
   private spawnCombatShip(): void {
-    const shipType =
-      this.constructionType === UnitType.Marauder
-        ? UnitType.Marauder
-        : UnitType.Warship;
+    const shipType = this.constructionType;
     this.mg.addExecution(
       new WarshipExecution({
         owner: this.player,
         patrolTile: this.tile,
-        shipType,
+        shipType:
+          shipType === UnitType.Marauder
+            ? UnitType.Marauder
+            : shipType === UnitType.Tender
+              ? UnitType.Tender
+              : UnitType.Warship,
       }),
     );
   }

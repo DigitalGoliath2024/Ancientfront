@@ -27,6 +27,7 @@ import {
   portGunIcon,
   inlandBatteryIcon,
   marauderIcon,
+  tenderIcon,
   navalMineIcon,
   warshipIcon,
   armoryIcon,
@@ -42,6 +43,7 @@ export class UnitDisplay extends LitElement implements Controller {
   private _cities = 0;
   private _warships = 0;
   private _marauders = 0;
+  private _tenders = 0;
   private _navalMines = 0;
   private _factories = 0;
   private _armory = 0;
@@ -81,6 +83,7 @@ export class UnitDisplay extends LitElement implements Controller {
     switch (item) {
       case UnitType.Warship:
       case UnitType.Marauder:
+      case UnitType.Tender:
         return (
           this.cost(item) <= (player?.gold() ?? 0n) &&
           (player?.units(UnitType.Port).length ?? 0) > 0
@@ -114,6 +117,7 @@ export class UnitDisplay extends LitElement implements Controller {
     this._armory = player.totalUnitLevels(UnitType.Armory);
     this._warships = player.totalUnitLevels(UnitType.Warship);
     this._marauders = player.totalUnitLevels(UnitType.Marauder);
+    this._tenders = player.totalUnitLevels(UnitType.Tender);
     this._navalMines = player
       .units(UnitType.NavalMine)
       .filter((u) => u.isActive()).length;
@@ -198,6 +202,13 @@ export class UnitDisplay extends LitElement implements Controller {
             this._marauders,
             UnitType.Marauder,
             "marauder",
+            "",
+          )}
+          ${this.renderUnitItem(
+            tenderIcon,
+            this._tenders,
+            UnitType.Tender,
+            "tender",
             "",
           )}
           ${navalMinesUnlocked(myPlayer)
@@ -290,6 +301,7 @@ export class UnitDisplay extends LitElement implements Controller {
             switch (unitType) {
               case UnitType.Warship:
               case UnitType.Marauder:
+              case UnitType.Tender:
                 this.eventBus?.emit(new ToggleStructureEvent([UnitType.Port]));
                 break;
               default:

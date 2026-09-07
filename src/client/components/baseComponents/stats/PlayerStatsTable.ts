@@ -24,7 +24,7 @@ const BUILDING_ORDER = {
   silo: 8,
   saml: 9,
 } as const satisfies Record<
-  Exclude<(typeof otherUnits)[number], "wshp" | "mrdr" | "nmine">,
+  Exclude<(typeof otherUnits)[number], "wshp" | "mrdr" | "tndr" | "nmine">,
   number
 >;
 
@@ -46,6 +46,7 @@ const UNIT_LABEL_KEYS = {
   silo: "unit_type.missile_silo",
   wshp: "unit_type.warship",
   mrdr: "unit_type.marauder",
+  tndr: "unit_type.tender",
   pgun: "unit_type.port_gun",
   ibat: "unit_type.inland_battery",
   armr: "unit_type.armory",
@@ -182,6 +183,9 @@ export class PlayerStatsTable extends LitElement {
         ])}
         ${statsSection("player_stats_table.marauder_stats", UNIT_COLUMNS, [
           { values: slots(stats?.units?.mrdr, 4) },
+        ])}
+        ${statsSection("player_stats_table.tender_stats", UNIT_COLUMNS, [
+          { values: slots(stats?.units?.tndr, 4) },
         ])}
         ${statsSection(
           "player_stats_table.ship_arrivals",

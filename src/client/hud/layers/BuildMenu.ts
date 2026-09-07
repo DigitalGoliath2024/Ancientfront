@@ -28,6 +28,7 @@ import { GameView } from "../../view";
 import {
   factoryIcon,
   marauderIcon,
+  tenderIcon,
   navalMineIcon,
   portGunIcon,
   inlandBatteryIcon,
@@ -61,6 +62,13 @@ export const buildTable: BuildItemDisplay[][] = [
       icon: marauderIcon,
       description: "build_menu.desc.marauder",
       key: "unit_type.marauder",
+      countable: true,
+    },
+    {
+      unitType: UnitType.Tender,
+      icon: tenderIcon,
+      description: "build_menu.desc.tender",
+      key: "unit_type.tender",
       countable: true,
     },
     {

@@ -9,6 +9,7 @@ import { ShellExecution } from "./ShellExecution";
 
 const PORT_GUN_TARGETS: readonly UnitType[] = [
   ...CombatShips.types,
+  UnitType.Tender,
   UnitType.TransportShip,
 ];
 

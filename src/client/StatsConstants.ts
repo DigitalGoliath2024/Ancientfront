@@ -24,6 +24,7 @@ export const COLUMN_IDS = [
   "portGuns",
   "warships",
   "marauders",
+  "tenders",
   // Diplomacy.
   "allies",
   "betrayals",

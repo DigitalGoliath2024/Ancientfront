@@ -22,6 +22,7 @@ import {
   UT_MARAUDER,
   UT_MISSILE_SILO,
   UT_SAM_LAUNCHER,
+  UT_TENDER,
 } from "../../types";
 import type { RenderSettings } from "../RenderSettings";
 import { createProgram } from "../utils/GlUtils";
@@ -72,6 +73,7 @@ export class BarPass {
   private mapW: number;
   private warshipMaxHealth: number;
   private marauderMaxHealth: number;
+  private tenderMaxHealth: number;
   private veterancyHealthBonus: number;
 
   constructor(
@@ -85,6 +87,7 @@ export class BarPass {
     this.mapW = header.mapWidth;
     this.warshipMaxHealth = config.unitInfo(UnitType.Warship).maxHealth ?? 0;
     this.marauderMaxHealth = config.unitInfo(UnitType.Marauder).maxHealth ?? 0;
+    this.tenderMaxHealth = config.unitInfo(UnitType.Tender).maxHealth ?? 0;
     this.veterancyHealthBonus = config.warshipVeterancyHealthBonus();
 
     // --- Shader program ---
@@ -157,7 +160,9 @@ export class BarPass {
       const baseMax =
         unit.unitType === UT_MARAUDER
           ? this.marauderMaxHealth
-          : this.warshipMaxHealth;
+          : unit.unitType === UT_TENDER
+            ? this.tenderMaxHealth
+            : this.warshipMaxHealth;
       const maxHealth = maxHealthWithVeterancy(
         baseMax,
         unit.veterancy,

@@ -361,7 +361,7 @@ export class TransportShipExecution implements Execution {
     const nearby = this.mg.nearbyUnits(
       this.boat.tile(),
       this.mg.config().transportTargettingRange(),
-      [...CombatShips.types, UnitType.TransportShip, ...Structures.types],
+      [...CombatShips.types, UnitType.Tender, UnitType.TransportShip, ...Structures.types],
     );
 
     let best: Unit | undefined;
@@ -385,7 +385,7 @@ export class TransportShipExecution implements Execution {
           ? 0
           : type === UnitType.PortGun
             ? 1
-            : CombatShips.has(type)
+            : CombatShips.has(type) || type === UnitType.Tender
               ? 2
               : 3;
 

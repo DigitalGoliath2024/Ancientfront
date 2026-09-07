@@ -24,6 +24,7 @@ import {
   UT_TRANSPORT,
   UT_WARSHIP,
   UT_MARAUDER,
+  UT_TENDER,
 } from "../../types";
 import type { RenderSettings } from "../RenderSettings";
 import { createProgram, shaderSrc } from "../utils/GlUtils";
@@ -54,6 +55,7 @@ const LIGHT_CONFIGS: Record<string, LightConfig> = {
   [UT_TRADE_SHIP]: { r: 0.9, g: 0.8, b: 0.6, radius: 6, intensity: 2.7 },
   [UT_WARSHIP]: { r: 0.9, g: 0.85, b: 0.7, radius: 10, intensity: 2.8 },
   [UT_MARAUDER]: { r: 0.9, g: 0.85, b: 0.7, radius: 7, intensity: 2.2 },
+  [UT_TENDER]: { r: 0.9, g: 0.85, b: 0.7, radius: 10, intensity: 2.8 },
   [UT_ATOM_BOMB]: { r: 1.0, g: 0.9, b: 0.7, radius: 16, intensity: 1.1 },
   [UT_HYDROGEN_BOMB]: { r: 1.0, g: 0.95, b: 0.6, radius: 22, intensity: 1.3 },
   [UT_MIRV]: { r: 1.0, g: 0.9, b: 0.7, radius: 18, intensity: 1.2 },

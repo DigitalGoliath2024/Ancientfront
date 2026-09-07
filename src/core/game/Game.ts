@@ -211,6 +211,7 @@ export enum UnitType {
   TransportShip = "Transport",
   Warship = "Warship",
   Marauder = "Marauder",
+  Tender = "Tender",
   Shell = "Shell",
   SAMMissile = "SAMMissile",
   Port = "Port",
@@ -257,6 +258,7 @@ export const EraDisabledUnits = unitTypeGroup([
 export const BuildableAttacks = unitTypeGroup([
   UnitType.Warship,
   UnitType.Marauder,
+  UnitType.Tender,
   UnitType.NavalMine,
 ] as const);
 
@@ -266,8 +268,18 @@ export const CombatShips = unitTypeGroup([
   UnitType.Marauder,
 ] as const);
 
+/** Selectable navy hulls that share warship move/patrol, including the unarmed Tender. */
+export const PatrolShips = unitTypeGroup([
+  ...CombatShips.types,
+  UnitType.Tender,
+] as const);
+
 export function isCombatShip(type: UnitType): boolean {
   return CombatShips.has(type);
+}
+
+export function isPatrolShip(type: UnitType): boolean {
+  return PatrolShips.has(type);
 }
 
 export const Structures = unitTypeGroup([
@@ -319,6 +331,10 @@ export interface UnitParamsMap {
   };
 
   [UnitType.Marauder]: {
+    patrolTile: TileRef;
+  };
+
+  [UnitType.Tender]: {
     patrolTile: TileRef;
   };
 

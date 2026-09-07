@@ -34,6 +34,7 @@ export const otherUnits = [
   "port",
   "wshp",
   "mrdr",
+  "tndr",
   "silo",
   "saml",
   "fact",
@@ -52,6 +53,7 @@ export type OtherUnitType =
   | UnitType.SAMLauncher
   | UnitType.Warship
   | UnitType.Marauder
+  | UnitType.Tender
   | UnitType.Factory
   | UnitType.PortGun
   | UnitType.Armory
@@ -66,6 +68,7 @@ export const unitTypeToOtherUnit = {
   [UnitType.SAMLauncher]: "saml",
   [UnitType.Warship]: "wshp",
   [UnitType.Marauder]: "mrdr",
+  [UnitType.Tender]: "tndr",
   [UnitType.Factory]: "fact",
   [UnitType.PortGun]: "pgun",
   [UnitType.Armory]: "armr",

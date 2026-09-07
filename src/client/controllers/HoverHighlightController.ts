@@ -9,7 +9,7 @@
  */
 
 import { EventBus } from "../../core/EventBus";
-import { CombatShips, UnitType } from "../../core/game/Game";
+import { PatrolShips, UnitType } from "../../core/game/Game";
 import { Controller } from "../Controller";
 import { MouseMoveEvent } from "../InputHandler";
 import { MapRenderer } from "../render/gl";
@@ -57,7 +57,7 @@ export class HoverHighlightController implements Controller {
       let closestUnit: UnitView | null = null;
       let closestDistSquared = 2500;
       for (const u of this.game.units(
-        ...CombatShips.types,
+        ...PatrolShips.types,
         UnitType.TradeShip,
         UnitType.TransportShip,
       )) {

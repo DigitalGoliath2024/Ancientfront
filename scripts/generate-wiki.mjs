@@ -17,6 +17,23 @@ function copyAsset(name, destRel) {
   fs.copyFileSync(src, dest);
 }
 
+function copyLocalAsset(name, destRel) {
+  const dest = path.join(wiki, destRel);
+  const candidates = [
+    path.join(assets, name),
+    path.join(root, "assets", name),
+    dest,
+  ];
+  const src = candidates.find((p) => fs.existsSync(p));
+  if (!src) {
+    throw new Error(`Missing wiki image ${name}`);
+  }
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  if (path.resolve(src) !== path.resolve(dest)) {
+    fs.copyFileSync(src, dest);
+  }
+}
+
 const maps = [
   {
     slug: "twin-isles",
@@ -217,10 +234,10 @@ const buildings = [
     ext: "jpg",
     alt: "Port building art for Marauder's Sea: a pirate harbor with docks, cranes, and a galleon",
     title: "Port building — Marauder's Sea wiki",
-    desc: "Ports in Marauder's Sea spawn warships and marauders and run trade ships for gold. How to place and protect them.",
+    desc: "Ports in Marauder's Sea spawn warships, marauders, and tenders and run trade ships for gold. How to place and protect them.",
     folklore:
       "A port is a mouth. Feed it timber and it spits hulls. Stop feeding it and the harbor goes quiet — which is how rival captains know you are hurting.",
-    play: "Build near water. Spawns Warships and Marauders. Auto trade between ports for gold unless trade is stopped (attacks pause it for 5 minutes, or use Stop/Start trading). Ships can destroy a port; it does not heal. Cost shares a scaling bucket with Factories.",
+    play: "Build near water. Spawns Warships, Marauders, and Tenders. Auto trade between ports for gold unless trade is stopped (attacks pause it for 5 minutes, or use Stop/Start trading). Ships can destroy a port; it does not heal. Cost shares a scaling bucket with Factories.",
   },
   {
     slug: "port-gun",
@@ -280,7 +297,7 @@ const buildings = [
     desc: "Naval Mines in Marauder's Sea: hidden sea mines unlocked at Armory 4. Placement, arming, and who they hit.",
     folklore:
       "The honest weapon of a dishonest harbor. You do not see it until the hull does.",
-    play: "Place from water, not the land menu. Unlock at Armory 4. Arms after 10 seconds. Hits enemy Warships, Marauders, and transports. You and teammates see them; enemies do not. Max 3. Trade ships ignore them. First $250,000, then $500,000.",
+    play: "Place from water, not the land menu. Unlock at Armory 4. Arms after 10 seconds. Hits enemy Warships, Marauders, Tenders, and transports. You and teammates see them; enemies do not. Max 3. Trade ships ignore them. First $250,000, then $500,000.",
   },
   {
     slug: "warship",
@@ -317,7 +334,27 @@ const buildings = [
       ["Speed", "1.5× a Warship (about 1.5 tiles per tick; 3 steps when hunting)."],
       ["Cost", "First hull $125,000, then scaling to a $500,000 cap. Half the Warship ledger. Spawns from the nearest Port."],
     ],
-    play: "Select and move them like <a href=\"warship.html\">Warships</a>. Use them to run down <a href=\"trader-ship.html\">trader ships</a>, cut <a href=\"transport.html\">Transports</a>, and win races to a strait. They do not get the rank-3 repairman — if the hull is bleeding, send her home or lose her.",
+    play: "Select and move them like <a href=\"warship.html\">Warships</a>. Use them to run down <a href=\"trader-ship.html\">trader ships</a>, cut <a href=\"transport.html\">Transports</a>, and win races to a strait. They do not get the rank-3 repairman — if the hull is bleeding, send her home or lose her. Park a <a href=\"tender.html\">Tender</a> nearby if you are far from a Port.",
+  },
+  {
+    slug: "tender",
+    name: "Tender",
+    file: "tender.jpg",
+    ext: "jpg",
+    localSrc: true,
+    alt: "Tender ship art for Marauder's Sea: a thick two-masted hull with black sails and no cannons",
+    title: "Tender — Marauder's Sea wiki",
+    desc: "Tenders in Marauder's Sea: unarmed 1,200 HP repair ships that heal friendly warships and marauders in a 30-tile bubble.",
+    folklore:
+      "No guns on the rail. The Tender is a floating carpenter's shop — thick oak, two black sails, and a crew that patches other people's fights. Captains who mock her learn what a leaking galleon is worth when the Port is twenty minutes astern.",
+    facts: [
+      ["Hit points", "1,200. Heavier than a Warship. Mines take 70% of max HP, same as a Warship — she does not one-shot."],
+      ["Guns", "None. No hunt, no capture, no shore bombardment. Enemy Warships, Marauders, Port Guns, and mines can still sink her."],
+      ["Heal", "1 HP per tick to friendly Warships and Marauders within 30 tiles. Does not stack with Port heal; the Port wins if both apply."],
+      ["Speed", "Warship patrol speed: 1 tile per tick. No hunt sprint."],
+      ["Cost", "$1,000,000 each. Unlimited. Spawns from the nearest Port."],
+    ],
+    play: "Click water to place, same as a <a href=\"warship.html\">Warship</a>. Keep her with the fighting hulls, not on the beach. If your ships are hugging a <a href=\"port.html\">Port</a>, she is wasted gold — Port heal already covers that. Far from harbor, she is the difference between a ranked galleon coming home and a rumor on the bottom.",
   },
   {
     slug: "transport",
@@ -445,7 +482,11 @@ for (const m of maps) {
   copyAsset(m.file, `images/maps/${m.slug}.jpg`);
 }
 for (const b of buildings) {
-  copyAsset(b.file, `images/buildings/${b.slug}.${b.ext}`);
+  if (b.localSrc) {
+    copyLocalAsset(b.file, `images/buildings/${b.slug}.${b.ext}`);
+  } else {
+    copyAsset(b.file, `images/buildings/${b.slug}.${b.ext}`);
+  }
 }
 
 const hubBody = `
@@ -542,7 +583,7 @@ write(
   shell({
     title: "Buildings — Marauder's Sea wiki",
     description:
-      "Buildings and ships in Marauder's Sea: City, Port, Port Gun, Inland Battery, Factory, Armory, Warship, Marauder, Transport, Trader Ship, and Naval Mine.",
+      "Buildings and ships in Marauder's Sea: City, Port, Port Gun, Inland Battery, Factory, Armory, Warship, Marauder, Tender, Transport, Trader Ship, and Naval Mine.",
     canonical: `${site}/wiki/buildings/`,
     ogImage: "/wiki/images/buildings/port.jpg",
     ogAlt: "Port building art from Marauder's Sea",

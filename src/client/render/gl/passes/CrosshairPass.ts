@@ -7,7 +7,7 @@
  */
 
 import type { GhostPreviewData } from "../../types";
-import { UT_MARAUDER, UT_MIRV, UT_NAVAL_MINE, UT_WARSHIP } from "../../types";
+import { UT_MARAUDER, UT_MIRV, UT_NAVAL_MINE, UT_TENDER, UT_WARSHIP } from "../../types";
 import { createProgram } from "../utils/GlUtils";
 
 import fragSrc from "../shaders/crosshair/crosshair.frag.glsl?raw";
@@ -102,6 +102,7 @@ export class CrosshairPass {
       data &&
       (data.ghostType === UT_WARSHIP ||
         data.ghostType === UT_MARAUDER ||
+        data.ghostType === UT_TENDER ||
         data.ghostType === UT_NAVAL_MINE ||
         data.ghostType === UT_MIRV)
     ) {

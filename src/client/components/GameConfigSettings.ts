@@ -114,6 +114,7 @@ const unitOptions: { type: UnitType; translationKey: string }[] = [
   { type: UnitType.InlandBattery, translationKey: "unit_type.inland_battery" },
   { type: UnitType.Warship, translationKey: "unit_type.warship" },
   { type: UnitType.Marauder, translationKey: "unit_type.marauder" },
+  { type: UnitType.Tender, translationKey: "unit_type.tender" },
   { type: UnitType.TransportShip, translationKey: "unit_type.boat" },
   { type: UnitType.Factory, translationKey: "unit_type.factory" },
   { type: UnitType.Armory, translationKey: "unit_type.armory" },

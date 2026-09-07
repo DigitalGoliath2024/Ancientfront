@@ -356,6 +356,9 @@ export class BuildPreviewController implements Controller {
       case UnitType.DefensePost:
         rangeRadius = this.game.config().defensePostRange();
         break;
+      case UnitType.Tender:
+        rangeRadius = this.game.config().tenderHealRange();
+        break;
       case UnitType.PortGun: {
         const level = this.resolveGhostRangeLevel(u) ?? 1;
         rangeRadius = this.game.config().portGunRange(level);

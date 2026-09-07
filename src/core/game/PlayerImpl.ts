@@ -17,7 +17,7 @@ import {
   Attack,
   BuildableUnit,
   Cell,
-  CombatShips,
+  PatrolShips,
   ColoredTeams,
   Embargo,
   EmojiMessage,
@@ -1554,7 +1554,7 @@ export class PlayerImpl implements Player {
           total += config.unitInfo(u).cost(mg, this, n);
           upgradeCosts[n] = total;
         }
-      } else if (buildNew && CombatShips.has(u)) {
+      } else if (buildNew && PatrolShips.has(u)) {
         upgradeCosts = new Array<Gold>(MAX_UPGRADE_AMOUNT);
         let total = 0n;
         for (let n = 0; n < MAX_UPGRADE_AMOUNT; n++) {
@@ -1620,6 +1620,7 @@ export class PlayerImpl implements Player {
         return this.portSpawn(targetTile, validTiles);
       case UnitType.Warship:
       case UnitType.Marauder:
+      case UnitType.Tender:
         return this.warshipSpawn(targetTile);
       case UnitType.Shell:
       case UnitType.SAMMissile:

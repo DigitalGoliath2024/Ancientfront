@@ -37,7 +37,9 @@ export class WarshipExecution implements Execution {
   constructor(
     private input:
       | (UnitParams<UnitType.Warship> &
-          OwnerComp & { shipType?: UnitType.Warship | UnitType.Marauder })
+          OwnerComp & {
+            shipType?: UnitType.Warship | UnitType.Marauder | UnitType.Tender;
+          })
       | Unit,
   ) {}
 
@@ -155,6 +157,8 @@ export class WarshipExecution implements Execution {
 
     if (isNearPort) {
       this.warship.modifyHealth(passiveHealing);
+    } else if (this.warship.type() !== UnitType.Tender) {
+      this.applyTenderHeal();
     }
 
     if (this.warship.warshipState().state === "docked") {
@@ -162,6 +166,31 @@ export class WarshipExecution implements Execution {
     }
 
     this.applyMaxRankHullRepair();
+  }
+
+  /** Unarmed Tender: 1 HP/tick in a 30-tile bubble, not stacked with Port heal. */
+  private applyTenderHeal(): void {
+    const amount = this.mg.config().tenderHealAmount();
+    if (amount <= 0) {
+      return;
+    }
+    const owner = this.warship.owner();
+    const nearby = this.mg.nearbyUnits(
+      this.warship.tile(),
+      this.mg.config().tenderHealRange(),
+      UnitType.Tender,
+    );
+    for (const { unit } of nearby) {
+      if (!unit.isActive() || unit.isUnderConstruction()) {
+        continue;
+      }
+      const tenderOwner = unit.owner();
+      if (tenderOwner !== owner && !tenderOwner.isFriendly(owner)) {
+        continue;
+      }
+      this.warship.modifyHealth(amount);
+      return;
+    }
   }
 
   /**
@@ -249,18 +278,26 @@ export class WarshipExecution implements Execution {
   }
 
   private findRetreatAggroTarget(): Unit | undefined {
+    if (this.warship.type() === UnitType.Tender) {
+      return undefined;
+    }
     return this.findBestTarget([
       ...CombatShips.types,
+      UnitType.Tender,
       UnitType.TransportShip,
       ...WARSHIP_SHORE_TARGETS,
     ]);
   }
 
   private findTargetUnit(): Unit | undefined {
+    if (this.warship.type() === UnitType.Tender) {
+      return undefined;
+    }
     return this.findBestTarget(
       [
         UnitType.TransportShip,
         ...CombatShips.types,
+        UnitType.Tender,
         ...WARSHIP_SHORE_TARGETS,
         UnitType.TradeShip,
       ],
@@ -343,7 +380,11 @@ export class WarshipExecution implements Execution {
       let typePriority: number;
       if (type === UnitType.TransportShip) {
         typePriority = 0;
-      } else if (isCombatShip(type) || type === UnitType.PortGun) {
+      } else if (
+        isCombatShip(type) ||
+        type === UnitType.PortGun ||
+        type === UnitType.Tender
+      ) {
         typePriority = 1;
       } else if (type === UnitType.TradeShip) {
         typePriority = 2;
@@ -728,7 +769,7 @@ export class WarshipExecution implements Execution {
     const nearby = this.mg.nearbyUnits(
       this.warship.tile(),
       this.mg.config().warshipTargettingRange(),
-      [UnitType.TransportShip, ...CombatShips.types, ...WARSHIP_SHORE_TARGETS],
+      [UnitType.TransportShip, ...CombatShips.types, UnitType.Tender, ...WARSHIP_SHORE_TARGETS],
     );
     const extras = nearby
       .filter(({ unit }) => unit !== primary && this.isValidHostileTarget(unit))

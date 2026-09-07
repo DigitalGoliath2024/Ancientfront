@@ -15,6 +15,7 @@ export const UT_TRANSPORT = "Transport" as const;
 export const UT_TRADE_SHIP = "Trade Ship" as const;
 export const UT_WARSHIP = "Warship" as const;
 export const UT_MARAUDER = "Marauder" as const;
+export const UT_TENDER = "Tender" as const;
 export const UT_ATOM_BOMB = "Atom Bomb" as const;
 export const UT_HYDROGEN_BOMB = "Hydrogen Bomb" as const;
 export const UT_MIRV = "MIRV" as const;
@@ -86,6 +87,7 @@ export const ALL_UNIT_TYPES = [
   UT_TRADE_SHIP,
   UT_WARSHIP,
   UT_MARAUDER,
+  UT_TENDER,
   UT_ATOM_BOMB,
   UT_HYDROGEN_BOMB,
   UT_MIRV,

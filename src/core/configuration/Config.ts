@@ -509,6 +509,12 @@ export class Config {
           maxHealth: 500,
         };
         break;
+      case UnitType.Tender:
+        info = {
+          cost: this.costWrapper(() => 1_000_000, UnitType.Tender),
+          maxHealth: 1200,
+        };
+        break;
       case UnitType.Shell:
         info = {
           cost: () => 0n,
@@ -1239,6 +1245,16 @@ export class Config {
 
   warshipPassiveHealingRange(): number {
     return 150;
+  }
+
+  /** Same patch as port proximity heal; only applies away from a Port. */
+  tenderHealAmount(): number {
+    return this.warshipPassiveHealing();
+  }
+
+  /** Heal bubble matches a Defense Post so the checkers size is already known. */
+  tenderHealRange(): number {
+    return this.defensePostRange();
   }
 
   warshipPortSwitchThreshold(): number {
