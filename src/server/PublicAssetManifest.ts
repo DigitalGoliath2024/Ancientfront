@@ -35,7 +35,7 @@ const ROOT_PUBLIC_FILES = new Set([
 // Directories served verbatim, without content hashing. Use for pages whose
 // asset URLs are published elsewhere and must stay stable — the press kit links
 // its images by literal path, and outlets hotlink them.
-const ROOT_PUBLIC_DIRS = ["press/"];
+const ROOT_PUBLIC_DIRS = ["press/", "wiki/"];
 
 const manifestCache = new Map<string, AssetManifest>();
 

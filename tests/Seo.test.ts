@@ -41,5 +41,25 @@ describe("site SEO", () => {
     expect(sitemap).toContain(
       "<loc>https://maraudersea.com/privacy-policy.html</loc>",
     );
+    expect(sitemap).toContain("<loc>https://maraudersea.com/wiki/</loc>");
+    expect(sitemap).toContain(
+      "<loc>https://maraudersea.com/wiki/maps/tarryn-fjords.html</loc>",
+    );
+    expect(sitemap).toContain(
+      "<loc>https://maraudersea.com/wiki/buildings/inland-battery.html</loc>",
+    );
+    expect(sitemap).toContain(
+      "<loc>https://maraudersea.com/wiki/buildings/trader-ship.html</loc>",
+    );
+  });
+
+  it("serves an indexable wiki hub", () => {
+    const wiki = readFileSync(resolve("resources/wiki/index.html"), "utf8");
+    expect(wiki).toContain('<meta name="robots" content="index, follow" />');
+    expect(wiki).toContain(
+      '<link rel="canonical" href="https://maraudersea.com/wiki/" />',
+    );
+    expect(wiki).toContain("Marauder's Sea wiki");
+    expect(indexHtml).toContain('href="/wiki/"');
   });
 });

@@ -102,6 +102,7 @@ export class Footer extends LitElement {
             rel="noopener noreferrer"
             class=${linkClass}
           ></a>
+          <a href="/wiki/" data-i18n="main.wiki" class=${linkClass}></a>
           <a
             href="/terms-of-service.html"
             data-i18n="main.terms_of_service"
