@@ -40,6 +40,7 @@ export enum GameMapType {
   DeglaciatedAntarctica = "Deglaciated Antarctica", // map-generator/assets/maps/deglaciatedantarctica/info.json
   Didier = "Didier", // map-generator/assets/maps/didier/info.json
   DidierFrance = "Didier France", // map-generator/assets/maps/didierfrance/info.json
+  DragonsFallIsland = "DragonsFallIsland", // map-generator/assets/maps/dragonsfallisland/info.json
   Dyslexdria = "Dyslexdria", // map-generator/assets/maps/dyslexdria/info.json
   EastAsia = "East Asia", // map-generator/assets/maps/eastasia/info.json
   EmberIsles = "The Ember Isles", // map-generator/assets/maps/emberisles/info.json
@@ -60,6 +61,8 @@ export enum GameMapType {
   Halkidiki = "Halkidiki", // map-generator/assets/maps/halkidiki/info.json
   Hawaii = "Hawaii", // map-generator/assets/maps/hawaii/info.json
   Hecatestrait = "Hecate Strait", // map-generator/assets/maps/hecatestrait/info.json
+  HexacephalicArchipelago = "HexacephalicArchipelago", // map-generator/assets/maps/hexacephalicarchipelago/info.json
+  HollowsIsles = "HollowsIsles", // map-generator/assets/maps/hollowsisles/info.json
   HongKong = "Hong Kong", // map-generator/assets/maps/hongkong/info.json
   Iceland = "Iceland", // map-generator/assets/maps/iceland/info.json
   IndianSubcontinent = "Indian Subcontinent", // map-generator/assets/maps/indiansubcontinent/info.json
@@ -125,6 +128,7 @@ export enum GameMapType {
   WarshipWarship = "Warship Warship", // map-generator/assets/maps/warshipwarship/info.json
   World = "World", // map-generator/assets/maps/world/info.json
   WorldInverted = "World Inverted", // map-generator/assets/maps/worldinverted/info.json
+  XMarksTheSpot = "XMarksTheSpot", // map-generator/assets/maps/xmarksthespot/info.json
   YangtzeRiver = "Yangtze River", // map-generator/assets/maps/yangtzeriver/info.json
   YellowSea = "Yellow Sea", // map-generator/assets/maps/yellowsea/info.json
   Yenisei = "Yenisei", // map-generator/assets/maps/yenisei/info.json
@@ -650,6 +654,17 @@ export const maps: readonly MapInfo[] = [
     ffaFrequency: -1,
     teamFrequency: -1,
     specialFrequency: -1,
+  },
+  {
+    id: "DragonsFallIsland",
+    type: GameMapType.DragonsFallIsland,
+    translationKey: "map.dragonsfallisland",
+    categories: ["new", "fictional"],
+    multiplayerFrequency: 4,
+    ffaFrequency: -1,
+    teamFrequency: -1,
+    specialFrequency: -1,
+    specialTeamCount: 2,
   },
   {
     id: "Dyslexdria",
@@ -1282,6 +1297,28 @@ export const maps: readonly MapInfo[] = [
     teamFrequency: -1,
     specialFrequency: -1,
     themes: ["north_america"],
+  },
+  {
+    id: "HexacephalicArchipelago",
+    type: GameMapType.HexacephalicArchipelago,
+    translationKey: "map.hexacephalicarchipelago",
+    categories: ["new", "fictional"],
+    multiplayerFrequency: 4,
+    ffaFrequency: -1,
+    teamFrequency: -1,
+    specialFrequency: -1,
+    specialTeamCount: 6,
+  },
+  {
+    id: "HollowsIsles",
+    type: GameMapType.HollowsIsles,
+    translationKey: "map.hollowsisles",
+    categories: ["new", "fictional"],
+    multiplayerFrequency: 4,
+    ffaFrequency: -1,
+    teamFrequency: -1,
+    specialFrequency: -1,
+    specialTeamCount: 2,
   },
   {
     id: "HongKong",
@@ -2183,6 +2220,17 @@ export const maps: readonly MapInfo[] = [
     ffaFrequency: -1,
     teamFrequency: -1,
     specialFrequency: -1,
+  },
+  {
+    id: "XMarksTheSpot",
+    type: GameMapType.XMarksTheSpot,
+    translationKey: "map.xmarksthespot",
+    categories: ["new", "fictional"],
+    multiplayerFrequency: 4,
+    ffaFrequency: -1,
+    teamFrequency: -1,
+    specialFrequency: -1,
+    specialTeamCount: 4,
   },
   {
     id: "YangtzeRiver",

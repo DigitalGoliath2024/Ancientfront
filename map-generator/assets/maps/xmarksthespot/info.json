@@ -1,0 +1,83 @@
+{
+  "id": "XMarksTheSpot",
+  "name": "XMarksTheSpot",
+  "display_name": "X Marks the Spot",
+  "translation_key": "map.xmarksthespot",
+  "categories": ["new", "fictional"],
+  "multiplayer_frequency": 4,
+  "special_team_count": 4,
+  "nations": [
+    {
+      "coordinates": [300, 300],
+      "flag": "",
+      "name": "Windward Cross"
+    },
+    {
+      "coordinates": [1236, 300],
+      "flag": "",
+      "name": "Leeward Cross"
+    },
+    {
+      "coordinates": [300, 1236],
+      "flag": "",
+      "name": "Port Cross"
+    },
+    {
+      "coordinates": [1236, 1236],
+      "flag": "",
+      "name": "Starboard Cross"
+    },
+    {
+      "coordinates": [256, 765],
+      "flag": "",
+      "name": "Cipher Cay"
+    },
+    {
+      "coordinates": [1395, 830],
+      "flag": "",
+      "name": "Legend Cay"
+    }
+  ],
+  "teamGameSpawnAreas": {
+    "2": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 768,
+        "height": 1536
+      },
+      {
+        "x": 768,
+        "y": 0,
+        "width": 768,
+        "height": 1536
+      }
+    ],
+    "4": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 768,
+        "height": 768
+      },
+      {
+        "x": 768,
+        "y": 0,
+        "width": 768,
+        "height": 768
+      },
+      {
+        "x": 0,
+        "y": 768,
+        "width": 768,
+        "height": 768
+      },
+      {
+        "x": 768,
+        "y": 768,
+        "width": 768,
+        "height": 768
+      }
+    ]
+  }
+}

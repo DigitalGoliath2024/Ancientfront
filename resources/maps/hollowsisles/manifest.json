@@ -1,0 +1,72 @@
+{
+  "categories": ["new", "fictional"],
+  "display_name": "Hollow's Isles",
+  "id": "HollowsIsles",
+  "map": {
+    "height": 1536,
+    "num_land_tiles": 1182700,
+    "width": 1536
+  },
+  "map16x": {
+    "height": 384,
+    "num_land_tiles": 69169,
+    "width": 384
+  },
+  "map4x": {
+    "height": 768,
+    "num_land_tiles": 289243,
+    "width": 768
+  },
+  "multiplayer_frequency": 4,
+  "name": "HollowsIsles",
+  "nations": [
+    {
+      "coordinates": [624, 582],
+      "flag": "",
+      "name": "Ember Gaze"
+    },
+    {
+      "coordinates": [1178, 782],
+      "flag": "",
+      "name": "Watchfire"
+    },
+    {
+      "coordinates": [658, 1148],
+      "flag": "",
+      "name": "Grinreach"
+    },
+    {
+      "coordinates": [1352, 206],
+      "flag": "",
+      "name": "Wickfall"
+    },
+    {
+      "coordinates": [1314, 1362],
+      "flag": "",
+      "name": "Gourdshore"
+    },
+    {
+      "coordinates": [154, 1227],
+      "flag": "",
+      "name": "Hollowmere"
+    }
+  ],
+  "special_team_count": 2,
+  "teamGameSpawnAreas": {
+    "2": [
+      {
+        "height": 1536,
+        "width": 768,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "height": 1536,
+        "width": 768,
+        "x": 768,
+        "y": 0
+      }
+    ]
+  },
+  "translation_key": "map.hollowsisles"
+}

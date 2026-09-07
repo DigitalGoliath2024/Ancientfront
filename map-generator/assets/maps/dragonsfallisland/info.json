@@ -1,0 +1,57 @@
+{
+  "id": "DragonsFallIsland",
+  "name": "DragonsFallIsland",
+  "display_name": "Dragon's Fall Island",
+  "translation_key": "map.dragonsfallisland",
+  "categories": ["new", "fictional"],
+  "multiplayer_frequency": 4,
+  "special_team_count": 2,
+  "nations": [
+    {
+      "coordinates": [1156, 392],
+      "flag": "",
+      "name": "Skycoil"
+    },
+    {
+      "coordinates": [418, 1000],
+      "flag": "",
+      "name": "Deepcoil"
+    },
+    {
+      "coordinates": [182, 196],
+      "flag": "",
+      "name": "Hornwake"
+    },
+    {
+      "coordinates": [1302, 1104],
+      "flag": "",
+      "name": "Fangreach"
+    },
+    {
+      "coordinates": [153, 1312],
+      "flag": "",
+      "name": "Tailfen"
+    },
+    {
+      "coordinates": [408, 405],
+      "flag": "",
+      "name": "Driftshard"
+    }
+  ],
+  "teamGameSpawnAreas": {
+    "2": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1536,
+        "height": 768
+      },
+      {
+        "x": 0,
+        "y": 768,
+        "width": 1536,
+        "height": 768
+      }
+    ]
+  }
+}

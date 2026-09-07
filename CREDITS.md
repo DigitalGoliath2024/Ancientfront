@@ -137,6 +137,22 @@ Original island art provided for Marauder's Sea (Tarryn Fjords).
 
 Original island art provided for Marauder's Sea (The Ember Isles).
 
+### Hexacephalic Archipelago
+
+Original map art provided for Marauder's Sea.
+
+### Hollow's Isles
+
+Original map art provided for Marauder's Sea.
+
+### Dragon's Fall Island
+
+Original map art provided for Marauder's Sea.
+
+### X Marks the Spot
+
+Original map art provided for Marauder's Sea.
+
 ### Los Angeles Map
 
 © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright)  

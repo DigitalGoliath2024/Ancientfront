@@ -1,0 +1,110 @@
+{
+  "categories": ["new", "fictional"],
+  "display_name": "The Hexacephalic Archipelago",
+  "id": "HexacephalicArchipelago",
+  "map": {
+    "height": 1536,
+    "num_land_tiles": 824653,
+    "width": 1536
+  },
+  "map16x": {
+    "height": 384,
+    "num_land_tiles": 45404,
+    "width": 384
+  },
+  "map4x": {
+    "height": 768,
+    "num_land_tiles": 197252,
+    "width": 768
+  },
+  "multiplayer_frequency": 4,
+  "name": "HexacephalicArchipelago",
+  "nations": [
+    {
+      "coordinates": [416, 249],
+      "flag": "",
+      "name": "Northveil"
+    },
+    {
+      "coordinates": [1096, 270],
+      "flag": "",
+      "name": "Palehorn"
+    },
+    {
+      "coordinates": [1305, 699],
+      "flag": "",
+      "name": "Eastspire"
+    },
+    {
+      "coordinates": [1130, 1190],
+      "flag": "",
+      "name": "Whitewake"
+    },
+    {
+      "coordinates": [357, 1197],
+      "flag": "",
+      "name": "Brineholt"
+    },
+    {
+      "coordinates": [201, 765],
+      "flag": "",
+      "name": "Westspine"
+    }
+  ],
+  "special_team_count": 6,
+  "teamGameSpawnAreas": {
+    "2": [
+      {
+        "height": 1536,
+        "width": 768,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "height": 1536,
+        "width": 768,
+        "x": 768,
+        "y": 0
+      }
+    ],
+    "6": [
+      {
+        "height": 512,
+        "width": 768,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "height": 512,
+        "width": 768,
+        "x": 768,
+        "y": 0
+      },
+      {
+        "height": 512,
+        "width": 768,
+        "x": 0,
+        "y": 512
+      },
+      {
+        "height": 512,
+        "width": 768,
+        "x": 768,
+        "y": 512
+      },
+      {
+        "height": 512,
+        "width": 768,
+        "x": 0,
+        "y": 1024
+      },
+      {
+        "height": 512,
+        "width": 768,
+        "x": 768,
+        "y": 1024
+      }
+    ]
+  },
+  "translation_key": "map.hexacephalicarchipelago"
+}
