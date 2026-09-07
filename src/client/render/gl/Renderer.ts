@@ -29,6 +29,7 @@ import type {
   TerrainRect,
   UnitState,
 } from "../types";
+import { UT_TENDER } from "../types";
 import { Camera } from "./Camera";
 import { GLUnavailableError, initGL } from "./initGL";
 import { BarPass } from "./passes/BarPass";
@@ -172,6 +173,7 @@ export class GPURenderer {
   private spawnOverlayPass: SpawnOverlayPass;
   private smallPlayerGlowPass: SmallPlayerGlowPass;
   private inSpawnPhase = false;
+  private tenderHealRange = 0;
 
   // Map-layer passes keyed by layer id, drawn between terrain and territory.
   private mapLayerPasses: Map<string, MapLayerPass> = new Map();
@@ -250,6 +252,7 @@ export class GPURenderer {
     // passed in, so every pass — including texture-baking ones like terrain —
     // is built with the final values. Live changes mutate this object in place.
     this.settings = settings;
+    this.tenderHealRange = config.tenderHealRange();
     this.raf = raf;
     this.caf = caf;
 
@@ -1222,17 +1225,22 @@ export class GPURenderer {
     }
     if (this.selectedUnitIds.length === 0) {
       this.selectionBoxPass.hide();
+      this.rangeCirclePass.setSelectionRanges([], 0);
     }
     // Position + color are rebuilt each frame in updateSelectionBox() from
     // lastUnits — dead units get dropped automatically.
   }
 
   private updateSelectionBox(): void {
-    if (this.selectedUnitIds.length === 0) return;
+    if (this.selectedUnitIds.length === 0) {
+      this.rangeCirclePass.setSelectionRanges([], 0);
+      return;
+    }
 
     // Build the entries for this frame and prune dead unit IDs in place.
     const entries = this.selectionBoxEntries;
     entries.length = 0;
+    const tenderCenters: { x: number; y: number }[] = [];
     let writeIdx = 0;
     for (let i = 0; i < this.selectedUnitIds.length; i++) {
       const id = this.selectedUnitIds[i];
@@ -1242,6 +1250,9 @@ export class GPURenderer {
 
       const centerX = unit.pos % this.mapW;
       const centerY = Math.floor(unit.pos / this.mapW);
+      if (unit.unitType === UT_TENDER) {
+        tenderCenters.push({ x: centerX, y: centerY });
+      }
       // Lighten the owner's territory color by ~20% (mix toward white).
       const off = unit.ownerID * 4;
       const r = Math.min(
@@ -1261,6 +1272,10 @@ export class GPURenderer {
     this.selectedUnitIds.length = writeIdx;
 
     this.selectionBoxPass.setSelections(entries);
+    this.rangeCirclePass.setSelectionRanges(
+      tenderCenters,
+      this.tenderHealRange,
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -1401,7 +1416,6 @@ export class GPURenderer {
     if (pe.unit) this.unitPass.drawGround(cam);
     if (pe.falloutBloom) this.bloomPass.draw(cam, this.frameTick);
     this.samRadiusPass.draw(cam);
-    this.rangeCirclePass.draw(cam);
     this.nukeTrajectoryPass.draw(cam);
     this.crosshairPass.draw(cam);
     if (pe.structure) this.structurePass.draw(cam, zoom);
@@ -1410,6 +1424,7 @@ export class GPURenderer {
     this.smallPlayerGlowPass.draw(cam);
     if (pe.bar) this.barPass.draw(cam);
     this.updateSelectionBox();
+    this.rangeCirclePass.draw(cam);
     this.selectionBoxPass.draw(cam, this.frameTick);
     this.moveIndicatorPass.draw(cam, zoom);
     this.nukeTelegraphPass.draw(cam);

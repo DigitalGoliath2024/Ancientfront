@@ -1,10 +1,10 @@
 /**
  * RangeCirclePass — draws a translucent circle showing the effective
- * range of a structure during build-mode ghost preview. White by default,
- * red when the ghost flags a warning (e.g. nuking would break an alliance).
+ * range of a structure during build-mode ghost preview, plus the heal
+ * bubble of selected Tenders. White by default, red when the ghost flags
+ * a warning (e.g. nuking would break an alliance).
  *
- * Single quad with circle SDF in the fragment shader.
- * Active only when a ghost preview with rangeRadius > 0 is set.
+ * Single quad with circle SDF in the fragment shader, redrawn per circle.
  */
 
 import type { GhostPreviewData } from "../../types";
@@ -28,6 +28,9 @@ export class RangeCirclePass {
   private radius = 0;
   private warning = false;
   private rangeTint: "default" | "valid" | "invalid" = "default";
+
+  private selectionCenters: { x: number; y: number }[] = [];
+  private selectionRadius = 0;
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
@@ -67,23 +70,59 @@ export class RangeCirclePass {
     }
   }
 
+  /** Heal bubbles for selected Tenders. Pass [] to hide. */
+  setSelectionRanges(
+    centers: readonly { x: number; y: number }[],
+    radius: number,
+  ): void {
+    this.selectionCenters = centers.map((c) => ({ x: c.x, y: c.y }));
+    this.selectionRadius = centers.length > 0 ? radius : 0;
+  }
+
   draw(cameraMatrix: Float32Array): void {
-    if (this.radius <= 0) return;
+    if (this.radius <= 0 && this.selectionRadius <= 0) return;
 
     const gl = this.gl;
     gl.useProgram(this.program);
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
     gl.bindVertexArray(this.vao);
 
-    gl.uniform2f(this.uCenter, this.centerX, this.centerY);
-    gl.uniform1f(this.uRadius, this.radius);
-    if (this.warning || this.rangeTint === "invalid") {
-      gl.uniform3f(this.uColor, 1.0, 0.2, 0.2);
-    } else if (this.rangeTint === "valid") {
-      gl.uniform3f(this.uColor, 0.2, 0.95, 0.35);
-    } else {
-      gl.uniform3f(this.uColor, 1.0, 1.0, 1.0);
+    if (this.radius > 0) {
+      if (this.warning || this.rangeTint === "invalid") {
+        this.drawCircle(this.centerX, this.centerY, this.radius, 1.0, 0.2, 0.2);
+      } else if (this.rangeTint === "valid") {
+        this.drawCircle(
+          this.centerX,
+          this.centerY,
+          this.radius,
+          0.2,
+          0.95,
+          0.35,
+        );
+      } else {
+        this.drawCircle(this.centerX, this.centerY, this.radius, 1.0, 1.0, 1.0);
+      }
     }
+
+    if (this.selectionRadius > 0) {
+      for (const c of this.selectionCenters) {
+        this.drawCircle(c.x, c.y, this.selectionRadius, 0.45, 0.95, 0.8);
+      }
+    }
+  }
+
+  private drawCircle(
+    x: number,
+    y: number,
+    radius: number,
+    r: number,
+    g: number,
+    b: number,
+  ): void {
+    const gl = this.gl;
+    gl.uniform2f(this.uCenter, x, y);
+    gl.uniform1f(this.uRadius, radius);
+    gl.uniform3f(this.uColor, r, g, b);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
   }
 

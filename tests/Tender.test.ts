@@ -132,4 +132,59 @@ describe("Tender", () => {
     expect(tender.isActive()).toBe(true);
     expect(tender.health()).toBe(1200 - Math.floor((1200 * 70) / 100));
   });
+
+  test("a wounded warship in a tender bubble does not run to port", () => {
+    const shipTile = game.ref(coastX + 1, 10);
+    const warship = player1.buildUnit(UnitType.Warship, shipTile, {
+      patrolTile: shipTile,
+    });
+    player1.buildUnit(UnitType.Tender, game.ref(coastX + 1, 11), {
+      patrolTile: game.ref(coastX + 1, 11),
+    });
+    game.addExecution(new WarshipExecution(warship));
+    game.executeNextTick();
+    warship.modifyHealth(-(warship.maxHealth() - 500));
+    executeTicks(game, 8);
+    expect(warship.warshipState().state).toBe("patrolling");
+    expect(warship.health()).toBeGreaterThan(500);
+  });
+
+  test("a wounded warship steams to a tender when no port is closer", () => {
+    game.config().tenderHealRange = () => 2;
+    const shipTile = game.ref(coastX + 1, 10);
+    const tenderTile = game.ref(coastX + 1, 14);
+    expect(game.isWater(tenderTile)).toBe(true);
+    const warship = player1.buildUnit(UnitType.Warship, shipTile, {
+      patrolTile: shipTile,
+    });
+    const tender = player1.buildUnit(UnitType.Tender, tenderTile, {
+      patrolTile: tenderTile,
+    });
+    game.addExecution(new WarshipExecution(warship));
+    game.executeNextTick();
+    warship.modifyHealth(-(warship.maxHealth() - 500));
+    executeTicks(game, 12);
+    expect(warship.warshipState().state).toBe("retreating");
+    expect(warship.warshipState().retreatPort).toBeUndefined();
+    const distAfter = game.manhattanDist(warship.tile(), tender.tile());
+    const distStart = game.manhattanDist(shipTile, tender.tile());
+    expect(distAfter).toBeLessThan(distStart);
+  });
+
+  test("a wounded warship still docks at port when the port is already healing it", () => {
+    player1.buildUnit(UnitType.Port, game.ref(coastX, 10), {});
+    const shipTile = game.ref(coastX + 1, 10);
+    const warship = player1.buildUnit(UnitType.Warship, shipTile, {
+      patrolTile: shipTile,
+    });
+    player1.buildUnit(UnitType.Tender, game.ref(coastX + 1, 11), {
+      patrolTile: game.ref(coastX + 1, 11),
+    });
+    game.addExecution(new WarshipExecution(warship));
+    game.executeNextTick();
+    warship.modifyHealth(-(warship.maxHealth() - 50));
+    executeTicks(game, 10);
+    expect(warship.warshipState().state).not.toBe("patrolling");
+    expect(warship.warshipState().retreatPort).toBe(game.ref(coastX, 10));
+  });
 });

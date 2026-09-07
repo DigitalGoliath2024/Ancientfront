@@ -14,20 +14,21 @@
  *   Ground/sea (boats, trains) → rendered below structures
  *   Missiles (nukes, shells, SAM, MIRV warheads) → rendered above structures
  *
- * Atlas layout (13 columns × 13px cells):
+ * Atlas layout (14 columns × 13px cells):
  *   Col 0: Transport (longboat, bow-east; rendered at half unit size)
  *   Col 1: Trade Ship (cargo hull, bow-east; rendered at ~0.4 unit size)
  *   Col 2: Warship (ship of the line, bow-east)
  *   Col 3: Marauder (raked raider, bow-east)
- *   Col 4: Atom Bomb (7×7)
- *   Col 5: Hydrogen Bomb (9×9)
- *   Col 6: MIRV (13×13, grayscale colorized)
- *   Col 7: SAM Missile (3×3)
- *   Col 8: Shell (1×1 white pixel)
- *   Col 9: MIRV Warhead (3×3 white square)
- *   Col 10: Train Engine (5×5)
- *   Col 11: Train Carriage (5×5)
- *   Col 12: Train Carriage Loaded (5×5)
+ *   Col 4: Tender (two black sails, 2px skinnier / 2px longer than a warship)
+ *   Col 5: Atom Bomb (7×7)
+ *   Col 6: Hydrogen Bomb (9×9)
+ *   Col 7: MIRV (13×13, grayscale colorized)
+ *   Col 8: SAM Missile (3×3)
+ *   Col 9: Shell (1×1 white pixel)
+ *   Col 10: MIRV Warhead (3×3 white square)
+ *   Col 11: Train Engine (5×5)
+ *   Col 12: Train Carriage (5×5)
+ *   Col 13: Train Carriage Loaded (5×5)
  *
  * Data flow:
  *   FrameSnapshot.units → filter by typeToAtlasIdx → instance VBO → GPU
@@ -82,6 +83,7 @@ const UNIT_ORDER = [
   UT_TRADE_SHIP,
   UT_WARSHIP,
   UT_MARAUDER,
+  UT_TENDER,
   UT_ATOM_BOMB,
   UT_HYDROGEN_BOMB,
   UT_MIRV,
@@ -101,9 +103,10 @@ const HYDROGEN_BOMB_COL = UNIT_ORDER.indexOf(UT_HYDROGEN_BOMB);
 /** Atlas column of the warship — gates the warship cosmetic effect. */
 const WARSHIP_COL = UNIT_ORDER.indexOf(UT_WARSHIP);
 const MARAUDER_COL = UNIT_ORDER.indexOf(UT_MARAUDER);
+const TENDER_COL = UNIT_ORDER.indexOf(UT_TENDER);
 const TRANSPORT_COL = UNIT_ORDER.indexOf(UT_TRANSPORT);
 const TRADE_SHIP_COL = UNIT_ORDER.indexOf(UT_TRADE_SHIP);
-const SHIP_LAST_COL = MARAUDER_COL;
+const SHIP_LAST_COL = TENDER_COL;
 
 /** First atlas column of the train sprites (engine, carriage, loaded
  *  carriage are contiguous) — gates the train cosmetic effect. */
@@ -392,7 +395,7 @@ export class UnitPass {
       }
     }
     this.typeToAtlasCol.set(UT_MARAUDER, MARAUDER_COL);
-    this.typeToAtlasCol.set(UT_TENDER, WARSHIP_COL);
+    this.typeToAtlasCol.set(UT_TENDER, TENDER_COL);
 
     // Compile shaders
     this.program = createProgram(
@@ -402,6 +405,7 @@ export class UnitPass {
         HYDROGEN_BOMB_COL,
         TRANSPORT_COL,
         TRADE_SHIP_COL,
+        TENDER_COL,
         SHIP_LAST_COL,
         HEADING_STEPS,
       }),
@@ -410,6 +414,7 @@ export class UnitPass {
         ATLAS_COLS,
         WARSHIP_COL,
         MARAUDER_COL,
+        TENDER_COL,
         WARSHIP_EFFECT_ROW_BASE: WARSHIP_EFFECT_BLOCK * MAX_TRAIL_COLORS,
         TRAIN_FIRST_COL,
         TRAIN_EFFECT_ROW_BASE: TRAIN_EFFECT_BLOCK * MAX_TRAIL_COLORS,

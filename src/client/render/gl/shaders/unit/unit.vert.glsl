@@ -45,6 +45,7 @@ void main() {
   float uvScale = mix(1.0, uHBombGlowScale, isHBomb);
   float isTransport = 1.0 - step(0.5, abs(atlasCol - float(TRANSPORT_COL)));
   float isTrade = 1.0 - step(0.5, abs(atlasCol - float(TRADE_SHIP_COL)));
+  float isTender = 1.0 - step(0.5, abs(atlasCol - float(TENDER_COL)));
   float sizeScale = uvScale
     * mix(1.0, 0.5, isTransport)
     * mix(1.0, 0.4, isTrade)
@@ -56,6 +57,8 @@ void main() {
 
   vec2 center = vec2(worldX + 0.5, worldY + 0.5);
   vec2 local = (aPos - 0.5) * halfSize * 2.0;
+  // Tender is two pixels longer than a warship along the keel (bow-east).
+  local.x *= mix(1.0, 15.0 / 13.0, isTender);
   // Sea hulls (atlas cols 0–SHIP_LAST_COL) are elongated sprites drawn bow-east.
   // Style bits 1–4 pack a 16-direction heading from smoothed movement.
   float isShip = 1.0 - step(float(SHIP_LAST_COL) + 0.5, atlasCol);

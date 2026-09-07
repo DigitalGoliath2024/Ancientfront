@@ -1,6 +1,6 @@
 /**
  * Regenerates elongated pixel-art sea hulls (transport / trade / warship /
- * marauder) and stamps them into resources/atlases/unit-atlas.png.
+ * marauder / tender) and stamps them into resources/atlases/unit-atlas.png.
  *
  * Grayscale bands match SpriteLoader / UnitPass: 180 hull, 130 deck, 100 mast,
  * 70 outline, 20 sail (stays black in the shader). Sprites face east (bow on
@@ -90,6 +90,24 @@ const MARAUDER = [
   ".....CCCS....",
   "......C.S....",
   "........S....",
+];
+
+/** Tender — two black sails, 2px skinnier beam than a warship. Extra length
+ *  is applied in the unit vertex shader (15/13 along the keel). */
+const TENDER = [
+  ".............",
+  "...S.....S...",
+  "...S.....S...",
+  "..CSC...CSC..",
+  ".DDSDDDDSDDD.",
+  "DLLSLLLLSLLDD",
+  "DMCSCCCCSSLLD",
+  "DLLSLLLLSLLDD",
+  ".DDSDDDDSDDD.",
+  "..CSC...CSC..",
+  "...S.....S...",
+  "...S.....S...",
+  ".............",
 ];
 
 function crc32(buf) {
@@ -253,12 +271,14 @@ const transport = paintGrid(TRANSPORT);
 const trade = paintGrid(TRADE);
 const warship = paintGrid(WARSHIP);
 const marauder = paintGrid(MARAUDER);
+const tender = paintGrid(TENDER);
 
 for (const [name, rgba] of [
   ["transportship.png", transport],
   ["tradeship.png", trade],
   ["warship.png", warship],
   ["marauder.png", marauder],
+  ["tender.png", tender],
 ]) {
   const cropped = cropOpaque(rgba, CELL, CELL);
   fs.writeFileSync(
@@ -267,8 +287,9 @@ for (const [name, rgba] of [
   );
 }
 
-const ATLAS_COLS = 13;
+const ATLAS_COLS = 14;
 const MARAUDER_COL = 3;
+const TENDER_COL = 4;
 
 function insertAtlasColumn(atlas, atCol, totalCols) {
   const oldCols = atlas.width / CELL;
@@ -294,7 +315,7 @@ function insertAtlasColumn(atlas, atCol, totalCols) {
 const atlasPath = path.join(root, "resources/atlases/unit-atlas.png");
 let atlas = insertAtlasColumn(
   decodePng(fs.readFileSync(atlasPath)),
-  MARAUDER_COL,
+  TENDER_COL,
   ATLAS_COLS,
 );
 
@@ -309,8 +330,9 @@ stampCol(0, transport);
 stampCol(1, trade);
 stampCol(2, warship);
 stampCol(MARAUDER_COL, marauder);
+stampCol(TENDER_COL, tender);
 
 fs.writeFileSync(atlasPath, encodePng(atlas.width, atlas.height, atlas.rgba));
 console.log(
-  "wrote transportship.png, tradeship.png, warship.png, marauder.png, unit-atlas.png",
+  "wrote transportship.png, tradeship.png, warship.png, marauder.png, tender.png, unit-atlas.png",
 );

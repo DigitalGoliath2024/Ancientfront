@@ -158,7 +158,8 @@ void main() {
   // angry (attacking) override below replaces this with red, and the retreat
   // blink still darkens the center band.
   if (abs(vAtlasCol - float(WARSHIP_COL)) < 0.1 ||
-      abs(vAtlasCol - float(MARAUDER_COL)) < 0.1) {
+      abs(vAtlasCol - float(MARAUDER_COL)) < 0.1 ||
+      abs(vAtlasCol - float(TENDER_COL)) < 0.1) {
     vec3 effectRGB;
     float dn = (vCellUV.x + vCellUV.y) * 0.5; // sprite diagonal, 0..1
     if (spriteEffectColor(WARSHIP_EFFECT_ROW_BASE, int(vOwnerID + 0.5), dn, true, effectRGB)) {

@@ -33,6 +33,8 @@ export class WarshipExecution implements Execution {
   private activeHealingRemainder = 0;
   private lastEmittedCombat = false;
   private currentTick = 0;
+  /** Set while steaming to / holding on a Tender instead of a Port. */
+  private retreatTender: Unit | undefined;
 
   constructor(
     private input:
@@ -138,24 +140,8 @@ export class WarshipExecution implements Execution {
     // out-healed at a port. Inert when the mode is off: the mark is never set.
     if (owner.inDoomsdayClock()) return;
     const passiveHealing = this.mg.config().warshipPassiveHealing();
-    const passiveHealingRange = this.mg.config().warshipPassiveHealingRange();
-    const passiveHealingRangeSquared =
-      passiveHealingRange * passiveHealingRange;
-    const warshipTile = this.warship.tile();
 
-    let isNearPort = false;
-    for (const port of owner.units(UnitType.Port)) {
-      const distSquared = this.mg.euclideanDistSquared(
-        warshipTile,
-        port.tile(),
-      );
-      if (distSquared <= passiveHealingRangeSquared) {
-        isNearPort = true;
-        break;
-      }
-    }
-
-    if (isNearPort) {
+    if (this.isNearPortHeal()) {
       this.warship.modifyHealth(passiveHealing);
     } else if (this.warship.type() !== UnitType.Tender) {
       this.applyTenderHeal();
@@ -174,18 +160,13 @@ export class WarshipExecution implements Execution {
     if (amount <= 0) {
       return;
     }
-    const owner = this.warship.owner();
     const nearby = this.mg.nearbyUnits(
       this.warship.tile(),
       this.mg.config().tenderHealRange(),
       UnitType.Tender,
     );
     for (const { unit } of nearby) {
-      if (!unit.isActive() || unit.isUnderConstruction()) {
-        continue;
-      }
-      const tenderOwner = unit.owner();
-      if (tenderOwner !== owner && !tenderOwner.isFriendly(owner)) {
+      if (!this.isFriendlyTender(unit)) {
         continue;
       }
       this.warship.modifyHealth(amount);
@@ -246,8 +227,101 @@ export class WarshipExecution implements Execution {
     if (healthBeforeHealing >= retreatThreshold) {
       return false;
     }
-    const ports = this.warship.owner().units(UnitType.Port);
-    return ports.length > 0;
+    // Tenders do not park on other Tenders; they still run to a Port.
+    if (this.warship.type() === UnitType.Tender) {
+      return this.warship.owner().units(UnitType.Port).length > 0;
+    }
+    // Already getting Port proximity heal — keep the old dock-at-Port path.
+    if (this.isNearPortHeal()) {
+      return this.warship.owner().units(UnitType.Port).length > 0;
+    }
+    // Already in a Tender bubble: stay on station and top up in place.
+    if (this.friendlyTenderInRange() !== undefined) {
+      return false;
+    }
+    if (this.findNearestFriendlyTender() !== undefined) {
+      return true;
+    }
+    return this.warship.owner().units(UnitType.Port).length > 0;
+  }
+
+  private isNearPortHeal(): boolean {
+    const range = this.mg.config().warshipPassiveHealingRange();
+    const rangeSquared = range * range;
+    const tile = this.warship.tile();
+    for (const port of this.warship.owner().units(UnitType.Port)) {
+      if (!port.isActive() || port.isUnderConstruction()) {
+        continue;
+      }
+      if (this.mg.euclideanDistSquared(tile, port.tile()) <= rangeSquared) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private isFriendlyTender(unit: Unit): boolean {
+    if (
+      unit.type() !== UnitType.Tender ||
+      !unit.isActive() ||
+      unit.isUnderConstruction()
+    ) {
+      return false;
+    }
+    const owner = this.warship.owner();
+    const tenderOwner = unit.owner();
+    return tenderOwner === owner || tenderOwner.isFriendly(owner);
+  }
+
+  private friendlyTenderInRange(): Unit | undefined {
+    const nearby = this.mg.nearbyUnits(
+      this.warship.tile(),
+      this.mg.config().tenderHealRange(),
+      UnitType.Tender,
+    );
+    for (const { unit } of nearby) {
+      if (this.isFriendlyTender(unit)) {
+        return unit;
+      }
+    }
+    return undefined;
+  }
+
+  private findNearestFriendlyTender(): Unit | undefined {
+    const shipTile = this.warship.tile();
+    const shipComponent = this.mg.getWaterComponent(shipTile);
+    if (shipComponent === null) {
+      return undefined;
+    }
+    const owner = this.warship.owner();
+    let best: Unit | undefined;
+    let bestDist = Infinity;
+    const consider = (tender: Unit) => {
+      if (!this.isFriendlyTender(tender)) {
+        return;
+      }
+      const tenderComponent = this.mg.getWaterComponent(tender.tile());
+      if (tenderComponent !== shipComponent) {
+        return;
+      }
+      const dist = this.mg.euclideanDistSquared(shipTile, tender.tile());
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = tender;
+      }
+    };
+    for (const tender of owner.units(UnitType.Tender)) {
+      consider(tender);
+    }
+    for (const player of this.mg.players()) {
+      if (player === owner || !owner.isFriendly(player)) {
+        continue;
+      }
+      for (const tender of player.units(UnitType.Tender)) {
+        consider(tender);
+      }
+    }
+    return best;
   }
 
   private findNearestPort(): TileRef | undefined {
@@ -421,6 +495,31 @@ export class WarshipExecution implements Execution {
   }
 
   private startRepairRetreat(): void {
+    this.retreatTender = undefined;
+    if (this.warship.type() !== UnitType.Tender && !this.isNearPortHeal()) {
+      const tender = this.findNearestFriendlyTender();
+      if (tender !== undefined) {
+        const portTile = this.findNearestPort();
+        const tenderDist = this.mg.euclideanDistSquared(
+          this.warship.tile(),
+          tender.tile(),
+        );
+        if (
+          portTile === undefined ||
+          tenderDist <
+            this.mg.euclideanDistSquared(this.warship.tile(), portTile)
+        ) {
+          this.retreatTender = tender;
+          this.warship.updateWarshipState({
+            retreatPort: undefined,
+            state: "retreating",
+          });
+          this.activeHealingRemainder = 0;
+          this.warship.setTargetUnit(undefined);
+          return;
+        }
+      }
+    }
     const portTile = this.findNearestPort();
     if (portTile === undefined) {
       return;
@@ -434,6 +533,7 @@ export class WarshipExecution implements Execution {
   }
 
   private cancelRepairRetreat(clearTargetTile = true): void {
+    this.retreatTender = undefined;
     this.activeHealingRemainder = 0;
     this.warship.updateWarshipState({
       state: "patrolling",
@@ -458,9 +558,78 @@ export class WarshipExecution implements Execution {
     this.lastObservedPatrolTile = patrolTile;
   }
 
+  private switchRetreatToPort(): boolean {
+    this.retreatTender = undefined;
+    const portTile = this.findNearestPort();
+    if (portTile === undefined) {
+      this.cancelRepairRetreat();
+      return false;
+    }
+    this.warship.updateWarshipState({
+      retreatPort: portTile,
+      state: "retreating",
+    });
+    return this.handleRepairRetreat();
+  }
+
+  private handleTenderRetreat(): boolean {
+    const tender = this.retreatTender;
+    if (tender === undefined || !this.isFriendlyTender(tender)) {
+      return this.switchRetreatToPort();
+    }
+    if (this.isNearPortHeal()) {
+      return this.switchRetreatToPort();
+    }
+    if (this.isFullyHealed()) {
+      this.cancelRepairRetreat();
+      return false;
+    }
+
+    const retreatAggroTarget = this.findRetreatAggroTarget();
+    if (retreatAggroTarget) {
+      this.warship.setTargetUnit(retreatAggroTarget);
+      this.shootTarget();
+    } else {
+      this.warship.setTargetUnit(undefined);
+    }
+
+    const range = this.mg.config().tenderHealRange();
+    const inBubble =
+      this.mg.euclideanDistSquared(this.warship.tile(), tender.tile()) <=
+      range * range;
+    if (inBubble) {
+      this.warship.setTargetTile(undefined);
+      return true;
+    }
+
+    const dest = tender.tile();
+    this.warship.setTargetTile(dest);
+    for (let i = 0; i < this.patrolSteps(); i++) {
+      const result = this.pathfinder.next(this.warship.tile(), dest);
+      switch (result.status) {
+        case PathStatus.COMPLETE:
+          this.warship.move(result.node);
+          if (result.node === dest) {
+            this.warship.setTargetTile(undefined);
+          }
+          return true;
+        case PathStatus.NEXT:
+          this.warship.move(result.node);
+          break;
+        case PathStatus.NOT_FOUND:
+          return this.switchRetreatToPort();
+      }
+    }
+    return true;
+  }
+
   private handleRepairRetreat(): boolean {
     if (this.warship.warshipState().state === "patrolling") {
       return false;
+    }
+
+    if (this.retreatTender !== undefined) {
+      return this.handleTenderRetreat();
     }
 
     const retreatAggroTarget = this.findRetreatAggroTarget();
