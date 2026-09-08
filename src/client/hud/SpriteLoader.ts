@@ -89,9 +89,9 @@ function trainTypeToSpriteType(unit: UnitView): TrainTypeSprite {
 
   switch (trainType) {
     case TrainType.Engine:
-    case TrainType.TailEngine:
       return TrainTypeSprite.Engine;
     case TrainType.Carriage:
+    case TrainType.TailEngine:
     default:
       return unit.isLoaded()
         ? TrainTypeSprite.LoadedCarriage
@@ -197,12 +197,25 @@ export const getColoredSprite = (
     throw new Error(`Failed to load sprite for ${unit.type()}`);
   }
 
-  const coloredCanvas = colorizeCanvas(
-    sprite,
-    territoryColor,
-    borderColor,
-    spawnHighlightColor,
-  );
+  const trainType = unit.trainType();
+  const isIronLoco =
+    unit.type() === UnitType.Train && trainType === TrainType.Engine;
+
+  const coloredCanvas = isIronLoco
+    ? (() => {
+        const canvas = document.createElement("canvas");
+        canvas.width = sprite.width;
+        canvas.height = sprite.height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(sprite, 0, 0);
+        return canvas;
+      })()
+    : colorizeCanvas(
+        sprite,
+        territoryColor,
+        borderColor,
+        spawnHighlightColor,
+      );
 
   coloredSpriteCache.set(key, coloredCanvas);
   return coloredCanvas;

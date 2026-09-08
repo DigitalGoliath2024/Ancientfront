@@ -226,9 +226,8 @@ export class PreviewAnimationTicker {
   }
 
   /**
-   * A 7-car train (engine, 5 loaded carriages, tail engine) circling the
-   * preview rail loop between a city and a factory, at in-game speed and
-   * spacing. Used for both the train and railroad cosmetics.
+   * A train (one locomotive + loaded carriages) circling the preview rail
+   * loop between a city and a factory, at in-game speed and spacing.
    */
   private sampleTrain(elapsed: number): PreviewAnimationSnapshot {
     const { path } = getPreviewRailLoop();
@@ -261,14 +260,6 @@ export class PreviewAnimationTicker {
         car(2 + i, TrainType.Carriage, (i + 1) * TRAIN_CAR_SPACING, true),
       );
     }
-    units.push(
-      car(
-        2 + TRAIN_CARRIAGES,
-        TrainType.TailEngine,
-        (TRAIN_CARRIAGES + 1) * TRAIN_CAR_SPACING,
-        null,
-      ),
-    );
 
     const station = (
       id: number,

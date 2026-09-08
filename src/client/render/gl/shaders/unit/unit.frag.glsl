@@ -134,6 +134,14 @@ void main() {
   }
 
   float gray = texel.r;
+  bool isTrainEngine = abs(vAtlasCol - float(TRAIN_FIRST_COL)) < 0.1;
+
+  // Top-down locomotive: draw atlas RGB as-is (black / yellow / grays / orange).
+  // Carriages stay owner-tinted.
+  if (isTrainEngine) {
+    fragColor = vec4(texel.rgb, texel.a * alphaMul);
+    return;
+  }
 
   // Alt-view: solid affiliation color, no gray-replacement bands
   if (uAltView != 0) {
@@ -167,16 +175,14 @@ void main() {
     }
   }
 
-  // train cosmetic: the train sprites (engine, carriage, loaded carriage) are
-  // the last three atlas columns. The engine is drawn entirely in the border
-  // band and the carriages are a border-band frame around a territory-band
-  // fill, so recolor both bands — the border band darkened — to keep that
-  // engine/frame/fill structure while the whole train takes the effect.
+  // train cosmetic: carriages only (the engine stays iron). Carriages are a
+  // border-band frame around a territory-band fill, so recolor both bands —
+  // the border band darkened — while the consist takes the effect.
   // The gradient is world-space (like trails and the railroad effect): the
   // 5×5 train sprites fill only the middle of the 13-tile unit cell, so an
   // icon-space gradient would show a sliver of the palette per car, whereas a
   // world-space one runs along the whole train.
-  if (vAtlasCol > float(TRAIN_FIRST_COL) - 0.1) {
+  if (vAtlasCol > float(TRAIN_FIRST_COL) + 0.5) {
     vec3 effectRGB;
     float diag = vWorldPos.x + vWorldPos.y;
     if (spriteEffectColor(TRAIN_EFFECT_ROW_BASE, int(vOwnerID + 0.5), diag, false, effectRGB)) {

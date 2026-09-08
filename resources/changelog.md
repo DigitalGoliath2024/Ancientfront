@@ -19,6 +19,14 @@ Brand-new update: the **Tender**. An unarmed repair hull so a fleet can stay on 
 
 - Tender page on the buildings roster, with Port and mine notes updated.
 
+## Trains
+
+- **Sprites** — One locomotive, not two. New top-down engine (black nose, yellow windows, gray coupler). Carriages look the same as before.
+
+## Nations
+
+- **Cities** — Bots place a city before they start stacking armories and batteries, so they actually grow.
+
 ---
 
 # Marauder's Sea 0.1.2

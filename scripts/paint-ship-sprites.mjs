@@ -1,6 +1,7 @@
 /**
  * Regenerates elongated pixel-art sea hulls (transport / trade / warship /
- * marauder / tender) and stamps them into resources/atlases/unit-atlas.png.
+ * marauder / tender) and the top-down train engine, then stamps them into
+ * resources/atlases/unit-atlas.png. Does not touch carriage columns.
  *
  * Grayscale bands match SpriteLoader / UnitPass: 180 hull, 130 deck, 100 mast,
  * 70 outline, 20 sail (stays black in the shader). Sprites face east (bow on
@@ -22,6 +23,11 @@ const PALETTE = {
   C: [100, 100, 100, 255],
   L: [180, 180, 180, 255],
   S: [20, 20, 20, 255],
+  K: [0, 0, 0, 255],
+  Y: [255, 194, 14, 255],
+  O: [255, 126, 0, 255],
+  R: [196, 32, 32, 255],
+  G: [196, 148, 40, 255],
 };
 
 /** Transport — thin longboat, pointed bow. */
@@ -332,7 +338,38 @@ stampCol(2, warship);
 stampCol(MARAUDER_COL, marauder);
 stampCol(TENDER_COL, tender);
 
+/** Top-down locomotive from the player's drawing. Atlas bow is west
+ *  (black nose on the left) so heading rotation matches travel direction. */
+function trainEngineGrid() {
+  const cells = Array.from({ length: CELL }, () => Array(CELL).fill("."));
+  const along = [
+    "KKK",
+    "YDY",
+    "KKK",
+    "LDL",
+    ".D.",
+  ];
+  const startX = 4;
+  const startY = 5;
+  for (let i = 0; i < along.length; i++) {
+    for (let w = 0; w < along[i].length; w++) {
+      cells[startY + w][startX + i] = along[i][w];
+    }
+  }
+  return cells.map((row) => row.join(""));
+}
+
+const TRAIN_ENGINE_COL = 11;
+const trainEngine = paintGrid(trainEngineGrid());
+stampCol(TRAIN_ENGINE_COL, trainEngine);
+
+const engineCrop = cropOpaque(trainEngine, CELL, CELL);
+fs.writeFileSync(
+  path.join(root, "resources/sprites", "trainEngine.png"),
+  encodePng(engineCrop.width, engineCrop.height, engineCrop.rgba),
+);
+
 fs.writeFileSync(atlasPath, encodePng(atlas.width, atlas.height, atlas.rgba));
 console.log(
-  "wrote transportship.png, tradeship.png, warship.png, marauder.png, tender.png, unit-atlas.png",
+  "wrote transportship.png, tradeship.png, warship.png, marauder.png, tender.png, trainEngine.png, unit-atlas.png",
 );

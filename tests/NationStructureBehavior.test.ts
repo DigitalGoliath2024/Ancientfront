@@ -4,9 +4,16 @@ import {
   NationStructureBehavior,
   samplesCoastalStructureSites,
 } from "../src/core/execution/nation/NationStructureBehavior";
-import { Difficulty, PlayerType, UnitType } from "../src/core/game/Game";
+import {
+  Difficulty,
+  PlayerInfo,
+  PlayerType,
+  UnitType,
+} from "../src/core/game/Game";
 import { Cluster } from "../src/core/game/TrainStation";
 import { PseudoRandom } from "../src/core/PseudoRandom";
+import { setup } from "./util/Setup";
+import { executeTicks } from "./util/utils";
 
 // ── Fixed trade-gold values matching DefaultConfig ──────────────────────────
 
@@ -911,5 +918,34 @@ describe("NationStructureBehavior.getOrBuildReachableStations", () => {
     (behavior as any).getOrBuildReachableStations();
 
     expect(buildSpy).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("NationStructureBehavior first city", () => {
+  it("places a city before armory or inland battery", async () => {
+    const game = await setup(
+      "big_plains",
+      { instantBuild: true },
+      [new PlayerInfo("nation", PlayerType.Nation, null, "nation_id")],
+    );
+    const nation = game.player("nation_id");
+    for (let x = 10; x <= 50; x++) {
+      for (let y = 10; y <= 50; y++) {
+        nation.conquer(game.ref(x, y));
+      }
+    }
+    nation.addGold(20_000_000n);
+
+    const behavior = new NationStructureBehavior(
+      new PseudoRandom(1),
+      game,
+      nation,
+    );
+    behavior.handleStructures();
+    executeTicks(game, 4);
+
+    expect(nation.units(UnitType.City).length).toBeGreaterThan(0);
+    expect(nation.units(UnitType.Armory)).toHaveLength(0);
+    expect(nation.units(UnitType.InlandBattery)).toHaveLength(0);
   });
 });

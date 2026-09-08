@@ -318,10 +318,10 @@ const WarshipEffectSchema = CosmeticSchema.extend({
 // "transition" cross-fades every car.
 export const TrainEffectAttributesSchema = StructuresEffectAttributesSchema;
 
-// Recolors the owner's trains (engine and carriages) with gradient /
-// transition styles. Always visible, like the warship effect. Train sprites
-// are tiny and the engine is drawn entirely in the border band, so the effect
-// recolors both bands (border band darkened) rather than just the fill.
+// Recolors the owner's train carriages with gradient / transition styles.
+// Always visible, like the warship effect. The locomotive stays iron black /
+// gray; carriages are a border-band frame around a territory-band fill, so
+// the effect recolors both bands (border band darkened) rather than just the fill.
 const TrainEffectSchema = CosmeticSchema.extend({
   effectType: z.literal("train"),
   attributes: TrainEffectAttributesSchema,

@@ -40,7 +40,6 @@ interface StructureRatioConfig {
 
 /**
  * Returns structure ratios relative to city count.
- * Cities are always prioritized and built first.
  * When cities are disabled, we use TILES_PER_CITY_EQUIVALENT. That's not ideal, nations won't properly upgrade structures, but it's better than nothing. Probably 99.9% of players won't disable cities anyway.
  */
 function getStructureRatios(
@@ -479,8 +478,17 @@ export class NationStructureBehavior {
           : UnitType.Factory;
       if (
         !config.isUnitDisabled(preferredFirst) &&
+        this.player.unitsOwned(preferredFirst) === 0 &&
         this.maybeSpawnStructure(preferredFirst)
       ) {
+        return true;
+      }
+    }
+
+    // Get a city down before armory / guns / batteries, or those will spend
+    // every think tick and nations never expand population.
+    if (!citiesDisabled && this.player.unitsOwned(UnitType.City) === 0) {
+      if (this.maybeSpawnStructure(UnitType.City)) {
         return true;
       }
     }
@@ -500,12 +508,10 @@ export class NationStructureBehavior {
       !config.isUnitDisabled(UnitType.MIRV);
 
     for (const structureType of buildOrder) {
-      // Skip disabled structure types
       if (config.isUnitDisabled(structureType)) {
         continue;
       }
 
-      // Skip ports and port guns if no coastal tiles
       if (
         (structureType === UnitType.Port ||
           structureType === UnitType.PortGun) &&
@@ -514,7 +520,6 @@ export class NationStructureBehavior {
         continue;
       }
 
-      // Skip missile silos and SAM launchers if all nukes are disabled
       if (
         !nukesEnabled &&
         (structureType === UnitType.MissileSilo ||
@@ -523,7 +528,6 @@ export class NationStructureBehavior {
         continue;
       }
 
-      // Skip SAM launchers if missile silos are disabled
       if (!missileSilosEnabled && structureType === UnitType.SAMLauncher) {
         continue;
       }

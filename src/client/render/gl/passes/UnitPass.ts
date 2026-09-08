@@ -26,7 +26,7 @@
  *   Col 8: SAM Missile (3×3)
  *   Col 9: Shell (1×1 white pixel)
  *   Col 10: MIRV Warhead (3×3 white square)
- *   Col 11: Train Engine (5×5)
+ *   Col 11: Train Engine (top-down cab/boiler/stack/cowcatcher, bow-east)
  *   Col 12: Train Carriage (5×5)
  *   Col 13: Train Carriage Loaded (5×5)
  *
@@ -223,6 +223,14 @@ export function advanceShipMotion(
   return prev;
 }
 
+/** Slide the locomotive along heading so its rear meets the first car.
+ *  Quad is 13 tiles (1 atlas pixel = 1 tile), centered on the unit.
+ *  Engine is 5px (cols 4–8) so it sticks 2 tiles behind center; cars are
+ *  3px so they stick 1 tile toward the engine; the lead car sits 1 tile
+ *  behind the engine. Slide 3 so the coupler sits one pixel ahead of the
+ *  first car. */
+const TRAIN_ENGINE_FORWARD = 3;
+
 function packGroundStyle(isMarauder: boolean, heading: number): number {
   return (isMarauder ? STYLE_MARAUDER : 0) | ((heading & 15) << 1);
 }
@@ -407,6 +415,7 @@ export class UnitPass {
         TRADE_SHIP_COL,
         TENDER_COL,
         SHIP_LAST_COL,
+        TRAIN_FIRST_COL,
         HEADING_STEPS,
       }),
       shaderSrc(unitFragSrc, {
@@ -590,7 +599,7 @@ export class UnitPass {
 
       if (atlasIdx === undefined && unit.unitType === UT_TRAIN) {
         const tt = unit.trainType;
-        if (tt === TrainType.Engine || tt === TrainType.TailEngine) {
+        if (tt === TrainType.Engine) {
           atlasIdx = TRAIN_ENGINE_COL;
         } else {
           atlasIdx = unit.loaded
@@ -675,7 +684,7 @@ export class UnitPass {
         let drawX = x;
         let drawY = y;
         let heading = 0;
-        if (SEA_HULL_TYPES.has(unit.unitType)) {
+        if (SEA_HULL_TYPES.has(unit.unitType) || unit.unitType === UT_TRAIN) {
           const moved = unit.lastPos !== unit.pos;
           const lastX = moved ? unit.lastPos % this.mapW : x;
           const lastY = moved ? (unit.lastPos - lastX) / this.mapW : y;
@@ -707,11 +716,25 @@ export class UnitPass {
           heading = motion.heading;
           drawX = motion.x;
           drawY = motion.y;
-          if (fromX !== drawX || fromY !== drawY) {
+          let segFromX = fromX;
+          let segFromY = fromY;
+          if (
+            unit.unitType === UT_TRAIN &&
+            unit.trainType === TrainType.Engine
+          ) {
+            const ang = (heading * Math.PI * 2) / HEADING_STEPS;
+            const ox = Math.cos(ang) * TRAIN_ENGINE_FORWARD;
+            const oy = Math.sin(ang) * TRAIN_ENGINE_FORWARD;
+            drawX += ox;
+            drawY += oy;
+            segFromX += ox;
+            segFromY += oy;
+          }
+          if (segFromX !== drawX || segFromY !== drawY) {
             this.groundSmoothSegs.push(
               this.groundCount,
-              fromX,
-              fromY,
+              segFromX,
+              segFromY,
               drawX,
               drawY,
             );

@@ -30,7 +30,7 @@ void main() {
   float atlasCol = aInstFlags.x;
   vFlags = aInstFlags.y;
   vAtlasCol = atlasCol;
-  // Bit 0 = marauder hull remap; bits 1–4 = 16-way heading (ships only).
+  // Bit 0 = marauder hull remap; bits 1–4 = 16-way heading (ships and trains).
   vStyle = mod(aInstFlags.w, 2.0);
 
   // Per-instance hash so each unit flickers independently. Computed CPU-side
@@ -59,9 +59,10 @@ void main() {
   vec2 local = (aPos - 0.5) * halfSize * 2.0;
   // Tender is two pixels longer than a warship along the keel (bow-east).
   local.x *= mix(1.0, 15.0 / 13.0, isTender);
-  // Sea hulls (atlas cols 0–SHIP_LAST_COL) are elongated sprites drawn bow-east.
-  // Style bits 1–4 pack a 16-direction heading from smoothed movement.
+  // Sea hulls (atlas cols 0–SHIP_LAST_COL) and trains (engine + cars) are
+  // drawn facing east; style bits 1–4 pack a 16-direction heading.
   float isShip = 1.0 - step(float(SHIP_LAST_COL) + 0.5, atlasCol);
+  float isTrain = step(float(TRAIN_FIRST_COL) - 0.5, atlasCol);
   float heading = floor(aInstFlags.w * 0.5 + 0.001);
   float ang = heading * 6.283185307179586 / float(HEADING_STEPS);
   float ca = cos(ang);
@@ -69,7 +70,7 @@ void main() {
   local = mix(
     local,
     vec2(ca * local.x - sa * local.y, sa * local.x + ca * local.y),
-    isShip
+    max(isShip, isTrain)
   );
   vec2 worldPos = center + local;
   vWorldPos = worldPos;

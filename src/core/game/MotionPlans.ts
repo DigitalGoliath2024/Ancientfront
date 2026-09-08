@@ -21,7 +21,7 @@ export interface TrainRailPathPlan {
   kind: "train";
   engineUnitId: number;
   /**
-   * TrainExecution `cars[]` order (tail engine + carriages).
+   * TrainExecution `cars[]` order (carriages behind the engine).
    */
   carUnitIds: readonly number[] | Uint32Array;
   planId: number;

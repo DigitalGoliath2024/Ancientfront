@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { TrainExecution } from "../../../src/core/execution/TrainExecution";
-import { PlayerInfo, PlayerType, UnitType } from "../../../src/core/game/Game";
+import { PlayerInfo, PlayerType, TrainType, UnitType } from "../../../src/core/game/Game";
 import { TileRef } from "../../../src/core/game/GameMap";
 import { Railroad } from "../../../src/core/game/Railroad";
 import { TrainStation } from "../../../src/core/game/TrainStation";
@@ -198,5 +198,37 @@ describe("TrainExecution", () => {
     exec.tick(1);
     // Rejects because final segment D->C uses unrecorded tile 9
     expect(exec.isActive()).toBe(false);
+  });
+
+  it("spawns one locomotive and carriages, not a tail engine", async () => {
+    const game = await setup("plains", { instantBuild: true }, [
+      new PlayerInfo("p1", PlayerType.Human, null, "p1"),
+    ]);
+    const player = game.player("p1")!;
+
+    [0, 1, 2, 3, 4].forEach((t) => player.conquer(t));
+    const [stationA, stationB] = [0, 4].map(
+      (t) => new TrainStation(game, player.buildUnit(UnitType.City, t, {})),
+    );
+
+    const net = game.railNetwork();
+    const stationManager = net.stationManager();
+    stationManager.addStation(stationA);
+    stationManager.addStation(stationB);
+    const rail = new Railroad(stationA, stationB, [0, 1, 2, 3, 4], 1);
+    stationA.addRailroad(rail);
+    stationB.addRailroad(rail);
+
+    const exec = new TrainExecution(net, player, stationA, stationB, 3);
+    exec.init(game, 0);
+
+    const trains = player.units(UnitType.Train);
+    const engines = trains.filter((u) => u.trainType() === TrainType.Engine);
+    const tails = trains.filter((u) => u.trainType() === TrainType.TailEngine);
+    const cars = trains.filter((u) => u.trainType() === TrainType.Carriage);
+
+    expect(engines).toHaveLength(1);
+    expect(tails).toHaveLength(0);
+    expect(cars).toHaveLength(3);
   });
 });
