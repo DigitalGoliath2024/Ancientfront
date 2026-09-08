@@ -21,7 +21,7 @@ Brand-new update: the **Tender**. An unarmed repair hull so a fleet can stay on 
 
 ## Trains
 
-- **Sprites** — One locomotive, not two. New top-down engine (black nose, yellow windows, gray coupler). Carriages look the same as before.
+- **Sprites** — New locomotive look.
 
 ## Nations
 
