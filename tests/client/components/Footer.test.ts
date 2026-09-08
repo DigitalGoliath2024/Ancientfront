@@ -75,6 +75,12 @@ describe("page-footer version line", () => {
     ).toBeTruthy();
     expect(footer.querySelector('[data-i18n="main.openfront_site"]')).toBeTruthy();
     expect(footer.querySelector('[data-i18n="main.not_affiliated"]')).toBeTruthy();
+    expect(footer.querySelector("[data-attribution]")?.className).toContain(
+      "hidden",
+    );
+    expect(footer.querySelector("[data-attribution]")?.className).toContain(
+      "lg:inline",
+    );
 
     const hrefs = [...footer.querySelectorAll("a")].map((a) => a.getAttribute("href"));
     expect(hrefs).toContain(FLYING_V_STUDIOS_URL);

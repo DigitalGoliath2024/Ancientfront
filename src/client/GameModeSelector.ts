@@ -316,10 +316,10 @@ export class GameModeSelector extends LitElement {
 
     return html`
       <div
-        class="w-full h-full min-h-0 px-4 sm:px-0 mx-auto pb-4 lg:pb-3 flex flex-col lg:flex-row lg:items-stretch lg:justify-between gap-4 lg:gap-6"
+        class="w-full h-full min-h-0 px-4 sm:px-0 mx-auto pb-2 lg:pb-3 flex flex-col lg:flex-row lg:items-stretch lg:justify-between gap-3 lg:gap-6"
       >
         <div
-          class="flex flex-col gap-3 w-full lg:flex-1 lg:min-w-0 lg:min-h-0 lg:overflow-y-auto"
+          class="flex flex-col gap-2 sm:gap-3 w-full lg:flex-1 lg:min-w-0 lg:min-h-0 lg:overflow-y-auto"
         >
           <news-box class="block w-full shrink-0"></news-box>
 
@@ -336,7 +336,7 @@ export class GameModeSelector extends LitElement {
                 <img
                   src=${assetUrl("images/GameLogo.jpg")}
                   alt="Marauder's Sea"
-                  class="w-auto max-w-full object-contain h-52 sm:h-64 lg:h-full lg:max-h-[17.5rem]"
+                  class="w-auto max-w-full object-contain h-36 sm:h-52 lg:h-full lg:max-h-[17.5rem]"
                 />
               </div>
               <div class="rounded-lg bg-black/80 p-1 shrink-0">

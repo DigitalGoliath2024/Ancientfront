@@ -130,6 +130,8 @@ describe("NewsBox", () => {
       const welcome = el.querySelector("[data-news-welcome]");
       expect(welcome).toBeTruthy();
       expect(welcome?.className).toContain("text-gold");
+      expect(welcome?.className).toContain("hidden");
+      expect(welcome?.className).toContain("sm:block");
       expect(welcome?.textContent).toContain("news_box.welcome");
       expect(welcome?.querySelector(".text-ember")?.textContent).toContain(
         "news_box.welcome_strategy",
@@ -138,6 +140,7 @@ describe("NewsBox", () => {
       const announcement = el.querySelector("span.text-sm.font-medium");
       expect(announcement?.textContent).toContain("Marauder's Sea 0.1.4");
       expect(el.textContent).toContain("news_box.v0_1_4");
+      expect(el.querySelector(".line-clamp-1")).toBeTruthy();
 
       const box = welcome!.parentElement;
       expect(box?.firstElementChild).toBe(welcome);

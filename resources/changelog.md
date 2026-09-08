@@ -1,6 +1,6 @@
 # Marauder's Sea 0.1.4
 
-Performance update. Late games stay closer to 10 ticks per second when batteries, ships, and trains pile up. Two new Florida maps.
+Performance update. Late games stay closer to 10 ticks per second when batteries, ships, and trains pile up. New maps: Florida, K Island, and Crackamack Isles.
 
 ## Performance
 
@@ -10,7 +10,7 @@ Performance update. Late games stay closer to 10 ticks per second when batteries
 
 ## Maps
 
-- **Central South Florida** and **Old World Miami**.
+- **Central South Florida**, **Old World Miami**, **K Island**, and **Crackamack Isles**.
 
 ---
 

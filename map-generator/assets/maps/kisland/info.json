@@ -1,0 +1,22 @@
+{
+  "id": "KIsland",
+  "name": "K Island",
+  "translation_key": "map.kisland",
+  "categories": ["new", "fictional"],
+  "multiplayer_frequency": 4,
+  "special_team_count": 2,
+  "nations": [
+    { "coordinates": [354, 979], "flag": "", "name": "Port Vernon" },
+    { "coordinates": [902, 455], "flag": "", "name": "North Arm" },
+    { "coordinates": [919, 1338], "flag": "", "name": "South Arm" },
+    { "coordinates": [803, 1844], "flag": "", "name": "Tail Cay" },
+    { "coordinates": [1204, 810], "flag": "", "name": "East Stack" },
+    { "coordinates": [127, 710], "flag": "", "name": "West Wreck" }
+  ],
+  "teamGameSpawnAreas": {
+    "2": [
+      { "x": 0, "y": 0, "width": 682, "height": 2048 },
+      { "x": 682, "y": 0, "width": 682, "height": 2048 }
+    ]
+  }
+}

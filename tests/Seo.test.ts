@@ -30,6 +30,8 @@ describe("site SEO", () => {
   it("exposes crawlable homepage copy", () => {
     expect(indexHtml).toContain('id="about-marauders-sea"');
     expect(indexHtml).toContain("data-i18n=\"main.seo_blurb\"");
+    expect(indexHtml).toContain('data-i18n="main.seo_read_more"');
+    expect(indexHtml).toContain('id="home-about-more"');
   });
 
   it("lists the sitemap from robots.txt", () => {
@@ -50,6 +52,12 @@ describe("site SEO", () => {
     );
     expect(sitemap).toContain(
       "<loc>https://maraudersea.com/wiki/maps/old-world-miami.html</loc>",
+    );
+    expect(sitemap).toContain(
+      "<loc>https://maraudersea.com/wiki/maps/k-island.html</loc>",
+    );
+    expect(sitemap).toContain(
+      "<loc>https://maraudersea.com/wiki/maps/crackamack-isles.html</loc>",
     );
     expect(sitemap).toContain(
       "<loc>https://maraudersea.com/wiki/buildings/inland-battery.html</loc>",

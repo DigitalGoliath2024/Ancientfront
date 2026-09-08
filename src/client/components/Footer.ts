@@ -45,7 +45,7 @@ export class Footer extends LitElement {
         />
 
         <div
-          class="flex flex-wrap items-center justify-end gap-x-2.5 gap-y-1 min-w-0"
+          class="flex flex-nowrap items-center justify-end gap-x-2.5 gap-y-1 min-w-0 overflow-x-auto"
         >
           <a
             href=${SOURCE_REPO_URL}
@@ -63,7 +63,7 @@ export class Footer extends LitElement {
           <span class="footer-version whitespace-nowrap tabular-nums text-white/80"
             >${this.versionLabel}</span
           >
-          <span class="text-right min-w-0" data-attribution>
+          <span class="hidden lg:inline text-right min-w-0" data-attribution>
             <span data-i18n="main.footer_product_prefix"></span><a
               href=${FLYING_V_STUDIOS_URL}
               data-i18n="main.studio_name"

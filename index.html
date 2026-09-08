@@ -390,26 +390,47 @@
 
       <div class="[.in-game_&]:hidden mt-auto flex flex-col shrink-0">
         <section
-          class="px-3 py-2 text-[11px] lg:text-xs text-white/55 leading-snug border-t border-white/10"
+          class="px-3 py-1 lg:py-2 text-[11px] lg:text-xs text-white/55 leading-snug border-t border-white/10"
           aria-labelledby="about-marauders-sea"
         >
+          <input
+            id="home-about-more"
+            type="checkbox"
+            class="peer/about sr-only"
+          />
           <h1
             id="about-marauders-sea"
-            class="text-white/80 font-medium text-sm mb-1"
+            class="hidden peer-checked/about:block lg:block text-white/80 font-medium text-sm mb-1"
             data-i18n="main.seo_heading"
           >
             Marauder's Sea — free browser strategy game
           </h1>
-          <p data-i18n="main.seo_blurb">
-            Play free in your browser. Real-time territorial strategy with
-            age-of-sail warships, ports, and island warfare. Independently
-            based on OpenFront.io. Made by Flying V Studios.
-          </p>
-          <p>
-            <a href="/wiki/">Marauder's Sea wiki</a>
-            — maps and buildings for this
-            <a href="https://maraudersea.com/">free pirate strategy game</a>.
-          </p>
+          <div class="hidden peer-checked/about:block lg:block">
+            <p data-i18n="main.seo_blurb">
+              Play free in your browser. Real-time territorial strategy with
+              age-of-sail warships, ports, and island warfare. Independently
+              based on OpenFront.io. Made by Flying V Studios.
+            </p>
+            <p>
+              <a href="/wiki/">Marauder's Sea wiki</a>
+              — maps and buildings for this
+              <a href="https://maraudersea.com/">free pirate strategy game</a>.
+            </p>
+          </div>
+          <label
+            for="home-about-more"
+            class="lg:hidden mt-0.5 inline-flex cursor-pointer select-none items-center rounded border border-white/20 bg-white/5 px-2 py-0.5 text-[11px] font-medium text-white/80 hover:bg-white/10 peer-checked/about:hidden"
+            data-i18n="main.seo_read_more"
+          >
+            Read more
+          </label>
+          <label
+            for="home-about-more"
+            class="mt-1 hidden cursor-pointer select-none text-[11px] font-medium text-white/70 underline hover:text-white/90 peer-checked/about:inline-flex lg:!hidden"
+            data-i18n="main.seo_show_less"
+          >
+            Show less
+          </label>
         </section>
         <page-footer></page-footer>
       </div>

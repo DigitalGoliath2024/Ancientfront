@@ -36,6 +36,7 @@ export enum GameMapType {
   ChoppingBlock = "Chopping Block", // map-generator/assets/maps/choppingblock/info.json
   ClearwaterLakes = "Clearwater Lakes", // map-generator/assets/maps/clearwaterlakes/info.json
   Conakry = "Conakry", // map-generator/assets/maps/conakry/info.json
+  CrackamackIsles = "Crackamack Isles", // map-generator/assets/maps/crackamackisles/info.json
   Crimea = "Crimea", // map-generator/assets/maps/crimea/info.json
   DanishStraits = "Danish Straits", // map-generator/assets/maps/danishstraits/info.json
   DeglaciatedAntarctica = "Deglaciated Antarctica", // map-generator/assets/maps/deglaciatedantarctica/info.json
@@ -71,6 +72,7 @@ export enum GameMapType {
   Italia = "Italia", // map-generator/assets/maps/italia/info.json
   Japan = "Japan", // map-generator/assets/maps/japan/info.json
   JuanDeFucaStrait = "Juan De Fuca Strait", // map-generator/assets/maps/juandefucastrait/info.json
+  KIsland = "K Island", // map-generator/assets/maps/kisland/info.json
   Korea = "Korea", // map-generator/assets/maps/korea/info.json
   Labyrinth = "Labyrinth", // map-generator/assets/maps/labyrinth/info.json
   LasVegasStrip = "Las Vegas Strip", // map-generator/assets/maps/lasvegasstrip/info.json
@@ -615,6 +617,17 @@ export const maps: readonly MapInfo[] = [
     specialFrequency: -1,
     specialTeamCount: 2,
     themes: ["africa"],
+  },
+  {
+    id: "CrackamackIsles",
+    type: GameMapType.CrackamackIsles,
+    translationKey: "map.crackamackisles",
+    categories: ["new", "fictional"],
+    multiplayerFrequency: 4,
+    ffaFrequency: -1,
+    teamFrequency: -1,
+    specialFrequency: -1,
+    specialTeamCount: 2,
   },
   {
     id: "Crimea",
@@ -1411,6 +1424,17 @@ export const maps: readonly MapInfo[] = [
     specialFrequency: -1,
     specialTeamCount: 3,
     themes: ["north_america"],
+  },
+  {
+    id: "KIsland",
+    type: GameMapType.KIsland,
+    translationKey: "map.kisland",
+    categories: ["new", "fictional"],
+    multiplayerFrequency: 4,
+    ffaFrequency: -1,
+    teamFrequency: -1,
+    specialFrequency: -1,
+    specialTeamCount: 2,
   },
   {
     id: "Korea",

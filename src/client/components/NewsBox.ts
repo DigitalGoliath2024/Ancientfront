@@ -113,10 +113,10 @@ export class NewsBox extends LitElement {
 
     return html`
       <div
-        class="px-3 py-2 bg-surface border-y border-white/10 lg:border-y-0 lg:rounded-xl w-full min-h-0 overflow-hidden flex flex-col gap-1"
+        class="px-3 py-1.5 sm:py-2 bg-surface border-y border-white/10 lg:border-y-0 lg:rounded-xl w-full min-h-0 overflow-hidden flex flex-col gap-0.5 sm:gap-1"
       >
         <p
-          class="shrink-0 text-sm sm:text-base font-display font-bold leading-snug text-gold"
+          class="hidden sm:block shrink-0 text-sm sm:text-base font-display font-bold leading-snug text-gold"
           data-news-welcome
         >
           ${translateText("news_box.welcome")}
@@ -141,15 +141,15 @@ export class NewsBox extends LitElement {
                         href="${item.url}"
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="text-sm font-medium text-white hover:text-white/70 transition-colors line-clamp-2 block"
+                        class="text-sm font-medium text-white hover:text-white/70 transition-colors line-clamp-1 sm:line-clamp-2 block"
                         >${item.title}</a
                       >`
                     : html`<span
-                        class="text-sm font-medium text-white line-clamp-2 block"
+                        class="text-sm font-medium text-white line-clamp-1 sm:line-clamp-2 block"
                         >${item.title}</span
                       >`}
                   <span
-                    class="text-xs text-white/70 block line-clamp-3 [&_a]:text-white [&_a:hover]:underline"
+                    class="text-xs text-white/70 block line-clamp-1 sm:line-clamp-2 lg:line-clamp-3 [&_a]:text-white [&_a:hover]:underline"
                     >${renderMarkdown(
                       item.descriptionTranslationKey
                         ? translateText(item.descriptionTranslationKey)

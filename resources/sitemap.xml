@@ -86,6 +86,16 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://maraudersea.com/wiki/maps/k-island.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://maraudersea.com/wiki/maps/crackamack-isles.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://maraudersea.com/wiki/buildings/city.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>

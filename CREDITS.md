@@ -166,6 +166,14 @@ Relief source provided for Marauder's Sea (Central South Florida).
 
 Map art provided for Marauder's Sea (Old World Miami).
 
+### K Island Map
+
+Original island art provided for Marauder's Sea (K Island).
+
+### Crackamack Isles Map
+
+Original island art provided for Marauder's Sea (Crackamack Isles).
+
 ## Icons
 
 ### [The Noun Project](https://thenounproject.com/)

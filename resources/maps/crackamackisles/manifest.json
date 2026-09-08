@@ -1,0 +1,108 @@
+{
+  "id": "CrackamackIsles",
+  "name": "Crackamack Isles",
+  "translation_key": "map.crackamackisles",
+  "categories": [
+    "new",
+    "fictional"
+  ],
+  "multiplayer_frequency": 4,
+  "special_team_count": 2,
+  "nations": [
+    {
+      "coordinates": [
+        1811,
+        838
+      ],
+      "flag": "",
+      "name": "Mack's Port"
+    },
+    {
+      "coordinates": [
+        1024,
+        595
+      ],
+      "flag": "",
+      "name": "Saltine"
+    },
+    {
+      "coordinates": [
+        1814,
+        345
+      ],
+      "flag": "",
+      "name": "Three Holes"
+    },
+    {
+      "coordinates": [
+        457,
+        660
+      ],
+      "flag": "",
+      "name": "Biscuit Cay"
+    },
+    {
+      "coordinates": [
+        201,
+        880
+      ],
+      "flag": "",
+      "name": "Crumb Bank"
+    },
+    {
+      "coordinates": [
+        197,
+        301
+      ],
+      "flag": "",
+      "name": "Oven Reef"
+    },
+    {
+      "coordinates": [
+        1590,
+        746
+      ],
+      "flag": "",
+      "name": "Hardtack"
+    },
+    {
+      "coordinates": [
+        1288,
+        924
+      ],
+      "flag": "",
+      "name": "Pilot's Crumb"
+    }
+  ],
+  "teamGameSpawnAreas": {
+    "2": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 1364
+      },
+      {
+        "x": 1024,
+        "y": 0,
+        "width": 1024,
+        "height": 1364
+      }
+    ]
+  },
+  "map": {
+    "width": 2048,
+    "height": 1364,
+    "num_land_tiles": 1273432
+  },
+  "map4x": {
+    "width": 1024,
+    "height": 682,
+    "num_land_tiles": 318326
+  },
+  "map16x": {
+    "width": 512,
+    "height": 341,
+    "num_land_tiles": 76345
+  }
+}
