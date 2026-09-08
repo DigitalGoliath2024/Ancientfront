@@ -46,9 +46,9 @@ function getStructureRatios(
   _difficulty: Difficulty,
 ): Partial<Record<UnitType, StructureRatioConfig>> {
   return {
-    [UnitType.Port]: { ratioPerCity: 0.75, perceivedCostIncreasePerOwned: 1 },
+    [UnitType.Port]: { ratioPerCity: 0.55, perceivedCostIncreasePerOwned: 1 },
     [UnitType.Factory]: {
-      ratioPerCity: 0.75,
+      ratioPerCity: 0.5,
       perceivedCostIncreasePerOwned: 1,
     },
     [UnitType.PortGun]: {

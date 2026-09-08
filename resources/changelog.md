@@ -1,3 +1,19 @@
+# Marauder's Sea 0.1.4
+
+Performance update. Late games stay closer to 10 ticks per second when batteries, ships, and trains pile up. Two new Florida maps.
+
+## Performance
+
+- **Batteries** — Auto-fire no longer scans a huge land square every tick. Port guns only look for ships when they are ready to shoot.
+- **Trains and trade** — Fewer cars per train, a cap on locomotives, slower spawn, and trade ships taper off earlier. Nations place fewer factories and ports per city.
+- **Graphics** — New **Performance** preset: turns off explosion FX, fallout bloom, and far-away rail drawing.
+
+## Maps
+
+- **Central South Florida** and **Old World Miami**.
+
+---
+
 # Marauder's Sea 0.1.3
 
 Brand-new update: the **Tender**. An unarmed repair hull so a fleet can stay on station instead of steaming home every time the wood splinters.

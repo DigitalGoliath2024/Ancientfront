@@ -31,6 +31,7 @@ export enum GameMapType {
   Caribbean = "Caribbean", // map-generator/assets/maps/caribbean/info.json
   CaspianSea = "Caspian Sea", // map-generator/assets/maps/caspiansea/info.json
   Caucasus = "Caucasus", // map-generator/assets/maps/caucasus/info.json
+  CentralSouthFlorida = "Central South Florida", // map-generator/assets/maps/centralsouthflorida/info.json
   China = "China", // map-generator/assets/maps/china/info.json
   ChoppingBlock = "Chopping Block", // map-generator/assets/maps/choppingblock/info.json
   ClearwaterLakes = "Clearwater Lakes", // map-generator/assets/maps/clearwaterlakes/info.json
@@ -92,6 +93,7 @@ export enum GameMapType {
   NorthAmerica = "North America", // map-generator/assets/maps/northamerica/info.json
   NorthwestPassage = "Northwest Passage", // map-generator/assets/maps/northwestpassage/info.json
   Oceania = "Oceania", // map-generator/assets/maps/oceania/info.json
+  OldWorldMiami = "Old World Miami", // map-generator/assets/maps/oldworldmiami/info.json
   Onion = "Onion", // map-generator/assets/maps/onion/info.json
   Pangaea = "Pangaea", // map-generator/assets/maps/pangaea/info.json
   Passage = "Passage", // map-generator/assets/maps/passage/info.json
@@ -556,6 +558,17 @@ export const maps: readonly MapInfo[] = [
     teamFrequency: -1,
     specialFrequency: -1,
     themes: ["europe", "asia"],
+  },
+  {
+    id: "CentralSouthFlorida",
+    type: GameMapType.CentralSouthFlorida,
+    translationKey: "map.centralsouthflorida",
+    categories: ["new", "north_america"],
+    multiplayerFrequency: 4,
+    ffaFrequency: -1,
+    teamFrequency: -1,
+    specialFrequency: -1,
+    themes: ["north_america"],
   },
   {
     id: "China",
@@ -1780,6 +1793,17 @@ export const maps: readonly MapInfo[] = [
     teamFrequency: -1,
     specialFrequency: -1,
     themes: ["oceania"],
+  },
+  {
+    id: "OldWorldMiami",
+    type: GameMapType.OldWorldMiami,
+    translationKey: "map.oldworldmiami",
+    categories: ["new", "north_america"],
+    multiplayerFrequency: 4,
+    ffaFrequency: -1,
+    teamFrequency: -1,
+    specialFrequency: -1,
+    themes: ["north_america"],
   },
   {
     id: "Onion",

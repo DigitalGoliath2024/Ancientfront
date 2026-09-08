@@ -1,0 +1,126 @@
+{
+  "id": "OldWorldMiami",
+  "name": "Old World Miami",
+  "translation_key": "map.oldworldmiami",
+  "categories": [
+    "new",
+    "north_america"
+  ],
+  "multiplayer_frequency": 4,
+  "nations": [
+    {
+      "coordinates": [
+        980,
+        700
+      ],
+      "name": "Tequesta",
+      "flag": "Florida"
+    },
+    {
+      "coordinates": [
+        1050,
+        399
+      ],
+      "name": "Santaluces",
+      "flag": "Florida"
+    },
+    {
+      "coordinates": [
+        993,
+        173
+      ],
+      "name": "Jaega",
+      "flag": "Florida"
+    },
+    {
+      "coordinates": [
+        1051,
+        31
+      ],
+      "name": "Ais",
+      "flag": "Florida"
+    },
+    {
+      "coordinates": [
+        700,
+        200
+      ],
+      "name": "Guacata",
+      "flag": "Florida"
+    },
+    {
+      "coordinates": [
+        400,
+        280
+      ],
+      "name": "Mayaimi",
+      "flag": "Florida"
+    },
+    {
+      "coordinates": [
+        350,
+        900
+      ],
+      "name": "Miccosukee",
+      "flag": "Florida"
+    },
+    {
+      "coordinates": [
+        180,
+        500
+      ],
+      "name": "Calusa",
+      "flag": "Florida"
+    },
+    {
+      "coordinates": [
+        200,
+        1100
+      ],
+      "name": "Muspa",
+      "flag": "Florida"
+    },
+    {
+      "coordinates": [
+        495,
+        1804
+      ],
+      "name": "Matecumbe",
+      "flag": "Florida"
+    },
+    {
+      "coordinates": [
+        642,
+        1640
+      ],
+      "name": "Cuchiyaga",
+      "flag": "Florida"
+    },
+    {
+      "coordinates": [
+        691,
+        1811
+      ],
+      "name": "Hobe",
+      "flag": "Florida"
+    }
+  ],
+  "themes": [
+    "north_america"
+  ],
+  "map": {
+    "width": 1364,
+    "height": 2048,
+    "num_land_tiles": 1536472
+  },
+  "map4x": {
+    "width": 682,
+    "height": 1024,
+    "num_land_tiles": 384001
+  },
+  "map16x": {
+    "width": 341,
+    "height": 512,
+    "num_land_tiles": 93121
+  }
+}

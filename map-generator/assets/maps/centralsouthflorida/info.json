@@ -1,0 +1,30 @@
+{
+  "id": "CentralSouthFlorida",
+  "name": "Central South Florida",
+  "translation_key": "map.centralsouthflorida",
+  "categories": ["new", "north_america"],
+  "multiplayer_frequency": 4,
+  "nations": [
+    { "coordinates": [640, 180], "name": "Timucua", "flag": "Florida" },
+    { "coordinates": [800, 357], "name": "Acuera", "flag": "Florida" },
+    { "coordinates": [840, 500], "name": "Jororo", "flag": "Florida" },
+    { "coordinates": [700, 560], "name": "Mayaimi", "flag": "Florida" },
+    { "coordinates": [360, 560], "name": "Tocobaga", "flag": "Florida" },
+    { "coordinates": [282, 518], "name": "Pohoy", "flag": "Florida" },
+    { "coordinates": [300, 640], "name": "Uzita", "flag": "Florida" },
+    { "coordinates": [320, 840], "name": "Mocoso", "flag": "Florida" },
+    { "coordinates": [400, 1180], "name": "Calusa", "flag": "Florida" },
+    { "coordinates": [446, 1225], "name": "Calos", "flag": "Florida" },
+    { "coordinates": [576, 1324], "name": "Muspa", "flag": "Florida" },
+    { "coordinates": [1240, 1480], "name": "Tequesta", "flag": "Florida" },
+    { "coordinates": [1280, 1320], "name": "Santaluces", "flag": "Florida" },
+    { "coordinates": [1300, 1200], "name": "Jaega", "flag": "Florida" },
+    { "coordinates": [1280, 960], "name": "Guacata", "flag": "Florida" },
+    { "coordinates": [1260, 800], "name": "Ais", "flag": "Florida" },
+    { "coordinates": [1160, 560], "name": "Surruque", "flag": "Florida" },
+    { "coordinates": [1178, 1650], "name": "Miccosukee", "flag": "Florida" },
+    { "coordinates": [687, 1947], "name": "Matecumbe", "flag": "Florida" },
+    { "coordinates": [1000, 200], "name": "Agua Dulce", "flag": "Florida" }
+  ],
+  "themes": ["north_america"]
+}

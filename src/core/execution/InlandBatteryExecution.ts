@@ -21,14 +21,14 @@ export function inlandBatteryShouldAutoFire(post: Unit): boolean {
   return post.autoFire();
 }
 
-/** Returns true if a volley actually launched (reload starts then). */
+/** Returns the first shell dest if a volley launched, otherwise null. */
 export function fireInlandBatteryVolley(
   mg: Game,
   post: Unit,
   aim: TileRef | null,
-): boolean {
+): TileRef | null {
   if (!inlandBatteryIsReady(mg, post)) {
-    return false;
+    return null;
   }
   const level = post.level();
   const dests = pickInlandBatteryDests(
@@ -42,7 +42,7 @@ export function fireInlandBatteryVolley(
     aim,
   );
   if (dests.length === 0) {
-    return false;
+    return null;
   }
   post.setLastVolleyTick(mg.ticks());
   const from = post.tile();
@@ -52,20 +52,23 @@ export function fireInlandBatteryVolley(
       new InlandBatteryShellExecution(from, owner, post, dest),
     );
   }
-  return true;
+  return dests[0];
 }
 
 export class InlandBatteryExecution implements Execution {
   private mg: Game;
   private active = true;
+  private nextAttemptTick = 0;
+  private lastAim: TileRef | null = null;
 
   constructor(private post: Unit) {}
 
   init(mg: Game, _ticks: number): void {
     this.mg = mg;
+    this.nextAttemptTick = this.post.id() % 15;
   }
 
-  tick(_ticks: number): void {
+  tick(ticks: number): void {
     if (!this.post.isActive()) {
       this.active = false;
       return;
@@ -77,7 +80,23 @@ export class InlandBatteryExecution implements Execution {
     if (!inlandBatteryShouldAutoFire(this.post)) {
       return;
     }
-    fireInlandBatteryVolley(this.mg, this.post, null);
+    if (ticks < this.nextAttemptTick) {
+      return;
+    }
+    if (!inlandBatteryIsReady(this.mg, this.post)) {
+      this.nextAttemptTick = ticks + 8;
+      return;
+    }
+    const aim = this.lastAim;
+    const fired = fireInlandBatteryVolley(this.mg, this.post, aim);
+    if (fired !== null) {
+      this.lastAim = fired;
+      this.nextAttemptTick = ticks + 8;
+    } else {
+      this.lastAim = null;
+      // Empty searches used to rescan a 200-tile disk every tick.
+      this.nextAttemptTick = ticks + 30;
+    }
   }
 
   isActive(): boolean {

@@ -64,6 +64,11 @@ export class PortGunExecution implements Execution {
 
     this.applyRepairman();
 
+    const shellAttackRate = this.mg.config().portGunShellAttackRate();
+    if (this.mg.ticks() - this.lastShellAttack <= shellAttackRate) {
+      return;
+    }
+
     const range = this.mg.config().portGunRange(this.post.level());
     const ships = this.mg
       .nearbyUnits(this.post.tile(), range, PORT_GUN_TARGETS)

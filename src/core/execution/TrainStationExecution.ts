@@ -1,4 +1,11 @@
-import { Execution, Game, Unit, UnitType } from "../game/Game";
+import {
+  Execution,
+  Game,
+  Player,
+  TrainType,
+  Unit,
+  UnitType,
+} from "../game/Game";
 import { TrainStation } from "../game/TrainStation";
 import { PseudoRandom } from "../PseudoRandom";
 import { TrainExecution } from "./TrainExecution";
@@ -8,9 +15,8 @@ export class TrainStationExecution implements Execution {
   private active: boolean = true;
   private random: PseudoRandom;
   private station: TrainStation | null = null;
-  private numCars: number = 5;
   private lastSpawnTick: number = 0;
-  private ticksCooldown: number = 10; // Minimum cooldown between two trains
+  private ticksCooldown: number = 18; // Minimum cooldown between two trains
   constructor(
     private unit: Unit,
     private spawnTrains?: boolean, // If set, the station will spawn trains
@@ -75,6 +81,9 @@ export class TrainStationExecution implements Execution {
     if (!cluster.hasAnyTradeDestination(owner)) {
       return;
     }
+    if (this.trainEngineCount(owner) >= this.mg.config().maxTrainEngines(owner)) {
+      return;
+    }
     if (!this.shouldSpawnTrain()) {
       return;
     }
@@ -91,10 +100,23 @@ export class TrainStationExecution implements Execution {
         owner,
         station,
         destination,
-        this.numCars,
+        this.mg.config().trainCarCount(),
       ),
     );
     this.lastSpawnTick = currentTick;
+  }
+
+  private trainEngineCount(owner: Player): number {
+    let n = 0;
+    for (const unit of owner.units()) {
+      if (
+        unit.type() === UnitType.Train &&
+        unit.trainType() === TrainType.Engine
+      ) {
+        n++;
+      }
+    }
+    return n;
   }
 
   activeDuringSpawnPhase(): boolean {

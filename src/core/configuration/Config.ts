@@ -418,7 +418,16 @@ export class Config {
   trainSpawnRate(numPlayerFactories: number): number {
     // hyperbolic decay, midpoint at 10 factories
     // expected number of trains = numPlayerFactories  / trainSpawnRate(numPlayerFactories)
-    return (numPlayerFactories + 10) * 15;
+    return (numPlayerFactories + 10) * 22;
+  }
+
+  trainCarCount(): number {
+    return 3;
+  }
+
+  maxTrainEngines(player: Player): number {
+    const factories = player.unitCount(UnitType.Factory);
+    return Math.min(16, 4 + factories * 2);
   }
   trainGold(
     rel: "self" | "team" | "ally" | "other",
@@ -470,7 +479,7 @@ export class Config {
     const decayRate = Math.LN2 / 50;
 
     // Approaches 0 as numTradeShips increase
-    const baseSpawnRate = 1 - sigmoid(numTradeShips, decayRate, 400);
+    const baseSpawnRate = 1 - sigmoid(numTradeShips, decayRate, 280);
 
     // Pity timer: increases spawn chance after consecutive rejections
     const rejectionModifier = 1 / (tradeShipSpawnRejections + 1);

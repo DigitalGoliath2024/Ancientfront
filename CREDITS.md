@@ -158,6 +158,14 @@ Original map art provided for Marauder's Sea.
 © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright)  
 Licensed under ODbL
 
+### Central South Florida Map
+
+Relief source provided for Marauder's Sea (Central South Florida).
+
+### Old World Miami Map
+
+Map art provided for Marauder's Sea (Old World Miami).
+
 ## Icons
 
 ### [The Noun Project](https://thenounproject.com/)

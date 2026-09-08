@@ -103,29 +103,32 @@ function nearestEnemyLand(
   const minFire2 = minFire * minFire;
   const bx = mg.x(from);
   const by = mg.y(from);
-  const x0 = Math.max(0, bx - range);
-  const x1 = Math.min(mg.width() - 1, bx + range);
-  const y0 = Math.max(0, by - range);
-  const y1 = Math.min(mg.height() - 1, by + range);
-  let best: TileRef | null = null;
-  let bestD2 = range2 + 1;
-  for (let x = x0; x <= x1; x++) {
-    for (let y = y0; y <= y1; y++) {
-      const tile = mg.ref(x, y);
-      const d2 = mg.euclideanDistSquared(from, tile);
-      if (d2 < minFire2 || d2 > range2) {
-        continue;
-      }
-      if (!isEnemyLand(mg, tile, owner)) {
-        continue;
-      }
-      if (d2 < bestD2) {
-        bestD2 = d2;
-        best = tile;
+  const w = mg.width();
+  const h = mg.height();
+  // Expanding rings: auto-fire only needs some enemy tile, not a full
+  // (2*range)^2 nearest-tile scan. Return on the first hit.
+  for (let r = minFire; r <= range; r++) {
+    for (let i = -r; i <= r; i++) {
+      const ring: Array<[number, number]> = [
+        [bx + i, by - r],
+        [bx + i, by + r],
+        [bx - r, by + i],
+        [bx + r, by + i],
+      ];
+      for (const [x, y] of ring) {
+        if (x < 0 || y < 0 || x >= w || y >= h) continue;
+        const dx = x - bx;
+        const dy = y - by;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < minFire2 || d2 > range2) continue;
+        const tile = mg.ref(x, y);
+        if (isEnemyLand(mg, tile, owner)) {
+          return tile;
+        }
       }
     }
   }
-  return best;
+  return null;
 }
 
 function enemyBuildingsInRange(
@@ -340,25 +343,11 @@ export function applyInlandBatteryBlast(
   }
 
   const doomed: Unit[] = [];
-  for (const unit of mg.units()) {
-    if (!unit.isActive()) {
-      continue;
-    }
-    if (unit === skipUnit) {
-      continue;
-    }
-    const type = unit.type();
-    if (
-      type === UnitType.Shell ||
-      type === UnitType.AtomBomb ||
-      type === UnitType.HydrogenBomb ||
-      type === UnitType.MIRVWarhead ||
-      type === UnitType.MIRV ||
-      type === UnitType.SAMMissile
-    ) {
-      continue;
-    }
-    if (mg.euclideanDistSquared(dst, unit.tile()) > radius2) {
+  for (const { unit } of mg.nearbyUnits(dst, radius, [
+    ...Structures.types,
+    UnitType.Train,
+  ])) {
+    if (!unit.isActive() || unit === skipUnit) {
       continue;
     }
     if (!mg.isLand(unit.tile())) {

@@ -10,6 +10,15 @@
     "overrides": { "lighting": { "ambient": 0.36 } }
   },
   {
+    "nameKey": "graphics_setting.preset_performance",
+    "descKey": "graphics_setting.preset_performance_desc",
+    "overrides": {
+      "passEnabled": { "fx": false, "fallout": false },
+      "smallPlayerGlow": { "strength": 0 },
+      "railroad": { "railMinZoom": 7 }
+    }
+  },
+  {
     "nameKey": "graphics_setting.preset_evans_pick",
     "descKey": "graphics_setting.preset_evans_pick_desc",
     "overrides": {
