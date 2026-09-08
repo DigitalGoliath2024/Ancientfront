@@ -46,6 +46,12 @@ describe("site SEO", () => {
       "<loc>https://maraudersea.com/wiki/maps/tarryn-fjords.html</loc>",
     );
     expect(sitemap).toContain(
+      "<loc>https://maraudersea.com/wiki/maps/central-south-florida.html</loc>",
+    );
+    expect(sitemap).toContain(
+      "<loc>https://maraudersea.com/wiki/maps/old-world-miami.html</loc>",
+    );
+    expect(sitemap).toContain(
       "<loc>https://maraudersea.com/wiki/buildings/inland-battery.html</loc>",
     );
     expect(sitemap).toContain(
